@@ -9,6 +9,7 @@ dependencies = []
 [dependency-groups]
 dev = [
     "pyright>=1.1.402",
+    "pytest>=8.3.5",
     "ruff>=0.12.2",
 ]
 
@@ -18,6 +19,14 @@ reportUnusedVariable = true
 typeCheckingMode = "strict"
 venv = ".venv"
 venvPath = "."
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+    "--strict-markers",
+    "--strict-config",
+]
+testpaths = ["tests"]
 
 [tool.ruff]
 exclude = [".git", ".venv", "__pycache__"]
