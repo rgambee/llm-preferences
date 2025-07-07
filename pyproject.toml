@@ -11,3 +11,19 @@ dev = [
     "pyright>=1.1.402",
     "ruff>=0.12.2",
 ]
+
+[tool.pyright]
+reportUnusedImport = true
+reportUnusedVariable = true
+typeCheckingMode = "strict"
+venv = ".venv"
+venvPath = "."
+
+[tool.ruff]
+exclude = [".git", ".venv", "__pycache__"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
