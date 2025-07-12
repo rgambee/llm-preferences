@@ -1,4 +1,5 @@
 import enum
+from collections.abc import Sequence
 
 from pydantic import BaseModel
 
@@ -34,3 +35,13 @@ class TaskRecord(BaseModel):
     type: TaskType
     difficulty: TaskDifficulty
     impact: TaskImpact
+
+
+class ResultRecord(BaseModel):
+    """A comparison of options, along with the preferred option.
+
+    Each option consists of a number of task IDs.
+    """
+
+    options: Sequence[Sequence[TaskId]]
+    preference_index: int
