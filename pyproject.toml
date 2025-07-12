@@ -44,6 +44,7 @@ ignore = [
     "D105",  # Missing docstring in magic method
     "D106",  # Missing docstring in public nested class
     "D107",  # Missing docstring in __init__
+    "TC003", # Move standard library import `...` into a type-checking block
 ]
 
 [tool.ruff.lint.flake8-tidy-imports]
