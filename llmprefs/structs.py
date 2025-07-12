@@ -11,7 +11,8 @@ class TaskTopic(enum.Enum):
 
 
 class TaskType(enum.Enum):
-    pass
+    opt_out = "opt_out"
+    free_choice = "free_choice"
 
 
 class TaskDifficulty(enum.Enum):
