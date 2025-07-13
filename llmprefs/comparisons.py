@@ -19,9 +19,10 @@ def generate_comparisons(
     The number of tasks in each option is determined by `tasks_per_option`.
 
     Some task types are treated differently:
-    - opt out tasks always appear alone in an option, regardless of `tasks_per_option`.
-    - opt out and free choice tasks are not compared to one another, only to other types
-      of tasks
+    - Opt out tasks always appear alone in an option, regardless of `tasks_per_option`.
+    - No option contains consecutive free choice tasks.
+    - Opt out and free choice tasks are not compared to one another, only to other types
+      of tasks.
     """
     options = generate_options(records, tasks_per_option)
     comparisons = itertools.permutations(options, 2)
@@ -36,7 +37,7 @@ def generate_options(
 
     The number of tasks in each option is determined by `tasks_per_option`. However,
     that note that opt out tasks always appear alone in an option, regardless of
-    `tasks_per_option`.
+    `tasks_per_option`. And no option contains consecutive free choice tasks.
     """
     if tasks_per_option < 1:
         message = "tasks_per_option must be at least 1"
@@ -49,11 +50,13 @@ def generate_options(
 
     # Group regular tasks into options
     options = itertools.permutations(regulars, tasks_per_option)
+    for opt in options:
+        if has_consecutive_free_choices(opt):
+            continue
+        yield opt
+
     # Add opt out tasks by themselves
-    yield from itertools.chain(
-        options,
-        ((oo,) for oo in opt_outs),
-    )
+    yield from ((oo,) for oo in opt_outs)
 
 
 def filter_comparisons(comparisons: Iterable[Comparison]) -> Iterable[Comparison]:
@@ -82,6 +85,13 @@ def filter_comparisons(comparisons: Iterable[Comparison]) -> Iterable[Comparison
 
         # The regular tasks are identical, and the irregular types are the same.
         # Therefore, this comparison is redundant and we should drop it.
+
+
+def has_consecutive_free_choices(opt: Option) -> bool:
+    return any(
+        is_free_choice_task(a) and is_free_choice_task(b)
+        for a, b in itertools.pairwise(opt)
+    )
 
 
 def is_opt_out_task(record: TaskRecord) -> bool:

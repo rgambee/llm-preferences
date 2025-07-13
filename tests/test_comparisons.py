@@ -29,6 +29,18 @@ class TestGenerateOptions:
         # options iterable.
         assert list(options) == [(rec,) for rec in records if is_opt_out_task(rec)]
 
+    def test_multiple_free_choice_records(self) -> None:
+        records = task_record_factory(
+            [TaskType.dummy, TaskType.free_choice, TaskType.free_choice],
+        )
+        regular, free_choice_a, free_choice_b = records
+        options = list(generate_options(records, tasks_per_option=2))
+        assert len(options) == 4
+        assert options[0] == (regular, free_choice_a)
+        assert options[1] == (regular, free_choice_b)
+        assert options[2] == (free_choice_a, regular)
+        assert options[3] == (free_choice_b, regular)
+
     def test_mixed_records(self) -> None:
         records = task_record_factory(
             [
