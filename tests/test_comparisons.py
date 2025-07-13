@@ -1,6 +1,11 @@
 import pytest
 
-from llmprefs.comparisons import filter_comparisons, generate_options, is_opt_out_task
+from llmprefs.comparisons import (
+    filter_comparisons,
+    generate_comparisons,
+    generate_options,
+    is_opt_out_task,
+)
 from llmprefs.structs import TaskType
 from llmprefs.testing.factories import task_record_factory
 
@@ -129,3 +134,55 @@ class TestFilterComparisons:
         comparisons = [((regular, irregular_a), (regular, irregular_b))]
         filtered = list(filter_comparisons(comparisons))
         assert filtered == []
+
+
+class TestGenerateComparisons:
+    def test_empty_records(self) -> None:
+        comparisons = list(generate_comparisons(records=[], tasks_per_option=1))
+        assert comparisons == []
+
+    def test_one_record(self) -> None:
+        records = task_record_factory([TaskType.dummy])
+        comparisons = list(generate_comparisons(records, tasks_per_option=1))
+        assert comparisons == []
+
+    def test_multiple_regular_records(self) -> None:
+        records = task_record_factory([TaskType.dummy, TaskType.dummy, TaskType.dummy])
+        comparisons = list(generate_comparisons(records, tasks_per_option=1))
+        # With 3 records and tasks_per_option == 1, there are 3 options. The number of
+        # comparisons (permutations of length 2) is 3 * 2 * 1 == 6.
+        assert len(comparisons) == 3 * 2 * 1
+
+    def test_mixed_records(self) -> None:
+        records = task_record_factory(
+            [
+                TaskType.dummy,
+                TaskType.dummy,
+                TaskType.opt_out,
+                TaskType.opt_out,
+                TaskType.free_choice,
+                TaskType.free_choice,
+            ]
+        )
+        assert len(list(generate_options(records, tasks_per_option=2))) == 12
+        comparisons = list(generate_comparisons(records, tasks_per_option=2))
+        # With 6 records and tasks_per_option == 2, there are 6 * 5 == 30 naive options.
+        # However, opt out tasks can only appear on their own. The same goes for free
+        # choice tasks, at least in this case since tasks_per_option == 2. That means
+        # there are 4 * 3 + 2 - 2 == 12 valid options.
+        #
+        # The number of comparisons (permutations of
+        # length 2) is 12 * 11 == 132. From these we filter out the following unhelpful
+        # comparisons:
+        #     - opt_out1 vs opt_out2
+        #     - opt_out2 vs opt_out1
+
+        #     - regular1 + free_choice1 vs regular1 + free_choice2
+        #     - regular2 + free_choice1 vs regular2 + free_choice2
+        #     - regular1 + free_choice2 vs regular1 + free_choice1
+        #     - regular2 + free_choice2 vs regular2 + free_choice1
+        #     - free_choice1 + regular1 vs free_choice2 + regular1
+        #     - free_choice1 + regular2 vs free_choice2 + regular2
+        #     - free_choice2 + regular1 vs free_choice1 + regular1
+        #     - free_choice2 + regular2 vs free_choice1 + regular2
+        assert len(comparisons) == 132 - 2 - 8
