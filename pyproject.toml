@@ -15,6 +15,10 @@ dev = [
     "ruff>=0.12.2",
 ]
 
+[tool.setuptools.packages.find]
+# The data/ directory only contains datasets, no code
+exclude = ["data"]
+
 [tool.pyright]
 reportUnusedImport = true
 reportUnusedVariable = true
