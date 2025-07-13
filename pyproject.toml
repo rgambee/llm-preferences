@@ -51,5 +51,10 @@ ignore = [
     "TC003", # Move standard library import `...` into a type-checking block
 ]
 
+[tool.ruff.lint.extend-per-file-ignores]
+"tests/*" = [
+    "S101",  # Use of `assert` detected
+]
+
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
