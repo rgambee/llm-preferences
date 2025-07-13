@@ -40,15 +40,16 @@ exclude = [".git", ".venv", "__pycache__"]
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "D100",  # Missing docstring in public module
-    "D101",  # Missing docstring in public class
-    "D102",  # Missing docstring in public method
-    "D103",  # Missing docstring in public function
-    "D104",  # Missing docstring in public package
-    "D105",  # Missing docstring in magic method
-    "D106",  # Missing docstring in public nested class
-    "D107",  # Missing docstring in __init__
-    "TC003", # Move standard library import `...` into a type-checking block
+    "COM812",    # Trailing comma missing (disabled due to conflict with `ruff format`)
+    "D100",      # Missing docstring in public module
+    "D101",      # Missing docstring in public class
+    "D102",      # Missing docstring in public method
+    "D103",      # Missing docstring in public function
+    "D104",      # Missing docstring in public package
+    "D105",      # Missing docstring in magic method
+    "D106",      # Missing docstring in public nested class
+    "D107",      # Missing docstring in __init__
+    "TC003",     # Move standard library import `...` into a type-checking block
 ]
 
 [tool.ruff.lint.extend-per-file-ignores]
@@ -58,3 +59,6 @@ ignore = [
 
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "all"
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
