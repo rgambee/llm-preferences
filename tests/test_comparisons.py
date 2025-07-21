@@ -4,10 +4,44 @@ from llmprefs.comparisons import (
     filter_comparisons,
     generate_comparisons,
     generate_options,
+    has_consecutive_free_choices,
     is_opt_out_task,
 )
 from llmprefs.structs import TaskType
 from llmprefs.testing.factories import task_record_factory
+
+
+class TestConsecutiveFreeChoices:
+    def test_empty(self) -> None:
+        assert not has_consecutive_free_choices(())
+
+    def test_single_record(self) -> None:
+        assert not has_consecutive_free_choices(task_record_factory([TaskType.dummy]))
+        assert not has_consecutive_free_choices(
+            task_record_factory([TaskType.free_choice])
+        )
+
+    def test_no_consecutive_free_choices(self) -> None:
+        assert not has_consecutive_free_choices(
+            task_record_factory(
+                [
+                    TaskType.free_choice,
+                    TaskType.dummy,
+                    TaskType.free_choice,
+                ],
+            )
+        )
+
+    def test_consecutive_free_choices(self) -> None:
+        assert has_consecutive_free_choices(
+            task_record_factory(
+                [
+                    TaskType.dummy,
+                    TaskType.free_choice,
+                    TaskType.free_choice,
+                ],
+            )
+        )
 
 
 class TestGenerateOptions:
