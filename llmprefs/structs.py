@@ -46,4 +46,5 @@ class ResultRecord(BaseModel):
     """
 
     options: Sequence[Sequence[TaskId]]
+    comparison_prompt_id: int
     preference_index: int
