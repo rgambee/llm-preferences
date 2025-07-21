@@ -1,4 +1,6 @@
-from llmprefs.prompts import format_option
+import pytest
+
+from llmprefs.prompts import ComparisonTemplate, format_option
 from llmprefs.structs import TaskType
 from llmprefs.testing.factories import task_record_factory
 
@@ -17,3 +19,29 @@ class TestFormatOption:
         option = task_record_factory([TaskType.dummy, TaskType.dummy])
         formatted_option = format_option(option)
         assert formatted_option == f"1. {option[0].task}\n2. {option[1].task}"
+
+
+class TestComparisonTemplate:
+    def test_valid_template(self) -> None:
+        option_a, option_b = task_record_factory([TaskType.dummy] * 2)
+        comparison = ((option_a,), (option_b,))
+        template = ComparisonTemplate(
+            id=0,
+            template="Which would you prefer?\n{option_a}\n\n{option_b}",
+        )
+        formatted = template.format_comparison(comparison)
+        assert option_a.task in formatted
+        assert option_b.task in formatted
+
+    def test_invalid_template(self) -> None:
+        option_a, option_b = task_record_factory([TaskType.dummy] * 2)
+        comparison = ((option_a,), (option_b,))
+        template = ComparisonTemplate(
+            id=0,
+            template="Which would you prefer?\n{0}\n\n{1}",
+        )
+        with pytest.raises(
+            IndexError,
+            match="Replacement index 0 out of range for positional args tuple",
+        ):
+            template.format_comparison(comparison)
