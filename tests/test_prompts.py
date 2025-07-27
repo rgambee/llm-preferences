@@ -1,6 +1,6 @@
 import pytest
 
-from llmprefs.prompts import ComparisonTemplate, format_option
+from llmprefs.prompts import COMPARISON_TEMPLATES, ComparisonTemplate, format_option
 from llmprefs.structs import TaskType
 from llmprefs.testing.factories import task_record_factory
 
@@ -45,3 +45,19 @@ class TestComparisonTemplate:
             match="Replacement index 0 out of range for positional args tuple",
         ):
             template.format_comparison(comparison)
+
+
+class TestTemplateInstances:
+    @pytest.mark.parametrize("template", COMPARISON_TEMPLATES)
+    def test_template_valid(self, template: ComparisonTemplate) -> None:
+        option_a, option_b = task_record_factory([TaskType.dummy] * 2)
+        comparison = ((option_a,), (option_b,))
+        template.format_comparison(comparison)
+
+    @pytest.mark.parametrize("template", COMPARISON_TEMPLATES)
+    def test_indentation(self, template: ComparisonTemplate) -> None:
+        option_a, option_b = task_record_factory([TaskType.dummy] * 2)
+        comparison = ((option_a,), (option_b,))
+        formatted = template.format_comparison(comparison)
+        for line in formatted.split("\n"):
+            assert line == line.strip()

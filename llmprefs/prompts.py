@@ -1,3 +1,4 @@
+from textwrap import dedent
 from typing import NewType
 
 from pydantic import BaseModel
@@ -20,6 +21,24 @@ class ComparisonTemplate(BaseModel):
             option_a=formatted_option_a,
             option_b=formatted_option_b,
         )
+
+
+COMPARISON_TEMPLATES = (
+    ComparisonTemplate(
+        id=0,
+        template=dedent(
+            """
+            Which would you prefer?
+
+            Option A:
+            {option_a}
+
+            Option B:
+            {option_b}
+            """
+        ),
+    ),
+)
 
 
 def format_option(option: Option) -> FormattedOption:
