@@ -39,6 +39,11 @@ class TaskRecord(BaseModel):
     impact: TaskImpact
 
 
+class LLM(enum.StrEnum):
+    CLAUDE_SONNET_4_0_2025_05_14 = "claude-sonnet-4-20250514"
+    CLAUDE_OPUS_4_0_2025_05_14 = "claude-opus-4-20250514"
+
+
 class ResultRecord(BaseModel):
     """A comparison of options, along with the preferred option.
 
