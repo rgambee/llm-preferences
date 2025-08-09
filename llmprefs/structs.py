@@ -1,5 +1,6 @@
 import enum
 from collections.abc import Sequence
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -50,6 +51,8 @@ class ResultRecord(BaseModel):
     Each option consists of a number of task IDs.
     """
 
-    options: Sequence[Sequence[TaskId]]
+    created_at: datetime
+    model: LLM
     comparison_prompt_id: int
+    options: Sequence[Sequence[TaskId]]
     preference_index: int
