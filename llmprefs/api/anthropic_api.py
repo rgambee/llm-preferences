@@ -6,14 +6,10 @@ from anthropic import AsyncAnthropic
 from anthropic.types import MessageParam, TextBlockParam, ThinkingConfigEnabledParam
 from pydantic import BaseModel, Field
 
-from llmprefs.structs import LLM
+from llmprefs.api.base import ApiParameters, BaseApi
 
 
-class ApiParams(BaseModel):
-    model: LLM
-    max_tokens: int
-    system_prompt: str
-    temperature: float
+class AnthropicApiParams(ApiParameters):
     thinking_budget: int
 
 
@@ -23,30 +19,41 @@ class Content(BaseModel):
 
 
 class ApiReply(BaseModel):
-    model: LLM
     content: list[Content] = Field(
         min_length=1,
         max_length=1,
     )
 
 
-async def submit(
-    client: AsyncAnthropic,
-    params: ApiParams,
-    prompt: str,
-) -> ApiReply:
-    messages = [
-        MessageParam(content=[TextBlockParam(text=prompt, type="text")], role="user")
-    ]
-    raw_reply = await client.messages.create(
-        messages=messages,
-        model=params.model.value,
-        max_tokens=params.max_tokens,
-        system=params.system_prompt,
-        temperature=params.temperature,
-        thinking=ThinkingConfigEnabledParam(
-            type="enabled",
-            budget_tokens=params.thinking_budget,
-        ),
-    )
-    return ApiReply.model_validate(raw_reply)
+class AnthropicApi(BaseApi):
+    def __init__(
+        self,
+        client: AsyncAnthropic,
+        params: AnthropicApiParams,
+    ) -> None:
+        self.client = client
+        self.params = params
+
+    async def submit(
+        self,
+        prompt: str,
+    ) -> str:
+        messages = [
+            MessageParam(
+                content=[TextBlockParam(text=prompt, type="text")],
+                role="user",
+            )
+        ]
+        raw_reply = await self.client.messages.create(
+            messages=messages,
+            model=self.params.model.value,
+            max_tokens=self.params.max_tokens,
+            system=self.params.system_prompt,
+            temperature=self.params.temperature,
+            thinking=ThinkingConfigEnabledParam(
+                type="enabled",
+                budget_tokens=self.params.thinking_budget,
+            ),
+        )
+        reply = ApiReply.model_validate(raw_reply)
+        return reply.content[0].text
