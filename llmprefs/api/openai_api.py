@@ -1,12 +1,8 @@
 from openai import AsyncOpenAI
 from openai.types.shared_params.reasoning import Reasoning
-from openai.types.shared_params.reasoning_effort import ReasoningEffort
 
-from llmprefs.api.base import ApiParameters, BaseApi
-
-
-class OpenAiApiParams(ApiParameters):
-    reasoning_effort: ReasoningEffort
+from llmprefs.api.base import BaseApi
+from llmprefs.structs import OpenAiApiParams
 
 
 class OpenAiApi(BaseApi):

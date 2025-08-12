@@ -2,6 +2,7 @@ import enum
 from collections.abc import Sequence
 from datetime import datetime
 
+from openai.types.shared_params.reasoning_effort import ReasoningEffort
 from pydantic import BaseModel
 
 TaskId = int
@@ -43,6 +44,21 @@ class TaskRecord(BaseModel):
 class LLM(enum.StrEnum):
     CLAUDE_SONNET_4_0_2025_05_14 = "claude-sonnet-4-20250514"
     CLAUDE_OPUS_4_0_2025_05_14 = "claude-opus-4-20250514"
+
+
+class ApiParameters(BaseModel):
+    model: LLM
+    max_tokens: int
+    system_prompt: str
+    temperature: float
+
+
+class AnthropicApiParams(ApiParameters):
+    thinking_budget: int
+
+
+class OpenAiApiParams(ApiParameters):
+    reasoning_effort: ReasoningEffort
 
 
 class ResultRecord(BaseModel):

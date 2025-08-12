@@ -6,11 +6,8 @@ from anthropic import AsyncAnthropic
 from anthropic.types import MessageParam, TextBlockParam, ThinkingConfigEnabledParam
 from pydantic import BaseModel, Field
 
-from llmprefs.api.base import ApiParameters, BaseApi
-
-
-class AnthropicApiParams(ApiParameters):
-    thinking_budget: int
+from llmprefs.api.base import BaseApi
+from llmprefs.structs import AnthropicApiParams
 
 
 class Content(BaseModel):
