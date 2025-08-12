@@ -28,8 +28,12 @@ class AnthropicApi(BaseApi):
         client: AsyncAnthropic,
         params: AnthropicApiParams,
     ) -> None:
-        self.client = client
-        self.params = params
+        self._client = client
+        self._params = params
+
+    @property
+    def params(self) -> AnthropicApiParams:
+        return self._params
 
     async def submit(
         self,
@@ -41,15 +45,15 @@ class AnthropicApi(BaseApi):
                 role="user",
             )
         ]
-        raw_reply = await self.client.messages.create(
+        raw_reply = await self._client.messages.create(
             messages=messages,
-            model=self.params.model.value,
-            max_tokens=self.params.max_tokens,
-            system=self.params.system_prompt,
-            temperature=self.params.temperature,
+            model=self._params.model.value,
+            max_tokens=self._params.max_tokens,
+            system=self._params.system_prompt,
+            temperature=self._params.temperature,
             thinking=ThinkingConfigEnabledParam(
                 type="enabled",
-                budget_tokens=self.params.thinking_budget,
+                budget_tokens=self._params.thinking_budget,
             ),
         )
         reply = ApiReply.model_validate(raw_reply)

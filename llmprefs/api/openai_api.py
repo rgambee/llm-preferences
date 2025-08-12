@@ -11,21 +11,25 @@ class OpenAiApi(BaseApi):
         client: AsyncOpenAI,
         params: OpenAiApiParams,
     ) -> None:
-        self.client = client
-        self.params = params
+        self._client = client
+        self._params = params
+
+    @property
+    def params(self) -> OpenAiApiParams:
+        return self._params
 
     async def submit(
         self,
         prompt: str,
     ) -> str:
-        response = await self.client.responses.create(
+        response = await self._client.responses.create(
             input=prompt,
-            model=self.params.model.value,
-            max_output_tokens=self.params.max_tokens,
-            instructions=self.params.system_prompt,
-            temperature=self.params.temperature,
+            model=self._params.model.value,
+            max_output_tokens=self._params.max_tokens,
+            instructions=self._params.system_prompt,
+            temperature=self._params.temperature,
             reasoning=Reasoning(
-                effort=self.params.reasoning_effort,
+                effort=self._params.reasoning_effort,
             ),
         )
         return response.output_text
