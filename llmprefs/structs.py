@@ -1,9 +1,10 @@
 import enum
 from collections.abc import Sequence
 from datetime import datetime
+from typing import Literal
 
 from openai.types.shared_params.reasoning_effort import ReasoningEffort
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 TaskId = int
 
@@ -41,6 +42,11 @@ class TaskRecord(BaseModel):
     impact: TaskImpact
 
 
+class Provider(enum.StrEnum):
+    ANTHROPIC = "anthropic"
+    OPENAI = "openai"
+
+
 class LLM(enum.StrEnum):
     CLAUDE_SONNET_4_0_2025_05_14 = "claude-sonnet-4-20250514"
     CLAUDE_OPUS_4_0_2025_05_14 = "claude-opus-4-20250514"
@@ -54,11 +60,16 @@ class ApiParameters(BaseModel):
 
 
 class AnthropicApiParams(ApiParameters):
+    provider: Literal[Provider.ANTHROPIC]
     thinking_budget: int
 
 
 class OpenAiApiParams(ApiParameters):
+    provider: Literal[Provider.OPENAI]
     reasoning_effort: ReasoningEffort
+
+
+AnyApiParams = AnthropicApiParams | OpenAiApiParams
 
 
 class ResultRecord(BaseModel):
@@ -68,7 +79,7 @@ class ResultRecord(BaseModel):
     """
 
     created_at: datetime
-    model: LLM
     comparison_prompt_id: int
     options: Sequence[Sequence[TaskId]]
     preference_index: int
+    api_params: AnyApiParams = Field(discriminator="provider")
