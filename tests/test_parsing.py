@@ -27,7 +27,7 @@ class TestParsePreference:
     )
     def test_valid_response(self, inputs: tuple[str, int]) -> None:
         response, expected_index = inputs
-        option_a, option_b = task_record_factory([TaskType.dummy] * 2)
+        option_a, option_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((option_a,), (option_b,))
         preference_index = parse_preference(comparison, response)
         assert preference_index == expected_index
@@ -44,7 +44,7 @@ class TestParsePreference:
         ],
     )
     def test_invalid_response(self, response: str) -> None:
-        option_a, option_b = task_record_factory([TaskType.dummy] * 2)
+        option_a, option_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((option_a,), (option_b,))
         with pytest.raises(
             ValueError,

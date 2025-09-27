@@ -11,19 +11,19 @@ class TestFormatOption:
         assert formatted_option == ""
 
     def test_single_task(self) -> None:
-        option = task_record_factory([TaskType.dummy])
+        option = task_record_factory([TaskType.regular])
         formatted_option = format_option(option)
         assert formatted_option == option[0].task
 
     def test_multiple_tasks(self) -> None:
-        option = task_record_factory([TaskType.dummy, TaskType.dummy])
+        option = task_record_factory([TaskType.regular] * 2)
         formatted_option = format_option(option)
         assert formatted_option == f"1. {option[0].task}\n2. {option[1].task}"
 
 
 class TestComparisonTemplate:
     def test_valid_template(self) -> None:
-        option_a, option_b = task_record_factory([TaskType.dummy] * 2)
+        option_a, option_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((option_a,), (option_b,))
         template = ComparisonTemplate(
             id=0,
@@ -34,7 +34,7 @@ class TestComparisonTemplate:
         assert option_b.task in formatted
 
     def test_invalid_template(self) -> None:
-        option_a, option_b = task_record_factory([TaskType.dummy] * 2)
+        option_a, option_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((option_a,), (option_b,))
         template = ComparisonTemplate(
             id=0,
@@ -50,13 +50,13 @@ class TestComparisonTemplate:
 class TestTemplateInstances:
     @pytest.mark.parametrize("template", COMPARISON_TEMPLATES)
     def test_template_valid(self, template: ComparisonTemplate) -> None:
-        option_a, option_b = task_record_factory([TaskType.dummy] * 2)
+        option_a, option_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((option_a,), (option_b,))
         template.format_comparison(comparison)
 
     @pytest.mark.parametrize("template", COMPARISON_TEMPLATES)
     def test_indentation(self, template: ComparisonTemplate) -> None:
-        option_a, option_b = task_record_factory([TaskType.dummy] * 2)
+        option_a, option_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((option_a,), (option_b,))
         formatted = template.format_comparison(comparison)
         for line in formatted.split("\n"):

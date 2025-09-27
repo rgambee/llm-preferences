@@ -10,7 +10,6 @@ TaskId = int
 
 
 class TaskType(enum.Enum):
-    dummy = "dummy"
     regular = "regular"
     opt_out = "opt_out"
     free_choice = "free_choice"

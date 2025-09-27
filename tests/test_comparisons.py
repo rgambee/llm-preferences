@@ -16,7 +16,7 @@ class TestConsecutiveFreeChoices:
         assert not has_consecutive_free_choices(())
 
     def test_single_record(self) -> None:
-        assert not has_consecutive_free_choices(task_record_factory([TaskType.dummy]))
+        assert not has_consecutive_free_choices(task_record_factory([TaskType.regular]))
         assert not has_consecutive_free_choices(
             task_record_factory([TaskType.free_choice])
         )
@@ -26,7 +26,7 @@ class TestConsecutiveFreeChoices:
             task_record_factory(
                 [
                     TaskType.free_choice,
-                    TaskType.dummy,
+                    TaskType.regular,
                     TaskType.free_choice,
                 ],
             )
@@ -36,7 +36,7 @@ class TestConsecutiveFreeChoices:
         assert has_consecutive_free_choices(
             task_record_factory(
                 [
-                    TaskType.dummy,
+                    TaskType.regular,
                     TaskType.free_choice,
                     TaskType.free_choice,
                 ],
@@ -53,14 +53,14 @@ class TestGenerateOptions:
         options = generate_options(records=[], tasks_per_option=1)
         assert list(options) == []
 
-    @pytest.mark.parametrize("task_type", [TaskType.dummy, TaskType.opt_out])
+    @pytest.mark.parametrize("task_type", [TaskType.regular, TaskType.opt_out])
     def test_one_record(self, task_type: TaskType) -> None:
         records = task_record_factory([task_type])
         options = generate_options(records, tasks_per_option=1)
         assert list(options) == [records]
 
     def test_more_tasks_per_option_than_records(self) -> None:
-        records = task_record_factory([TaskType.dummy, TaskType.opt_out])
+        records = task_record_factory([TaskType.regular, TaskType.opt_out])
         options = generate_options(records, tasks_per_option=3)
         # When given fewer regular records than `tasks_per_option`, the regular records
         # no not appear in the output options, though the opt out tasks still do. This
@@ -70,7 +70,7 @@ class TestGenerateOptions:
 
     def test_multiple_free_choice_records(self) -> None:
         records = task_record_factory(
-            [TaskType.dummy, TaskType.free_choice, TaskType.free_choice],
+            [TaskType.regular, TaskType.free_choice, TaskType.free_choice],
         )
         regular, free_choice_a, free_choice_b = records
         options = list(generate_options(records, tasks_per_option=2))
@@ -83,8 +83,8 @@ class TestGenerateOptions:
     def test_mixed_records(self) -> None:
         records = task_record_factory(
             [
-                TaskType.dummy,
-                TaskType.dummy,
+                TaskType.regular,
+                TaskType.regular,
                 TaskType.opt_out,
                 TaskType.opt_out,
             ]
@@ -102,11 +102,11 @@ class TestFilterComparisons:
     @pytest.mark.parametrize(
         argnames=("type_a", "type_b"),
         argvalues=[
-            (TaskType.dummy, TaskType.dummy),
-            (TaskType.dummy, TaskType.opt_out),
-            (TaskType.opt_out, TaskType.dummy),
-            (TaskType.dummy, TaskType.free_choice),
-            (TaskType.free_choice, TaskType.dummy),
+            (TaskType.regular, TaskType.regular),
+            (TaskType.regular, TaskType.opt_out),
+            (TaskType.opt_out, TaskType.regular),
+            (TaskType.regular, TaskType.free_choice),
+            (TaskType.free_choice, TaskType.regular),
             (TaskType.opt_out, TaskType.free_choice),
             (TaskType.free_choice, TaskType.opt_out),
         ],
@@ -122,7 +122,7 @@ class TestFilterComparisons:
         argvalues=[TaskType.opt_out, TaskType.free_choice],
     )
     def test_two_similar_tasks(self, task_type: TaskType) -> None:
-        record_a, record_b = task_record_factory([task_type, task_type])
+        record_a, record_b = task_record_factory([task_type] * 2)
         comparisons = [((record_a,), (record_b,)), ((record_b,), (record_a,))]
         filtered = list(filter_comparisons(comparisons))
         assert filtered == []
@@ -130,11 +130,11 @@ class TestFilterComparisons:
     @pytest.mark.parametrize(
         argnames=("type_a", "type_b"),
         argvalues=[
-            (TaskType.dummy, TaskType.dummy),
-            (TaskType.dummy, TaskType.opt_out),
-            (TaskType.opt_out, TaskType.dummy),
-            (TaskType.dummy, TaskType.free_choice),
-            (TaskType.free_choice, TaskType.dummy),
+            (TaskType.regular, TaskType.regular),
+            (TaskType.regular, TaskType.opt_out),
+            (TaskType.opt_out, TaskType.regular),
+            (TaskType.regular, TaskType.free_choice),
+            (TaskType.free_choice, TaskType.regular),
             (TaskType.opt_out, TaskType.free_choice),
             (TaskType.free_choice, TaskType.opt_out),
         ],
@@ -151,7 +151,7 @@ class TestFilterComparisons:
     )
     def test_different_regular_tasks(self, irregular_type: TaskType) -> None:
         regular_a, regular_b, irregular = task_record_factory(
-            [TaskType.dummy, TaskType.dummy, irregular_type],
+            [TaskType.regular, TaskType.regular, irregular_type],
         )
         comparisons = [((regular_a, irregular), (regular_b, irregular))]
         filtered = list(filter_comparisons(comparisons))
@@ -163,7 +163,7 @@ class TestFilterComparisons:
     )
     def test_different_irregular_tasks(self, irregular_type: TaskType) -> None:
         regular, irregular_a, irregular_b = task_record_factory(
-            [TaskType.dummy, irregular_type, irregular_type],
+            [TaskType.regular, irregular_type, irregular_type],
         )
         comparisons = [((regular, irregular_a), (regular, irregular_b))]
         filtered = list(filter_comparisons(comparisons))
@@ -176,12 +176,12 @@ class TestGenerateComparisons:
         assert comparisons == []
 
     def test_one_record(self) -> None:
-        records = task_record_factory([TaskType.dummy])
+        records = task_record_factory([TaskType.regular])
         comparisons = list(generate_comparisons(records, tasks_per_option=1))
         assert comparisons == []
 
     def test_multiple_regular_records(self) -> None:
-        records = task_record_factory([TaskType.dummy, TaskType.dummy, TaskType.dummy])
+        records = task_record_factory([TaskType.regular] * 3)
         comparisons = list(generate_comparisons(records, tasks_per_option=1))
         # With 3 records and tasks_per_option == 1, there are 3 options. The number of
         # comparisons (permutations of length 2) is 3 * 2 * 1 == 6.
@@ -190,8 +190,8 @@ class TestGenerateComparisons:
     def test_mixed_records(self) -> None:
         records = task_record_factory(
             [
-                TaskType.dummy,
-                TaskType.dummy,
+                TaskType.regular,
+                TaskType.regular,
                 TaskType.opt_out,
                 TaskType.opt_out,
                 TaskType.free_choice,
