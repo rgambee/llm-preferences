@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from datetime import UTC, datetime
 
 from llmprefs.structs import (
+    LLM,
+    AnthropicApiParams,
+    Provider,
+    ResultRecord,
     TaskDependency,
     TaskImpact,
     TaskObSubjectivity,
@@ -29,3 +34,20 @@ def task_record_factory(task_types: Sequence[TaskType]) -> tuple[TaskRecord, ...
         )
         records.append(record)
     return tuple(records)
+
+
+def result_record_factory() -> ResultRecord:
+    return ResultRecord(
+        created_at=datetime.now(tz=UTC),
+        comparison_prompt_id=123,
+        options=[[1], [2]],
+        preferred_option_index=0,
+        api_params=AnthropicApiParams(
+            provider=Provider.ANTHROPIC,
+            model=LLM.CLAUDE_SONNET_4_0_2025_05_14,
+            max_tokens=1000,
+            system_prompt="You are a helpful assistant.",
+            temperature=1.0,
+            thinking_budget=1000,
+        ),
+    )

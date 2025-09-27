@@ -1,7 +1,10 @@
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from llmprefs.file_io.load_records import load_records
-from llmprefs.structs import TaskRecord
+from llmprefs.file_io.save_results import save_results_jsonl
+from llmprefs.structs import ResultRecord, TaskRecord
+from llmprefs.testing.factories import result_record_factory
 
 
 class TestLoadTasks:
@@ -14,3 +17,14 @@ class TestLoadTasks:
             count += 1
             assert record.task
         assert count > 0
+
+
+class TestLoadResults:
+    def test_load_results_jsonl(self) -> None:
+        results = [result_record_factory(), result_record_factory()]
+        with NamedTemporaryFile(suffix=".jsonl") as f:
+            save_results_jsonl(results, Path(f.name))
+            loaded_results = tuple(load_records(Path(f.name), ResultRecord))
+        assert len(loaded_results) == len(results)
+        for loaded_result, result in zip(loaded_results, results, strict=True):
+            assert loaded_result == result
