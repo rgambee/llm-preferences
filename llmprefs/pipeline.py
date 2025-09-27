@@ -39,12 +39,12 @@ async def compare_options(
     async with semaphore:
         prompt = template.format_comparison(comparison)
         response = await api.submit(prompt)
-        preference_index = parse_preference(comparison, response)
+        preferred_option_index = parse_preference(comparison, response)
         option_ids = [[task.id for task in option] for option in comparison]
         return ResultRecord(
             created_at=datetime.now(tz=UTC),
             comparison_prompt_id=template.id,
             options=option_ids,
-            preference_index=preference_index,
+            preferred_option_index=preferred_option_index,
             api_params=api.params,
         )

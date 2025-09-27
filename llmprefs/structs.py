@@ -1,10 +1,11 @@
 import enum
+import logging
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Self
 
 from openai.types.shared_params.reasoning_effort import ReasoningEffort
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 TaskId = int
 
@@ -101,5 +102,15 @@ class ResultRecord(BaseModel):
     created_at: datetime
     comparison_prompt_id: int
     options: Sequence[Sequence[TaskId]]
-    preference_index: int
+    preferred_option_index: int
     api_params: AnyApiParams = Field(discriminator="provider")
+
+    @model_validator(mode="after")
+    def check_option_index_in_range(self) -> Self:
+        if 0 <= self.preferred_option_index < len(self.options):
+            return self
+        logging.getLogger(__name__).error(
+            f"preferred_option_index {self.preferred_option_index} is out of range "
+            f"for options of length {len(self.options)}"
+        )
+        raise ValueError("preferred_option_index is out of range")
