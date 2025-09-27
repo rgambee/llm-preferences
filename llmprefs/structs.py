@@ -9,23 +9,42 @@ from pydantic import BaseModel, Field
 TaskId = int
 
 
-class TaskTopic(enum.Enum):
-    dummy = "dummy"
-
-
 class TaskType(enum.Enum):
     dummy = "dummy"
+    regular = "regular"
     opt_out = "opt_out"
     free_choice = "free_choice"
 
 
-class TaskDifficulty(enum.Enum):
-    easy = "easy"
-    medium = "medium"
-    hard = "hard"
+class TaskTopic(enum.Enum):
+    not_applicable = "not_applicable"
+    arts_and_humanities = "arts_and_humanities"
+    lifestyle = "lifestyle"
+    social_sciences = "social_sciences"
+    stem = "stem"
+
+
+class TaskDependency(enum.Enum):
+    not_applicable = "not_applicable"
+    self_contained = "self_contained"
+    tool = "tool"
+    user_interaction = "user_interaction"
+
+
+class TaskObSubjectivity(enum.Enum):
+    not_applicable = "not_applicable"
+    objective = "objective"
+    subjective = "subjective"
+
+
+class TaskTime(enum.Enum):
+    not_applicable = "not_applicable"
+    brief = "brief"
+    long = "long"
 
 
 class TaskImpact(enum.Enum):
+    not_applicable = "not_applicable"
     positive = "positive"
     neutral = "neutral"
     negative = "negative"
@@ -36,9 +55,11 @@ class TaskRecord(BaseModel):
 
     id: TaskId
     task: str
-    topic: TaskTopic
     type: TaskType
-    difficulty: TaskDifficulty
+    topic: TaskTopic
+    dependency: TaskDependency
+    ob_subjectivity: TaskObSubjectivity
+    time: TaskTime
     impact: TaskImpact
 
 
