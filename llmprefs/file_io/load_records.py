@@ -1,21 +1,26 @@
+from __future__ import annotations
+
 import csv
 import json
 import logging
 from collections.abc import Iterable
 from pathlib import Path
+from typing import TypeVar
 
-from llmprefs.structs import TaskRecord
+from pydantic import BaseModel
+
+T = TypeVar("T", bound=BaseModel)
 
 
-def load_records(path: Path) -> Iterable[TaskRecord]:
+def load_records(path: Path, record_type: type[T]) -> Iterable[T]:
     """Load the records from a CSV or JSON lines file.
 
-    The column/field names and values must match those in TaskRecord.
+    The column/field names and values must match those in the record type.
     """
     if path.suffix == ".csv":
-        return load_records_csv(path)
+        return load_records_csv(path, record_type)
     if path.suffix == ".jsonl":
-        return load_records_jsonl(path)
+        return load_records_jsonl(path, record_type)
     logging.getLogger(__name__).error(
         f"Unsupported file extension: {path.suffix}. "
         "Allowed extensions are .csv and .jsonl."
@@ -23,23 +28,23 @@ def load_records(path: Path) -> Iterable[TaskRecord]:
     raise ValueError("Unsupported file extension")
 
 
-def load_records_csv(path: Path) -> Iterable[TaskRecord]:
-    """Load the records from a JSON lines file.
+def load_records_csv(path: Path, record_type: type[T]) -> Iterable[T]:
+    """Load the records from a CSV file.
 
-    The first row is assumed to be the header row. The column names and values must
-    match those in TaskRecord.
+    The first row is assumed to be the header row. The column names must match those in
+    the record type.
     """
     with path.open("r") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            yield TaskRecord.model_validate(row)
+            yield record_type.model_validate(row)
 
 
-def load_records_jsonl(path: Path) -> Iterable[TaskRecord]:
+def load_records_jsonl(path: Path, record_type: type[T]) -> Iterable[T]:
     """Load the records from a JSON lines file.
 
-    The field names and values must match those in TaskRecord.
+    The field names must match those in the record type.
     """
     with path.open("r") as f:
         for line in f:
-            yield TaskRecord.model_validate(json.loads(line))
+            yield record_type.model_validate(json.loads(line))
