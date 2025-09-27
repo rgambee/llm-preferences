@@ -7,15 +7,15 @@ from pathlib import Path
 from llmprefs.structs import TaskRecord
 
 
-def load_dataset(path: Path) -> Iterable[TaskRecord]:
-    """Load the dataset from a CSV or JSON lines file.
+def load_records(path: Path) -> Iterable[TaskRecord]:
+    """Load the records from a CSV or JSON lines file.
 
     The column/field names and values must match those in TaskRecord.
     """
     if path.suffix == ".csv":
-        return load_dataset_csv(path)
+        return load_records_csv(path)
     if path.suffix == ".jsonl":
-        return load_dataset_jsonl(path)
+        return load_records_jsonl(path)
     logging.getLogger(__name__).error(
         f"Unsupported file extension: {path.suffix}. "
         "Allowed extensions are .csv and .jsonl."
@@ -23,8 +23,8 @@ def load_dataset(path: Path) -> Iterable[TaskRecord]:
     raise ValueError("Unsupported file extension")
 
 
-def load_dataset_csv(path: Path) -> Iterable[TaskRecord]:
-    """Load the dataset from a JSON lines file.
+def load_records_csv(path: Path) -> Iterable[TaskRecord]:
+    """Load the records from a JSON lines file.
 
     The first row is assumed to be the header row. The column names and values must
     match those in TaskRecord.
@@ -35,8 +35,8 @@ def load_dataset_csv(path: Path) -> Iterable[TaskRecord]:
             yield TaskRecord.model_validate(row)
 
 
-def load_dataset_jsonl(path: Path) -> Iterable[TaskRecord]:
-    """Load the dataset from a JSON lines file.
+def load_records_jsonl(path: Path) -> Iterable[TaskRecord]:
+    """Load the records from a JSON lines file.
 
     The field names and values must match those in TaskRecord.
     """
