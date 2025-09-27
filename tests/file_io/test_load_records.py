@@ -1,6 +1,8 @@
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 
+import pytest
+
 from llmprefs.file_io.load_records import load_records
 from llmprefs.file_io.save_results import save_results_jsonl
 from llmprefs.structs import ResultRecord, TaskRecord
@@ -20,6 +22,7 @@ class TestLoadTasks:
 
 
 class TestLoadResults:
+    @pytest.mark.anyio
     async def test_load_results_jsonl(self) -> None:
         results = [result_record_factory(), result_record_factory()]
         with NamedTemporaryFile(suffix=".jsonl") as f:
