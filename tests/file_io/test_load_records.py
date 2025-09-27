@@ -20,10 +20,10 @@ class TestLoadTasks:
 
 
 class TestLoadResults:
-    def test_load_results_jsonl(self) -> None:
+    async def test_load_results_jsonl(self) -> None:
         results = [result_record_factory(), result_record_factory()]
         with NamedTemporaryFile(suffix=".jsonl") as f:
-            save_results_jsonl(results, Path(f.name))
+            await save_results_jsonl(results, Path(f.name))
             loaded_results = tuple(load_records(Path(f.name), ResultRecord))
         assert len(loaded_results) == len(results)
         for loaded_result, result in zip(loaded_results, results, strict=True):

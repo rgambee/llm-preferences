@@ -1,14 +1,28 @@
-from collections.abc import Iterable
+from __future__ import annotations
+
+from collections.abc import AsyncIterable, Iterable
+from io import TextIOWrapper
 from pathlib import Path
 
 from llmprefs.structs import ResultRecord
 
 
-def save_results_jsonl(results: Iterable[ResultRecord], path: Path) -> None:
+async def save_results_jsonl(
+    results: AsyncIterable[ResultRecord] | Iterable[ResultRecord],
+    path: Path,
+) -> None:
     """Save the results to a JSONL file.
 
     Append to the file if it already exists.
     """
     with path.open("a", encoding="utf-8") as f:
-        for result in results:
-            f.write(result.model_dump_json() + "\n")
+        if isinstance(results, AsyncIterable):
+            async for result in results:
+                write_single_result(f, result)
+        else:
+            for result in results:
+                write_single_result(f, result)
+
+
+def write_single_result(file: TextIOWrapper, result: ResultRecord) -> None:
+    file.write(result.model_dump_json() + "\n")
