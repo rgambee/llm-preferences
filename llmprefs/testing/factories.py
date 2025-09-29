@@ -3,10 +3,9 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
-from llmprefs.structs import (
-    LLM,
-    AnthropicApiParams,
-    Provider,
+from llmprefs.api.anthropic_api import AnthropicApiParams
+from llmprefs.api.structs import LLM, Provider
+from llmprefs.task_structs import (
     ResultRecord,
     TaskDependency,
     TaskImpact,

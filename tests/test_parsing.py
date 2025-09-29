@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from llmprefs.parsing import generate_option_regex, parse_preference
-from llmprefs.structs import TaskType
+from llmprefs.task_structs import TaskType
 from llmprefs.testing.factories import task_record_factory
 
 

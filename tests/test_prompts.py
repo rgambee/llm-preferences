@@ -1,7 +1,7 @@
 import pytest
 
 from llmprefs.prompts import COMPARISON_TEMPLATES, ComparisonTemplate, format_option
-from llmprefs.structs import TaskType
+from llmprefs.task_structs import TaskType
 from llmprefs.testing.factories import task_record_factory
 
 

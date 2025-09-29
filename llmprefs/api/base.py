@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
 
-from llmprefs.structs import AnyApiParams
+from llmprefs.api.structs import AnyApiParameters
 
 
 class BaseApi(ABC):
     @property
     @abstractmethod
-    def params(self) -> AnyApiParams:
+    def params(self) -> AnyApiParameters:
         pass
 
     @abstractmethod

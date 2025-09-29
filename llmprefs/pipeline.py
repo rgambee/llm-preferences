@@ -7,7 +7,7 @@ from llmprefs.api.base import BaseApi
 from llmprefs.comparisons import Comparison
 from llmprefs.parsing import parse_preference
 from llmprefs.prompts import COMPARISON_TEMPLATES, ComparisonTemplate
-from llmprefs.structs import ResultRecord
+from llmprefs.task_structs import ResultRecord
 
 
 async def run_pipeline(

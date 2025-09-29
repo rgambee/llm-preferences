@@ -2,7 +2,7 @@ from openai import AsyncOpenAI
 from openai.types.shared_params.reasoning import Reasoning
 
 from llmprefs.api.base import BaseApi
-from llmprefs.structs import OpenAiApiParams
+from llmprefs.api.structs import OpenAiApiParams
 
 
 class OpenAiApi(BaseApi):

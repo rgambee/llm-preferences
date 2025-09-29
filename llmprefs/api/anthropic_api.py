@@ -7,7 +7,7 @@ from anthropic.types import MessageParam, TextBlockParam, ThinkingConfigEnabledP
 from pydantic import BaseModel, Field
 
 from llmprefs.api.base import BaseApi
-from llmprefs.structs import AnthropicApiParams
+from llmprefs.api.structs import AnthropicApiParams
 
 
 class Content(BaseModel):

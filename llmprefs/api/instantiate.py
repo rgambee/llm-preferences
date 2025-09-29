@@ -5,10 +5,10 @@ import logging
 from anthropic import AsyncAnthropic
 from openai import AsyncOpenAI
 
-from llmprefs.api.anthropic_api import AnthropicApi
+from llmprefs.api.anthropic_api import AnthropicApi, AnthropicApiParams
 from llmprefs.api.base import BaseApi
-from llmprefs.api.openai_api import OpenAiApi
-from llmprefs.structs import LLM, AnthropicApiParams, OpenAiApiParams, Provider
+from llmprefs.api.openai_api import OpenAiApi, OpenAiApiParams
+from llmprefs.api.structs import LLM, Provider
 
 LLM_TO_PROVIDER: dict[LLM, Provider] = {
     LLM.CLAUDE_SONNET_4_0_2025_05_14: Provider.ANTHROPIC,

@@ -3,7 +3,7 @@ from __future__ import annotations
 import itertools
 from collections.abc import Iterable
 
-from llmprefs.structs import TaskRecord, TaskType
+from llmprefs.task_structs import TaskRecord, TaskType
 
 Option = tuple[TaskRecord, ...]
 Comparison = tuple[Option, Option]

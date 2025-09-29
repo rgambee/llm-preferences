@@ -2,10 +2,11 @@ import enum
 import logging
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Literal, Self
+from typing import Self
 
-from openai.types.shared_params.reasoning_effort import ReasoningEffort
 from pydantic import BaseModel, Field, model_validator
+
+from llmprefs.api.structs import AnyApiParameters
 
 TaskId = int
 
@@ -63,36 +64,6 @@ class TaskRecord(BaseModel):
     impact: TaskImpact
 
 
-class Provider(enum.StrEnum):
-    ANTHROPIC = "anthropic"
-    OPENAI = "openai"
-
-
-class LLM(enum.StrEnum):
-    CLAUDE_SONNET_4_0_2025_05_14 = "claude-sonnet-4-20250514"
-    CLAUDE_OPUS_4_0_2025_05_14 = "claude-opus-4-20250514"
-
-
-class ApiParameters(BaseModel):
-    model: LLM
-    max_tokens: int
-    system_prompt: str
-    temperature: float
-
-
-class AnthropicApiParams(ApiParameters):
-    provider: Literal[Provider.ANTHROPIC]
-    thinking_budget: int
-
-
-class OpenAiApiParams(ApiParameters):
-    provider: Literal[Provider.OPENAI]
-    reasoning_effort: ReasoningEffort
-
-
-AnyApiParams = AnthropicApiParams | OpenAiApiParams
-
-
 class ResultRecord(BaseModel):
     """A comparison of options, along with the preferred option.
 
@@ -103,7 +74,7 @@ class ResultRecord(BaseModel):
     comparison_prompt_id: int
     options: Sequence[Sequence[TaskId]]
     preferred_option_index: int
-    api_params: AnyApiParams = Field(discriminator="provider")
+    api_params: AnyApiParameters = Field(discriminator="provider")
 
     @model_validator(mode="after")
     def check_option_index_in_range(self) -> Self:

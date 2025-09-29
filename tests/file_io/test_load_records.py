@@ -5,7 +5,7 @@ import pytest
 
 from llmprefs.file_io.load_records import load_records
 from llmprefs.file_io.save_results import save_results_jsonl
-from llmprefs.structs import ResultRecord, TaskRecord
+from llmprefs.task_structs import ResultRecord, TaskRecord
 from llmprefs.testing.factories import result_record_factory
 
 

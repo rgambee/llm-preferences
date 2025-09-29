@@ -7,7 +7,7 @@ from llmprefs.comparisons import (
     has_consecutive_free_choices,
     is_opt_out_task,
 )
-from llmprefs.structs import TaskType
+from llmprefs.task_structs import TaskType
 from llmprefs.testing.factories import task_record_factory
 
 

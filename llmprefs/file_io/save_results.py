@@ -4,7 +4,7 @@ from collections.abc import AsyncIterable, Iterable
 from io import TextIOWrapper
 from pathlib import Path
 
-from llmprefs.structs import ResultRecord
+from llmprefs.task_structs import ResultRecord
 
 
 async def save_results_jsonl(
