@@ -1,28 +1,13 @@
 from __future__ import annotations
 
-from typing import Literal
-
 from anthropic import AsyncAnthropic
 from anthropic.types import MessageParam, TextBlockParam, ThinkingConfigEnabledParam
-from pydantic import BaseModel, Field
 
 from llmprefs.api.base import BaseApi
-from llmprefs.api.structs import AnthropicApiParams
+from llmprefs.api.structs import AnthropicApiParams, AnthropicApiResponse
 
 
-class Content(BaseModel):
-    type: Literal["text"]
-    text: str
-
-
-class ApiReply(BaseModel):
-    content: list[Content] = Field(
-        min_length=1,
-        max_length=1,
-    )
-
-
-class AnthropicApi(BaseApi):
+class AnthropicApi(BaseApi[AnthropicApiResponse]):
     def __init__(
         self,
         client: AsyncAnthropic,
@@ -38,7 +23,7 @@ class AnthropicApi(BaseApi):
     async def submit(
         self,
         prompt: str,
-    ) -> str:
+    ) -> AnthropicApiResponse:
         messages = [
             MessageParam(
                 content=[TextBlockParam(text=prompt, type="text")],
@@ -56,5 +41,4 @@ class AnthropicApi(BaseApi):
                 budget_tokens=self._params.thinking_budget,
             ),
         )
-        reply = ApiReply.model_validate(raw_reply)
-        return reply.content[0].text
+        return AnthropicApiResponse.model_validate(raw_reply)

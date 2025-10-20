@@ -8,20 +8,20 @@ from openai import AsyncOpenAI
 from llmprefs.api.anthropic_api import AnthropicApi, AnthropicApiParams
 from llmprefs.api.base import BaseApi
 from llmprefs.api.openai_api import OpenAiApi, OpenAiApiParams
-from llmprefs.api.structs import LLM, Provider
+from llmprefs.api.structs import LLM, BaseApiResponse, Provider
 
 LLM_TO_PROVIDER: dict[LLM, Provider] = {
     LLM.CLAUDE_SONNET_4_0_2025_05_14: Provider.ANTHROPIC,
     LLM.CLAUDE_OPUS_4_0_2025_05_14: Provider.ANTHROPIC,
 }
 
-PROVIDER_TO_API: dict[Provider, type[BaseApi]] = {
+PROVIDER_TO_API: dict[Provider, type[BaseApi[BaseApiResponse]]] = {
     Provider.ANTHROPIC: AnthropicApi,
     Provider.OPENAI: OpenAiApi,
 }
 
 
-def get_api_for_llm(llm: LLM) -> BaseApi:
+def get_api_for_llm(llm: LLM) -> BaseApi[BaseApiResponse]:
     provider = LLM_TO_PROVIDER[llm]
 
     if provider == Provider.ANTHROPIC:

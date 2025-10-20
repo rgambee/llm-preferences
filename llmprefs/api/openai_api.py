@@ -2,10 +2,10 @@ from openai import AsyncOpenAI
 from openai.types.shared_params.reasoning import Reasoning
 
 from llmprefs.api.base import BaseApi
-from llmprefs.api.structs import OpenAiApiParams
+from llmprefs.api.structs import OpenAiApiParams, OpenAiApiResponse
 
 
-class OpenAiApi(BaseApi):
+class OpenAiApi(BaseApi[OpenAiApiResponse]):
     def __init__(
         self,
         client: AsyncOpenAI,
@@ -21,7 +21,7 @@ class OpenAiApi(BaseApi):
     async def submit(
         self,
         prompt: str,
-    ) -> str:
+    ) -> OpenAiApiResponse:
         response = await self._client.responses.create(
             input=prompt,
             model=self._params.model.value,
@@ -32,4 +32,4 @@ class OpenAiApi(BaseApi):
                 effort=self._params.reasoning_effort,
             ),
         )
-        return response.output_text
+        return OpenAiApiResponse.model_validate(response)
