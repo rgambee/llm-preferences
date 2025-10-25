@@ -6,7 +6,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from llmprefs.api.structs import AnyApiParameters
+from llmprefs.api.structs import AnyApiParameters, AnyApiResponse
 
 TaskId = int
 
@@ -75,6 +75,7 @@ class ResultRecord(BaseModel):
     options: Sequence[Sequence[TaskId]]
     preferred_option_index: int
     api_params: AnyApiParameters = Field(discriminator="provider")
+    api_response: AnyApiResponse
 
     @model_validator(mode="after")
     def check_option_index_in_range(self) -> Self:

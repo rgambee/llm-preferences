@@ -3,7 +3,9 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import UTC, datetime
 
-from llmprefs.api.anthropic_api import AnthropicApiParams
+from anthropic.types import TextBlock, Usage
+
+from llmprefs.api.anthropic_api import AnthropicApiParams, AnthropicApiResponse
 from llmprefs.api.structs import LLM, Provider
 from llmprefs.task_structs import (
     ResultRecord,
@@ -48,5 +50,16 @@ def result_record_factory() -> ResultRecord:
             system_prompt="You are a helpful assistant.",
             temperature=1.0,
             thinking_budget=1000,
+        ),
+        api_response=AnthropicApiResponse(
+            id="123",
+            type="message",
+            model=LLM.CLAUDE_SONNET_4_0_2025_05_14,
+            content=[TextBlock(text="Option 1", type="text")],
+            role="assistant",
+            usage=Usage(
+                input_tokens=10,
+                output_tokens=5,
+            ),
         ),
     )

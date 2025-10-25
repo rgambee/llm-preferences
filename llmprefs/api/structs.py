@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 import enum
-from abc import abstractmethod
 from typing import Literal
 
+from anthropic.types import Message as AnthropicMessage
+from openai.types.responses import Response as _OpenAiResponse
 from openai.types.shared_params.reasoning_effort import ReasoningEffort
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class Provider(enum.StrEnum):
@@ -38,34 +39,24 @@ class OpenAiApiParams(BaseApiParameters):
 AnyApiParameters = AnthropicApiParams | OpenAiApiParams
 
 
-class BaseApiResponse(BaseModel):
-    @property
-    @abstractmethod
-    def output(self) -> str:
-        pass
-
-
-class AnthropicContent(BaseModel):
-    type: Literal["text"]
-    text: str
-
-
-class AnthropicApiResponse(BaseApiResponse):
+class AnthropicApiResponse(AnthropicMessage):
     provider: Literal[Provider.ANTHROPIC] = Provider.ANTHROPIC
-    content: list[AnthropicContent] = Field(
-        min_length=1,
-        max_length=1,
-    )
 
     @property
-    def output(self) -> str:
-        return self.content[0].text
+    def answer(self) -> str:
+        try:
+            text_block = next(block for block in self.content if block.type == "text")
+        except StopIteration:
+            return ""
+        return text_block.text
 
 
-class OpenAiApiResponse(BaseApiResponse):
+class OpenAiApiResponse(_OpenAiResponse):
     provider: Literal[Provider.OPENAI] = Provider.OPENAI
-    output_text: str
 
     @property
-    def output(self) -> str:
+    def answer(self) -> str:
         return self.output_text
+
+
+AnyApiResponse = AnthropicApiResponse | OpenAiApiResponse

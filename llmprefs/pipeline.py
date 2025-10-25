@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from typing import Any, Coroutine
 
 from llmprefs.api.base import BaseApi
-from llmprefs.api.structs import BaseApiResponse
+from llmprefs.api.structs import AnyApiResponse
 from llmprefs.comparisons import Comparison
 from llmprefs.parsing import parse_preference
 from llmprefs.prompts import COMPARISON_TEMPLATES, ComparisonTemplate
@@ -12,7 +12,7 @@ from llmprefs.task_structs import ResultRecord
 
 
 async def run_pipeline(
-    api: BaseApi[BaseApiResponse],
+    api: BaseApi[AnyApiResponse],
     comparisons: Iterable[Comparison],
     concurrent_requests: int,
 ) -> AsyncIterable[ResultRecord]:
@@ -32,7 +32,7 @@ async def run_pipeline(
 
 
 async def compare_options(
-    api: BaseApi[BaseApiResponse],
+    api: BaseApi[AnyApiResponse],
     comparison: Comparison,
     template: ComparisonTemplate,
     semaphore: Semaphore,
@@ -40,7 +40,7 @@ async def compare_options(
     async with semaphore:
         prompt = template.format_comparison(comparison)
         response = await api.submit(prompt)
-        preferred_option_index = parse_preference(comparison, response.output)
+        preferred_option_index = parse_preference(comparison, response.answer)
         option_ids = [[task.id for task in option] for option in comparison]
         return ResultRecord(
             created_at=datetime.now(tz=UTC),
@@ -48,4 +48,5 @@ async def compare_options(
             options=option_ids,
             preferred_option_index=preferred_option_index,
             api_params=api.params,
+            api_response=response,
         )
