@@ -46,7 +46,7 @@ def result_record_factory() -> ResultRecord:
         api_params=AnthropicApiParams(
             provider=Provider.ANTHROPIC,
             model=LLM.CLAUDE_SONNET_4_0_2025_05_14,
-            max_tokens=1000,
+            max_output_tokens=1000,
             system_prompt="You are a helpful assistant.",
             temperature=1.0,
             thinking_budget=1000,

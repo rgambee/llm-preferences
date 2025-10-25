@@ -21,7 +21,7 @@ class LLM(enum.StrEnum):
 
 class BaseApiParameters(BaseModel):
     model: LLM
-    max_tokens: int
+    max_output_tokens: int
     system_prompt: str
     temperature: float
 

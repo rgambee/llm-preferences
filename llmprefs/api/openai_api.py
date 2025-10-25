@@ -25,7 +25,7 @@ class OpenAiApi(BaseApi[OpenAiApiResponse]):
         response = await self._client.responses.create(
             input=prompt,
             model=self._params.model.value,
-            max_output_tokens=self._params.max_tokens,
+            max_output_tokens=self._params.max_output_tokens,
             instructions=self._params.system_prompt,
             temperature=self._params.temperature,
             reasoning=Reasoning(

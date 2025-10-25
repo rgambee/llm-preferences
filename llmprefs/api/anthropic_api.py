@@ -33,7 +33,7 @@ class AnthropicApi(BaseApi[AnthropicApiResponse]):
         raw_reply = await self._client.messages.create(
             messages=messages,
             model=self._params.model.value,
-            max_tokens=self._params.max_tokens,
+            max_tokens=self._params.max_output_tokens,
             system=self._params.system_prompt,
             temperature=self._params.temperature,
             thinking=ThinkingConfigEnabledParam(

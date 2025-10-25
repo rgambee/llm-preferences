@@ -9,6 +9,7 @@ from llmprefs.api.anthropic_api import AnthropicApi, AnthropicApiParams
 from llmprefs.api.base import BaseApi
 from llmprefs.api.openai_api import OpenAiApi, OpenAiApiParams
 from llmprefs.api.structs import LLM, AnyApiResponse, Provider
+from llmprefs.settings import Settings
 
 LLM_TO_PROVIDER: dict[LLM, Provider] = {
     LLM.CLAUDE_SONNET_4_0_2025_05_14: Provider.ANTHROPIC,
@@ -21,18 +22,18 @@ PROVIDER_TO_API: dict[Provider, type[BaseApi[AnyApiResponse]]] = {
 }
 
 
-def get_api_for_llm(llm: LLM) -> BaseApi[AnyApiResponse]:
-    provider = LLM_TO_PROVIDER[llm]
+def get_api_for_llm(settings: Settings) -> BaseApi[AnyApiResponse]:
+    provider = LLM_TO_PROVIDER[settings.model]
 
     if provider == Provider.ANTHROPIC:
         client = AsyncAnthropic()
         params = AnthropicApiParams(
             provider=provider,
-            model=llm,
-            max_tokens=1000,
-            system_prompt="You are a helpful assistant.",
-            temperature=1.0,
-            thinking_budget=512,
+            model=settings.model,
+            max_output_tokens=settings.max_output_tokens,
+            system_prompt=settings.system_prompt,
+            temperature=settings.temperature,
+            thinking_budget=settings.anthropic_thinking_budget,
         )
         return AnthropicApi(client, params)
 
@@ -40,11 +41,11 @@ def get_api_for_llm(llm: LLM) -> BaseApi[AnyApiResponse]:
         client = AsyncOpenAI()
         params = OpenAiApiParams(
             provider=provider,
-            model=llm,
-            max_tokens=1000,
-            system_prompt="You are a helpful assistant.",
-            temperature=1.0,
-            reasoning_effort="low",
+            model=settings.model,
+            max_output_tokens=settings.max_output_tokens,
+            system_prompt=settings.system_prompt,
+            temperature=settings.temperature,
+            reasoning_effort=settings.openai_reasoning_effort,
         )
         return OpenAiApi(client, params)
 
