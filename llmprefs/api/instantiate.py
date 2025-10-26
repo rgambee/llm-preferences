@@ -19,12 +19,6 @@ LLM_TO_PROVIDER: dict[LLM, Provider] = {
     LLM.CLAUDE_OPUS_4_0_2025_05_14: Provider.ANTHROPIC,
 }
 
-PROVIDER_TO_API: dict[Provider, type[BaseApi[AnyApiResponse]]] = {
-    Provider.MOCK: MockApi,
-    Provider.ANTHROPIC: AnthropicApi,
-    Provider.OPENAI: OpenAiApi,
-}
-
 
 def instantiate_api(settings: Settings) -> BaseApi[AnyApiResponse]:
     provider = LLM_TO_PROVIDER[settings.model]
