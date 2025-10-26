@@ -54,4 +54,4 @@ class AnthropicApi(BaseApi[AnthropicApiResponse]):
             temperature=self._params.temperature,
             thinking=thinking,
         )
-        return AnthropicApiResponse.model_validate(raw_reply)
+        return AnthropicApiResponse.model_validate(raw_reply.model_dump())

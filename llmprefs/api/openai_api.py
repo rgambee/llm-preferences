@@ -22,7 +22,7 @@ class OpenAiApi(BaseApi[OpenAiApiResponse]):
         self,
         prompt: str,
     ) -> OpenAiApiResponse:
-        response = await self._client.responses.create(
+        raw_reply = await self._client.responses.create(
             input=prompt,
             model=self._params.model.value,
             max_output_tokens=self._params.max_output_tokens,
@@ -32,4 +32,4 @@ class OpenAiApi(BaseApi[OpenAiApiResponse]):
                 effort=self._params.reasoning_effort,
             ),
         )
-        return OpenAiApiResponse.model_validate(response)
+        return OpenAiApiResponse.model_validate(raw_reply.model_dump())
