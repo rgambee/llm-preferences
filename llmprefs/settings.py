@@ -70,7 +70,7 @@ class Settings(
 
     # Anthropic settings
     anthropic_thinking_budget: int = Field(
-        default=512,
+        default=0,
         description="""
             Maximum number of thinking tokens per response.
             Must be less than maximum output tokens. Only applies to Anthropic models.
@@ -79,6 +79,6 @@ class Settings(
 
     # OpenAI settings
     openai_reasoning_effort: ReasoningEffort = Field(
-        default="low",
+        default="minimal",
         description="Reasoning effort for the model. Only applies to OpenAI models.",
     )
