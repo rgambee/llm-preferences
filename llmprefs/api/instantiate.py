@@ -7,17 +7,20 @@ from openai import AsyncOpenAI
 
 from llmprefs.api.anthropic_api import AnthropicApi, AnthropicApiParams
 from llmprefs.api.base import BaseApi
+from llmprefs.api.mock import MockApi
 from llmprefs.api.openai_api import OpenAiApi, OpenAiApiParams
 from llmprefs.api.structs import LLM, AnyApiResponse, Provider
 from llmprefs.settings import Settings
 
 LLM_TO_PROVIDER: dict[LLM, Provider] = {
+    LLM.MOCK_MODEL: Provider.MOCK,
     LLM.CLAUDE_HAIKU_4_5_2025_10_01: Provider.ANTHROPIC,
     LLM.CLAUDE_SONNET_4_0_2025_05_14: Provider.ANTHROPIC,
     LLM.CLAUDE_OPUS_4_0_2025_05_14: Provider.ANTHROPIC,
 }
 
 PROVIDER_TO_API: dict[Provider, type[BaseApi[AnyApiResponse]]] = {
+    Provider.MOCK: MockApi,
     Provider.ANTHROPIC: AnthropicApi,
     Provider.OPENAI: OpenAiApi,
 }
