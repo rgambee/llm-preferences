@@ -5,9 +5,10 @@ from abc import ABC, abstractmethod
 from typing import Literal
 
 from anthropic.types import Message as AnthropicMessage
+from anthropic.types import ToolParam
 from openai.types.responses import Response as _OpenAiResponse
 from openai.types.shared_params.reasoning_effort import ReasoningEffort
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Provider(enum.StrEnum):
@@ -74,11 +75,12 @@ class AnthropicApiResponse(BaseApiResponse, AnthropicMessage):
 
     @property
     def answer(self) -> str:
-        try:
-            text_block = next(block for block in self.content if block.type == "text")
-        except StopIteration:
-            return ""
-        return text_block.text
+        for block in self.content:
+            if block.type == "text":
+                return block.text
+            if block.type == "tool_use":
+                return SelectTaskToolInputSchema.model_validate(block.input).task_id
+        return ""
 
 
 class OpenAiApiResponse(BaseApiResponse, _OpenAiResponse):
@@ -90,3 +92,18 @@ class OpenAiApiResponse(BaseApiResponse, _OpenAiResponse):
 
 
 AnyApiResponse = MockApiResponse | AnthropicApiResponse | OpenAiApiResponse
+
+
+class SelectTaskToolInputSchema(BaseModel):
+    task_id: Literal["A", "B"] = Field(
+        description=(
+            "The letter indicating the task (or series of tasks) to work on next"
+        )
+    )
+
+
+SELECT_TASK_TOOL: ToolParam = {
+    "name": "select_task",
+    "description": "Select which of the available tasks to work on next",
+    "input_schema": SelectTaskToolInputSchema.model_json_schema(),
+}

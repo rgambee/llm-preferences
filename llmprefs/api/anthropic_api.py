@@ -7,10 +7,18 @@ from anthropic.types import (
     ThinkingConfigDisabledParam,
     ThinkingConfigEnabledParam,
     ThinkingConfigParam,
+    ToolChoiceNoneParam,
+    ToolChoiceParam,
+    ToolChoiceToolParam,
+    ToolParam,
 )
 
 from llmprefs.api.base import BaseApi
-from llmprefs.api.structs import AnthropicApiParams, AnthropicApiResponse
+from llmprefs.api.structs import (
+    SELECT_TASK_TOOL,
+    AnthropicApiParams,
+    AnthropicApiResponse,
+)
 
 
 class AnthropicApi(BaseApi[AnthropicApiResponse]):
@@ -46,6 +54,15 @@ class AnthropicApi(BaseApi[AnthropicApiResponse]):
                 budget_tokens=self._params.thinking_budget,
             )
 
+        tools: list[ToolParam] = []
+        tool_choice: ToolChoiceParam = ToolChoiceNoneParam(type="none")
+        if self._params.structured_output:
+            tools = [SELECT_TASK_TOOL]
+            tool_choice = ToolChoiceToolParam(
+                type="tool",
+                name=SELECT_TASK_TOOL["name"],
+            )
+
         raw_reply = await self._client.messages.create(
             messages=messages,
             model=self._params.model.value,
@@ -53,5 +70,7 @@ class AnthropicApi(BaseApi[AnthropicApiResponse]):
             system=self._params.system_prompt,
             temperature=self._params.temperature,
             thinking=thinking,
+            tools=tools,
+            tool_choice=tool_choice,
         )
         return AnthropicApiResponse.model_validate(raw_reply.model_dump())
