@@ -12,6 +12,7 @@ from llmprefs.api.structs import LLM, AnyApiResponse, Provider
 from llmprefs.settings import Settings
 
 LLM_TO_PROVIDER: dict[LLM, Provider] = {
+    LLM.CLAUDE_HAIKU_4_5_2025_10_01: Provider.ANTHROPIC,
     LLM.CLAUDE_SONNET_4_0_2025_05_14: Provider.ANTHROPIC,
     LLM.CLAUDE_OPUS_4_0_2025_05_14: Provider.ANTHROPIC,
 }

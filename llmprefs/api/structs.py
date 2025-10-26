@@ -18,6 +18,7 @@ class Provider(enum.StrEnum):
 
 class LLM(enum.StrEnum):
     MOCK_MODEL = "mock-model"
+    CLAUDE_HAIKU_4_5_2025_10_01 = "claude-haiku-4-5-20251001"
     CLAUDE_SONNET_4_0_2025_05_14 = "claude-sonnet-4-20250514"
     CLAUDE_OPUS_4_0_2025_05_14 = "claude-opus-4-20250514"
 
