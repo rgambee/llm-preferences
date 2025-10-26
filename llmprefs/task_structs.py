@@ -73,6 +73,7 @@ class ResultRecord(BaseModel):
     created_at: datetime
     comparison_prompt_id: int
     options: Sequence[Sequence[TaskId]]
+    sample_index: int
     preferred_option_index: int
     api_params: AnyApiParameters = Field(discriminator="provider")
     api_response: AnyApiResponse

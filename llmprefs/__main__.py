@@ -22,7 +22,7 @@ async def main() -> None:
 
     api = get_api_for_llm(settings)
 
-    results = run_pipeline(api, comparisons, settings.concurrent_requests)
+    results = run_pipeline(api, comparisons, settings)
     await save_results_jsonl(results, settings.output_path)
 
 

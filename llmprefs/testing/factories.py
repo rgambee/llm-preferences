@@ -42,6 +42,7 @@ def result_record_factory() -> ResultRecord:
         created_at=datetime.now(tz=UTC),
         comparison_prompt_id=123,
         options=[[1], [2]],
+        sample_index=0,
         preferred_option_index=0,
         api_params=AnthropicApiParams(
             provider=Provider.ANTHROPIC,

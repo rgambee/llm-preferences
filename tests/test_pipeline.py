@@ -1,16 +1,25 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
 
 from llmprefs.api.base import BaseApi
-from llmprefs.api.structs import MockApiParams, MockApiResponse
+from llmprefs.api.structs import LLM, MockApiParams, MockApiResponse
 from llmprefs.comparisons import Comparison
-from llmprefs.pipeline import chunked, run_pipeline
+from llmprefs.pipeline import chunked, generate_samples, run_pipeline
+from llmprefs.prompts import COMPARISON_TEMPLATES
+from llmprefs.settings import Settings
 from llmprefs.task_structs import TaskType
 from llmprefs.testing.factories import task_record_factory
+
+
+class MockSettings(Settings, cli_parse_args=False):
+    input_path: Path = Path("in.csv")
+    output_path: Path = Path("out.jsonl")
+    model: LLM = LLM.MOCK_MODEL
 
 
 class TestRunPipeline:
@@ -18,8 +27,7 @@ class TestRunPipeline:
     async def test_empty(self) -> None:
         api = AsyncMock(spec=BaseApi)
         comparisons: list[Comparison] = []
-        concurrent_requests = 1
-        results = run_pipeline(api, comparisons, concurrent_requests)
+        results = run_pipeline(api, comparisons, MockSettings())
         async for _ in results:
             pytest.fail("Should not yield any results")
         api.submit.assert_not_awaited()
@@ -32,7 +40,7 @@ class TestRunPipeline:
 
         task_a, task_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((task_a,), (task_b,))
-        results = run_pipeline(api, [comparison], concurrent_requests=1)
+        results = run_pipeline(api, [comparison], MockSettings())
 
         async for result in results:
             assert result.preferred_option_index == 0
@@ -47,7 +55,8 @@ class TestRunPipeline:
         task_a, task_b = task_record_factory([TaskType.regular] * 2)
         comparison_0 = ((task_a,), (task_b,))
         comparison_1 = ((task_b,), (task_a,))
-        results = run_pipeline(api, [comparison_0, comparison_1], concurrent_requests=1)
+        settings = MockSettings(concurrent_requests=1)
+        results = run_pipeline(api, [comparison_0, comparison_1], settings)
 
         index = 0
         async for result in results:
@@ -67,7 +76,8 @@ class TestRunPipeline:
         task_a, task_b = task_record_factory([TaskType.regular] * 2)
         comparison_0 = ((task_a,), (task_b,))
         comparison_1 = ((task_b,), (task_a,))
-        results = run_pipeline(api, [comparison_0, comparison_1], concurrent_requests=2)
+        settings = MockSettings(concurrent_requests=2)
+        results = run_pipeline(api, [comparison_0, comparison_1], settings)
 
         index = 0
         async for result in results:
@@ -77,6 +87,52 @@ class TestRunPipeline:
             assert api.submit.await_count == 2
             index += 1
         assert index == 2
+
+
+class TestGenerateSamples:
+    def test_empty(self) -> None:
+        task_a, task_b = task_record_factory([TaskType.regular] * 2)
+        comparison = ((task_a,), (task_b,))
+
+        assert list(generate_samples([], [], 1)) == []
+        assert list(generate_samples([], COMPARISON_TEMPLATES, 1)) == []
+        assert list(generate_samples([comparison], [], 1)) == []
+        assert list(generate_samples([comparison], COMPARISON_TEMPLATES, 0)) == []
+
+    @pytest.mark.parametrize("samples_per_comparison", [1, 2])
+    def test_repeated_sample(self, samples_per_comparison: int) -> None:
+        task_a, task_b = task_record_factory([TaskType.regular] * 2)
+        comparison = ((task_a,), (task_b,))
+        samples = list(
+            generate_samples([comparison], COMPARISON_TEMPLATES, samples_per_comparison)
+        )
+        assert len(samples) == samples_per_comparison
+        for i in range(len(samples)):
+            assert samples[i].comparison == comparison
+            assert samples[i].template == COMPARISON_TEMPLATES[0]
+            assert samples[i].index == i
+
+    @pytest.mark.parametrize("samples_per_comparison", [1, 2])
+    def test_multiple_different_samples(self, samples_per_comparison: int) -> None:
+        task_a, task_b = task_record_factory([TaskType.regular] * 2)
+        comparison_0 = ((task_a,), (task_b,))
+        comparison_1 = ((task_b,), (task_a,))
+        comparisons = [comparison_0, comparison_1]
+        samples = list(
+            generate_samples(comparisons, COMPARISON_TEMPLATES, samples_per_comparison)
+        )
+        assert len(samples) == (
+            len(comparisons) * len(COMPARISON_TEMPLATES) * samples_per_comparison
+        )
+        outer_index = 0
+        for comparison in comparisons:
+            for template in COMPARISON_TEMPLATES:
+                for sample_index in range(samples_per_comparison):
+                    sample = samples[outer_index]
+                    assert sample.comparison == comparison
+                    assert sample.template == template
+                    assert sample.index == sample_index
+                    outer_index += 1
 
 
 class TestChunked:

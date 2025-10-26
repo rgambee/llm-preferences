@@ -32,6 +32,10 @@ class Settings(BaseSettings, cli_parse_args=True, cli_enforce_required=True):
         default=2,
         description="Number of tasks per option",
     )
+    samples_per_comparison: int = Field(
+        default=1,
+        description="Number of answers to generate for each comparison",
+    )
 
     # API settings
     concurrent_requests: int = Field(
