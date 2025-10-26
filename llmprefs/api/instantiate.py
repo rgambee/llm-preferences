@@ -55,5 +55,5 @@ def instantiate_api(settings: Settings) -> BaseApi[AnyApiResponse]:
 
     logger = logging.getLogger(__name__)
     logger.error(f"Unknown provider: {provider}")
-    logger.error(f"Available providers: {PROVIDER_TO_API.keys()}")
+    logger.error(f"Available providers: {[provider.name for provider in Provider]}")
     raise ValueError("Unknown provider")
