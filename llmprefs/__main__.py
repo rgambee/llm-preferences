@@ -2,6 +2,8 @@
 import asyncio
 import logging
 
+from dotenv import load_dotenv
+
 from llmprefs.api.instantiate import instantiate_api
 from llmprefs.comparisons import generate_comparisons
 from llmprefs.file_io.load_records import load_records
@@ -16,6 +18,10 @@ async def main() -> None:
     settings = Settings()
 
     configure_logging(logging.INFO, settings.log_file)
+    logger = logging.getLogger(__name__)
+
+    if not load_dotenv():
+        logger.warning("No .env file found")
 
     tasks = load_records(settings.input_path, TaskRecord)
     comparisons = generate_comparisons(tasks, settings.tasks_per_option)
