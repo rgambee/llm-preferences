@@ -41,6 +41,7 @@ def instantiate_api(settings: Settings) -> BaseApi[AnyApiResponse]:
             max_output_tokens=settings.max_output_tokens,
             system_prompt=settings.system_prompt,
             temperature=settings.temperature,
+            structured_output=settings.structured_output,
             thinking_budget=settings.anthropic_thinking_budget,
         )
         return AnthropicApi(client, params)
@@ -53,6 +54,7 @@ def instantiate_api(settings: Settings) -> BaseApi[AnyApiResponse]:
             max_output_tokens=settings.max_output_tokens,
             system_prompt=settings.system_prompt,
             temperature=settings.temperature,
+            structured_output=settings.structured_output,
             reasoning_effort=settings.openai_reasoning_effort,
         )
         return OpenAiApi(client, params)

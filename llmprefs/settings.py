@@ -63,6 +63,10 @@ class Settings(
         default="You are a helpful assistant.",
         description="System prompt for the model",
     )
+    structured_output: bool = Field(
+        default=False,
+        description="Whether to enforce structured output",
+    )
 
     # Anthropic settings
     anthropic_thinking_budget: int = Field(

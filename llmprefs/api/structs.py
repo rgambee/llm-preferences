@@ -28,6 +28,7 @@ class BaseApiParameters(BaseModel):
     max_output_tokens: int
     system_prompt: str
     temperature: float
+    structured_output: bool
 
 
 class MockApiParams(BaseApiParameters):
@@ -36,6 +37,7 @@ class MockApiParams(BaseApiParameters):
     max_output_tokens: int = 123
     system_prompt: str = "mock system prompt"
     temperature: float = 1.0
+    structured_output: bool = False
 
 
 class AnthropicApiParams(BaseApiParameters):

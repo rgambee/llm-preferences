@@ -51,6 +51,7 @@ def result_record_factory() -> ResultRecord:
             system_prompt="You are a helpful assistant.",
             temperature=1.0,
             thinking_budget=1000,
+            structured_output=False,
         ),
         api_response=AnthropicApiResponse(
             id="123",
