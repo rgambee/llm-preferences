@@ -1,25 +1,18 @@
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
 from unittest.mock import AsyncMock
 
 import pytest
 
 from llmprefs.api.base import BaseApi
-from llmprefs.api.structs import LLM, MockApiParams, MockApiResponse
+from llmprefs.api.structs import MockApiParams, MockApiResponse
 from llmprefs.comparisons import Comparison
 from llmprefs.pipeline import chunked, generate_samples, run_pipeline
 from llmprefs.prompts import COMPARISON_TEMPLATES
-from llmprefs.settings import Settings
 from llmprefs.task_structs import TaskType
 from llmprefs.testing.factories import task_record_factory
-
-
-class MockSettings(Settings, cli_parse_args=False):
-    input_path: Path = Path("in.csv")
-    output_path: Path = Path("out.jsonl")
-    model: LLM = LLM.MOCK_MODEL
+from llmprefs.testing.mock_settings import MockSettings
 
 
 class TestRunPipeline:
