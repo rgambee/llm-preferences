@@ -26,7 +26,7 @@ PROVIDER_TO_API: dict[Provider, type[BaseApi[AnyApiResponse]]] = {
 }
 
 
-def get_api_for_llm(settings: Settings) -> BaseApi[AnyApiResponse]:
+def instantiate_api(settings: Settings) -> BaseApi[AnyApiResponse]:
     provider = LLM_TO_PROVIDER[settings.model]
 
     if provider == Provider.ANTHROPIC:

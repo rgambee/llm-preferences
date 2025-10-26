@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-from llmprefs.api.instantiate import get_api_for_llm
+from llmprefs.api.instantiate import instantiate_api
 from llmprefs.comparisons import generate_comparisons
 from llmprefs.file_io.load_records import load_records
 from llmprefs.file_io.save_results import save_results_jsonl
@@ -20,7 +20,7 @@ async def main() -> None:
     tasks = load_records(settings.input_path, TaskRecord)
     comparisons = generate_comparisons(tasks, settings.tasks_per_option)
 
-    api = get_api_for_llm(settings)
+    api = instantiate_api(settings)
 
     results = run_pipeline(api, comparisons, settings)
     await save_results_jsonl(results, settings.output_path)
