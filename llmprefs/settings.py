@@ -9,7 +9,12 @@ from pydantic_settings import BaseSettings
 from llmprefs.api.structs import LLM
 
 
-class Settings(BaseSettings, cli_parse_args=True, cli_enforce_required=True):
+class Settings(
+    BaseSettings,
+    cli_parse_args=True,
+    cli_enforce_required=True,
+    cli_kebab_case=True,
+):
     # IO Settings
     input_path: Path = Field(
         default=...,
