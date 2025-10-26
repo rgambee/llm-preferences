@@ -7,7 +7,7 @@ from openai import AsyncOpenAI
 
 from llmprefs.api.anthropic_api import AnthropicApi, AnthropicApiParams
 from llmprefs.api.base import BaseApi
-from llmprefs.api.mock import MockApi
+from llmprefs.api.mock import MockApi, MockApiParams
 from llmprefs.api.openai_api import OpenAiApi, OpenAiApiParams
 from llmprefs.api.structs import LLM, AnyApiResponse, Provider
 from llmprefs.settings import Settings
@@ -22,6 +22,16 @@ LLM_TO_PROVIDER: dict[LLM, Provider] = {
 
 def instantiate_api(settings: Settings) -> BaseApi[AnyApiResponse]:
     provider = LLM_TO_PROVIDER[settings.model]
+
+    if provider == Provider.MOCK:
+        params = MockApiParams(
+            provider=provider,
+            model=settings.model,
+            max_output_tokens=settings.max_output_tokens,
+            system_prompt=settings.system_prompt,
+            temperature=settings.temperature,
+        )
+        return MockApi(params)
 
     if provider == Provider.ANTHROPIC:
         client = AsyncAnthropic()
