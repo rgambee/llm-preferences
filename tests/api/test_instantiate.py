@@ -1,3 +1,6 @@
+import os
+from unittest.mock import patch
+
 import pytest
 
 from llmprefs.api.instantiate import LLM_TO_PROVIDER, instantiate_api
@@ -15,4 +18,5 @@ class TestInstantiateApi:
     @pytest.mark.parametrize("model", LLM)
     def test_instantiate_api(self, model: LLM) -> None:
         settings = MockSettings(model=model)
-        instantiate_api(settings)
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+            instantiate_api(settings)
