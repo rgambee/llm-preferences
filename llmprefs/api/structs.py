@@ -7,8 +7,9 @@ from typing import Literal
 from anthropic.types import Message as AnthropicMessage
 from anthropic.types import ToolParam
 from openai.types.responses import Response as _OpenAiResponse
+from openai.types.responses import ResponseFormatTextJSONSchemaConfigParam
 from openai.types.shared_params.reasoning_effort import ReasoningEffort
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Provider(enum.StrEnum):
@@ -88,13 +89,20 @@ class OpenAiApiResponse(BaseApiResponse, _OpenAiResponse):
 
     @property
     def answer(self) -> str:
-        return self.output_text
+        for block in self.output:
+            if block.type == "message":
+                for content in block.content:
+                    if content.type == "output_text":
+                        return content.text
+        return ""
 
 
 AnyApiResponse = MockApiResponse | AnthropicApiResponse | OpenAiApiResponse
 
 
 class SelectTaskToolInputSchema(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"additionalProperties": False})
+
     task_id: Literal["A", "B"] = Field(
         description=(
             "The letter indicating the task (or series of tasks) to work on next"
@@ -102,8 +110,16 @@ class SelectTaskToolInputSchema(BaseModel):
     )
 
 
-SELECT_TASK_TOOL: ToolParam = {
+SELECT_TASK_TOOL_ANTHROPIC: ToolParam = {
     "name": "select_task",
     "description": "Select which of the available tasks to work on next",
     "input_schema": SelectTaskToolInputSchema.model_json_schema(),
+}
+
+SELECT_TASK_TOOL_OPENAI: ResponseFormatTextJSONSchemaConfigParam = {
+    "type": "json_schema",
+    "name": "select_task",
+    "description": "Select which of the available tasks to work on next",
+    "schema": SelectTaskToolInputSchema.model_json_schema(),
+    "strict": True,
 }

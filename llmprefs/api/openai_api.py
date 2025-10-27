@@ -1,8 +1,13 @@
 from openai import AsyncOpenAI
-from openai.types.shared_params.reasoning import Reasoning
+from openai.types.responses import ResponseTextConfigParam
+from openai.types.shared_params import Reasoning
 
 from llmprefs.api.base import BaseApi
-from llmprefs.api.structs import OpenAiApiParams, OpenAiApiResponse
+from llmprefs.api.structs import (
+    SELECT_TASK_TOOL_OPENAI,
+    OpenAiApiParams,
+    OpenAiApiResponse,
+)
 
 
 class OpenAiApi(BaseApi[OpenAiApiResponse]):
@@ -22,6 +27,10 @@ class OpenAiApi(BaseApi[OpenAiApiResponse]):
         self,
         prompt: str,
     ) -> OpenAiApiResponse:
+        text: ResponseTextConfigParam = {"format": {"type": "text"}}
+        if self._params.structured_output:
+            text = {"format": SELECT_TASK_TOOL_OPENAI}
+
         raw_reply = await self._client.responses.create(
             input=prompt,
             model=self._params.model.value,
@@ -31,5 +40,8 @@ class OpenAiApi(BaseApi[OpenAiApiResponse]):
             reasoning=Reasoning(
                 effort=self._params.reasoning_effort,
             ),
+            text=text,
         )
-        return OpenAiApiResponse.model_validate(raw_reply.model_dump())
+        return OpenAiApiResponse.model_validate(
+            raw_reply.model_dump(mode="python", by_alias=True)
+        )

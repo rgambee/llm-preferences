@@ -15,7 +15,7 @@ from anthropic.types import (
 
 from llmprefs.api.base import BaseApi
 from llmprefs.api.structs import (
-    SELECT_TASK_TOOL,
+    SELECT_TASK_TOOL_ANTHROPIC,
     AnthropicApiParams,
     AnthropicApiResponse,
 )
@@ -57,10 +57,10 @@ class AnthropicApi(BaseApi[AnthropicApiResponse]):
         tools: list[ToolParam] = []
         tool_choice: ToolChoiceParam = ToolChoiceNoneParam(type="none")
         if self._params.structured_output:
-            tools = [SELECT_TASK_TOOL]
+            tools = [SELECT_TASK_TOOL_ANTHROPIC]
             tool_choice = ToolChoiceToolParam(
                 type="tool",
-                name=SELECT_TASK_TOOL["name"],
+                name=SELECT_TASK_TOOL_ANTHROPIC["name"],
             )
 
         raw_reply = await self._client.messages.create(
@@ -73,4 +73,6 @@ class AnthropicApi(BaseApi[AnthropicApiResponse]):
             tools=tools,
             tool_choice=tool_choice,
         )
-        return AnthropicApiResponse.model_validate(raw_reply.model_dump())
+        return AnthropicApiResponse.model_validate(
+            raw_reply.model_dump(mode="python"),
+        )
