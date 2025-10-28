@@ -12,7 +12,7 @@ from llmprefs.api.base import BaseApi
 from llmprefs.api.structs import AnyApiResponse
 from llmprefs.comparisons import Comparison
 from llmprefs.parsing import parse_preference
-from llmprefs.prompts import COMPARISON_TEMPLATES, ComparisonTemplate
+from llmprefs.prompts import ComparisonTemplate
 from llmprefs.settings import Settings
 from llmprefs.task_structs import ResultRecord
 
@@ -28,11 +28,12 @@ class Sample(BaseModel):
 async def run_pipeline(
     api: BaseApi[AnyApiResponse],
     comparisons: Iterable[Comparison],
+    templates: Iterable[ComparisonTemplate],
     settings: Settings,
 ) -> AsyncIterable[ResultRecord]:
     samples = generate_samples(
         comparisons=comparisons,
-        templates=COMPARISON_TEMPLATES,
+        templates=templates,
         samples_per_comparison=settings.samples_per_comparison,
     )
     for chunk in chunked(samples, settings.concurrent_requests):
