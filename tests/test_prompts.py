@@ -61,3 +61,9 @@ class TestTemplateInstances:
         formatted = template.format_comparison(comparison)
         for line in formatted.split("\n"):
             assert line == line.strip()
+
+    def test_ids_are_unique(self) -> None:
+        seen: set[int] = set()
+        for template in COMPARISON_TEMPLATES:
+            assert template.id not in seen
+            seen.add(template.id)
