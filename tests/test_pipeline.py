@@ -104,6 +104,31 @@ class TestRunPipeline:
             index += 1
         assert index == 2
 
+    @pytest.mark.anyio
+    async def test_multiple_samples(self) -> None:
+        api = AsyncMock(spec=BaseApi)
+        api.params = MockApiParams()
+        api.submit.return_value = MockApiResponse(reply="Option A")
+
+        task_a, task_b = task_record_factory([TaskType.regular] * 2)
+        comparison = ((task_a,), (task_b,))
+        settings = MockSettings(samples_per_comparison=3, concurrent_requests=1)
+        results = run_pipeline(
+            api=api,
+            comparisons=[comparison],
+            templates=MOCK_TEMPLATES,
+            settings=settings,
+        )
+
+        index = 0
+        async for result in results:
+            await asyncio.sleep(0)
+            assert index < 3
+            assert result.preferred_option_index == 0
+            assert api.submit.await_count == index + 1
+            index += 1
+        assert index == 3
+
 
 class TestGenerateSamples:
     def test_empty(self) -> None:
