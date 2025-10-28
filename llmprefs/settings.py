@@ -60,7 +60,7 @@ class Settings(
         description="Maximum number of output tokens per response",
     )
     system_prompt: str = Field(
-        default="You are a helpful assistant.",
+        default="",
         description="System prompt for the model",
     )
     structured_output: bool = Field(
