@@ -64,6 +64,12 @@ class TaskRecord(BaseModel):
     impact: TaskImpact
 
 
+Option = Sequence[TaskRecord]
+OptionById = Sequence[TaskId]
+Comparison = tuple[Option, Option]
+ComparisonById = tuple[OptionById, OptionById]
+
+
 class ResultRecord(BaseModel):
     """A comparison of options, along with the preferred option.
 
@@ -72,7 +78,7 @@ class ResultRecord(BaseModel):
 
     created_at: datetime
     comparison_prompt_id: int
-    options: Sequence[Sequence[TaskId]]
+    comparison: ComparisonById
     sample_index: int
     preferred_option_index: int
     api_params: AnyApiParameters = Field(discriminator="provider")
@@ -80,10 +86,10 @@ class ResultRecord(BaseModel):
 
     @model_validator(mode="after")
     def check_option_index_in_range(self) -> Self:
-        if 0 <= self.preferred_option_index < len(self.options):
+        if 0 <= self.preferred_option_index < len(self.comparison):
             return self
         logging.getLogger(__name__).error(
             f"preferred_option_index {self.preferred_option_index} is out of range "
-            f"for options of length {len(self.options)}"
+            f"for comparison of length {len(self.comparison)}"
         )
         raise ValueError("preferred_option_index is out of range")

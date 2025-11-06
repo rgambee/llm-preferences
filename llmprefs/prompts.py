@@ -5,7 +5,7 @@ from typing import NewType
 
 from pydantic import BaseModel
 
-from llmprefs.comparisons import Comparison, Option
+from llmprefs.task_structs import Comparison, Option
 
 FormattedOption = NewType("FormattedOption", str)
 FormattedComparison = NewType("FormattedComparison", str)

@@ -3,10 +3,7 @@ from __future__ import annotations
 import itertools
 from collections.abc import Iterable
 
-from llmprefs.task_structs import TaskRecord, TaskType
-
-Option = tuple[TaskRecord, ...]
-Comparison = tuple[Option, Option]
+from llmprefs.task_structs import Comparison, Option, TaskRecord, TaskType
 
 
 def generate_comparisons(
