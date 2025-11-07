@@ -41,7 +41,7 @@ def result_record_factory() -> ResultRecord:
     return ResultRecord(
         created_at=datetime.now(tz=UTC),
         comparison_prompt_id=123,
-        comparison=([1], [2]),
+        comparison=((1,), (2,)),
         sample_index=0,
         preferred_option_index=0,
         api_params=AnthropicApiParams(

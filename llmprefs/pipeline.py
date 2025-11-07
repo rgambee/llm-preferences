@@ -54,8 +54,8 @@ async def compare_options(
     preferred_option_index = parse_preference(sample.comparison, response.answer)
     option_a, option_b = sample.comparison
     option_ids = (
-        [task.id for task in option_a],
-        [task.id for task in option_b],
+        tuple(task.id for task in option_a),
+        tuple(task.id for task in option_b),
     )
     return ResultRecord(
         created_at=datetime.now(tz=UTC),

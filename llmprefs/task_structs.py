@@ -65,7 +65,7 @@ class TaskRecord(BaseModel):
 
 
 Option = Sequence[TaskRecord]
-OptionById = Sequence[TaskId]
+OptionById = tuple[TaskId, ...]  # Restrict to tuple for hashability
 Comparison = tuple[Option, Option]
 ComparisonById = tuple[OptionById, OptionById]
 
