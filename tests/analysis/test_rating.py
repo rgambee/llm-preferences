@@ -1,4 +1,4 @@
-from llmprefs.analysis.ranking import compile_matrix, rate_options
+from llmprefs.analysis.rating import compile_matrix, rate_options
 
 
 class TestRateOptions:
