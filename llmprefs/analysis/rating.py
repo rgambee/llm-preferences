@@ -23,13 +23,16 @@ class OptionMatrix:
 RatedOptions = dict[OptionById, float]
 
 
-def rate_options(results: Iterable[ResultRecord]) -> RatedOptions:
+def rate_options(
+    results: Iterable[ResultRecord],
+    alpha: float = 1e-6,
+) -> RatedOptions:
     option_matrix = compile_matrix(results)
 
     if len(option_matrix.options) == 0:
         return {}
 
-    ratings = choix.ilsr_pairwise_dense(comp_mat=option_matrix.matrix)
+    ratings = choix.ilsr_pairwise_dense(comp_mat=option_matrix.matrix, alpha=alpha)
     rated_options: RatedOptions = {}
     for i, option in enumerate(option_matrix.options):
         rated_options[option] = ratings[i]
