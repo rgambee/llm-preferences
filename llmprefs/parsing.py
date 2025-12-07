@@ -8,9 +8,19 @@ def parse_preference(
     comparison: Comparison,
     llm_response: str,
 ) -> int:
+    first_match: re.Match[str] | None = None
+    option_index_for_first_match: int | None = None
     for option_index in range(len(comparison)):
-        if generate_option_regex(option_index).search(llm_response):
-            return option_index
+        pattern = generate_option_regex(option_index)
+        match = pattern.search(llm_response)
+        if match is None:
+            continue
+        if first_match is None or match.start() < first_match.start():
+            first_match = match
+            option_index_for_first_match = option_index
+
+    if option_index_for_first_match is not None:
+        return option_index_for_first_match
 
     error_message = "Could not parse preference from response"
     logging.getLogger(__name__).error(

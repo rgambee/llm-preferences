@@ -20,6 +20,11 @@ class TestParsePreference:
             ("B)", 1),
             ("(b)", 1),
             ("I would prefer option a", 0),
+            ("I'd pick Option B. If you'd prefer Option A, I can do that instead.", 1),
+            # This test case documents a known bug: ideally it would return 1 to
+            # indicate that option B is preferred. It's unclear whether that's a
+            # problem worth fixing.
+            ("I don't want to do option A, so I'll pick option B instead.", 0),
             # It's not desired that we parse this successfully,
             # but it's unclear whether that's a problem worth fixing.
             ("I cannot make a decision", 0),
