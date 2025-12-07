@@ -8,7 +8,6 @@ def parse_preference(
     comparison: Comparison,
     llm_response: str,
 ) -> int:
-    llm_response = llm_response.strip().lower()
     for option_index in range(len(comparison)):
         if generate_option_regex(option_index).search(llm_response):
             return option_index
@@ -24,4 +23,4 @@ def parse_preference(
 
 def generate_option_regex(option_index: int) -> re.Pattern[str]:
     letter = chr(ord("a") + option_index)
-    return re.compile(rf"\b{letter}\b")
+    return re.compile(rf"\b{letter}\b", flags=re.IGNORECASE)
