@@ -1,0 +1,7 @@
+# If you wish to override Matplotlib's default configuration, save a copy of
+# this file to `matplotlibrc` and edit it as desired.
+#
+# For information on how to customize Matplotlib, see
+# https://matplotlib.org/stable/users/explain/customizing.html
+interactive: True
+backend: qtagg

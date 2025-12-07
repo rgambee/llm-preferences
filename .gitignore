@@ -12,6 +12,9 @@ wheels/
 # Environment variable files
 .env
 
+# Matplotlib configuration file
+matplotlibrc
+
 # Data files
 *.csv
 *.jsonl
