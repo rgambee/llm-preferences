@@ -54,11 +54,11 @@ def plot_ratings_heatmap(rated_options: RatedOptions) -> Figure:
     threshold = cast(float, im.norm(np.nanmax(ratings))) / 2.0
     for task0 in task_0_ids:
         for task1 in task_1_ids:
-            if task0 == task1:
-                continue
             index0 = task_0_ids_to_index[task0]
             index1 = task_1_ids_to_index[task1]
             rating = ratings[index0, index1]
+            if np.isnan(rating):
+                continue
             color = "white" if im.norm(rating) < threshold else "black"
             ax.text(  # pyright: ignore[reportUnknownMemberType]
                 x=index1,
