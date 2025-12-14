@@ -25,4 +25,4 @@ async def save_results_jsonl(
 
 
 def write_single_result(file: TextIOWrapper, result: ResultRecord) -> None:
-    file.write(result.model_dump_json() + "\n")
+    file.write(result.model_dump_json(by_alias=True) + "\n")
