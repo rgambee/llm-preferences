@@ -14,6 +14,7 @@ class TestParsePreference:
             ("A.", 0),
             ("a)", 0),
             ("<option_a>", 0),
+            ('{"task_id":"A"}', 0),
             ("b", 1),
             ("B", 1),
             ("B)", 1),
@@ -43,10 +44,18 @@ class TestParsePreference:
             "Cannot decide",
             "No thanks",
             "Pass",
-            # Ideally we'd fail to parse this, but currently we interpret it as option
-            # A. It's unclear whether this is a problem worth fixing.
+            # Ideally we'd fail to these examples, but currently we interpret them as
+            # valid options. It's unclear whether this is a problem worth fixing.
             pytest.param(
                 "I cannot make a decision",
+                marks=pytest.mark.xfail(reason="Parsing false positive", strict=True),
+            ),
+            pytest.param(
+                (
+                    "Interesting choice. Before I start, a couple of quick questions:"
+                    + "\n\n- Do you want me to pick between Option A and Option B, or"
+                    + " should I state my preference?",
+                ),
                 marks=pytest.mark.xfail(reason="Parsing false positive", strict=True),
             ),
         ],
