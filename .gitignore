@@ -15,6 +15,7 @@ wheels/
 # Matplotlib configuration file
 matplotlibrc
 
-# Data files
+# Data and log files
 *.csv
 *.jsonl
+*.log
