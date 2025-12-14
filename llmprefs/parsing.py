@@ -33,4 +33,4 @@ def parse_preference(
 
 def generate_option_regex(option_index: int) -> re.Pattern[str]:
     letter = chr(ord("a") + option_index)
-    return re.compile(rf"\b{letter}\b", flags=re.IGNORECASE)
+    return re.compile(rf"(?:\b|_){letter}\b", flags=re.IGNORECASE)

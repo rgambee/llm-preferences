@@ -15,15 +15,14 @@ class TestParsePreference:
             ("A", 0),
             ("A.", 0),
             ("a)", 0),
+            ("<option_a>", 0),
             ("b", 1),
             ("B", 1),
             ("B)", 1),
             ("(b)", 1),
+            ("option_b", 1),
             ("I would prefer option a", 0),
             ("I'd pick Option B. If you'd prefer Option A, I can do that instead.", 1),
-            # This test case documents a known bug: ideally it would return 1 to
-            # indicate that option B is preferred. It's unclear whether that's a
-            # problem worth fixing.
             # Ideally we'd parse this as option B, but currently we parse it as A.
             # It's unclear whether this is a problem worth fixing.
             pytest.param(
