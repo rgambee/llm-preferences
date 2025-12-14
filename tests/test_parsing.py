@@ -24,10 +24,12 @@ class TestParsePreference:
             # This test case documents a known bug: ideally it would return 1 to
             # indicate that option B is preferred. It's unclear whether that's a
             # problem worth fixing.
-            ("I don't want to do option A, so I'll pick option B instead.", 0),
-            # It's not desired that we parse this successfully,
-            # but it's unclear whether that's a problem worth fixing.
-            ("I cannot make a decision", 0),
+            # Ideally we'd parse this as option B, but currently we parse it as A.
+            # It's unclear whether this is a problem worth fixing.
+            pytest.param(
+                ("I don't want to do option A, so I'll pick option B instead.", 1),
+                marks=pytest.mark.xfail(reason="Parsing false positive", strict=True),
+            ),
         ],
     )
     def test_valid_response(self, inputs: tuple[str, int]) -> None:
@@ -46,6 +48,12 @@ class TestParsePreference:
             "Cannot decide",
             "No thanks",
             "Pass",
+            # Ideally we'd fail to parse this, but currently we interpret it as option
+            # A. It's unclear whether this is a problem worth fixing.
+            pytest.param(
+                "I cannot make a decision",
+                marks=pytest.mark.xfail(reason="Parsing false positive", strict=True),
+            ),
         ],
     )
     def test_invalid_response(self, response: str) -> None:
