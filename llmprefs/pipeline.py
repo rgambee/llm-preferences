@@ -51,7 +51,10 @@ async def compare_options(
 ) -> ResultRecord:
     prompt = sample.template.format_comparison(sample.comparison)
     response = await api.submit(prompt)
-    preferred_option_index = parse_preference(sample.comparison, response.answer)
+    preferred_option_index = parse_preference(
+        num_options=len(sample.comparison),
+        llm_response=response.answer,
+    )
     option_a, option_b = sample.comparison
     option_ids = (
         tuple(task.id for task in option_a),

@@ -3,16 +3,14 @@ from __future__ import annotations
 import logging
 import re
 
-from llmprefs.comparisons import Comparison
-
 
 def parse_preference(
-    comparison: Comparison,
+    num_options: int,
     llm_response: str,
 ) -> int | None:
     first_match: re.Match[str] | None = None
     option_index_for_first_match: int | None = None
-    for option_index in range(len(comparison)):
+    for option_index in range(num_options):
         pattern = generate_option_regex(option_index)
         match = pattern.search(llm_response)
         if match is None:

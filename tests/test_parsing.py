@@ -3,8 +3,6 @@ from __future__ import annotations
 import pytest
 
 from llmprefs.parsing import generate_option_regex, parse_preference
-from llmprefs.task_structs import TaskType
-from llmprefs.testing.factories import task_record_factory
 
 
 class TestParsePreference:
@@ -33,9 +31,7 @@ class TestParsePreference:
     )
     def test_valid_response(self, inputs: tuple[str, int]) -> None:
         response, expected_index = inputs
-        option_a, option_b = task_record_factory([TaskType.regular] * 2)
-        comparison = ((option_a,), (option_b,))
-        preference_index = parse_preference(comparison, response)
+        preference_index = parse_preference(num_options=2, llm_response=response)
         assert preference_index == expected_index
 
     @pytest.mark.parametrize(
@@ -56,9 +52,7 @@ class TestParsePreference:
         ],
     )
     def test_invalid_response(self, response: str) -> None:
-        option_a, option_b = task_record_factory([TaskType.regular] * 2)
-        comparison = ((option_a,), (option_b,))
-        assert parse_preference(comparison, response) is None
+        assert parse_preference(num_options=2, llm_response=response) is None
 
 
 class TestGenerateOptionRegex:
