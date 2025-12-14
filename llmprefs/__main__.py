@@ -26,6 +26,10 @@ async def main() -> None:
 
     tasks = load_records(settings.input_path, TaskRecord)
     comparisons = generate_comparisons(tasks, settings.tasks_per_option)
+    if settings.count_comparisons_only:
+        count = sum(1 for _ in comparisons)
+        logger.info(f"Comparison count: {count}")
+        return
 
     api = instantiate_api(settings)
 

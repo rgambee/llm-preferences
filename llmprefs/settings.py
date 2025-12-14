@@ -14,6 +14,7 @@ class Settings(
     cli_parse_args=True,
     cli_enforce_required=True,
     cli_kebab_case=True,
+    cli_implicit_flags=True,
 ):
     # IO Settings
     input_path: Path = Field(
@@ -40,6 +41,10 @@ class Settings(
     samples_per_comparison: int = Field(
         default=1,
         description="Number of answers to generate for each comparison",
+    )
+    count_comparisons_only: bool = Field(
+        default=False,
+        description="Only count the number of comparisons, don't generate any results",
     )
 
     # API settings
