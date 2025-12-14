@@ -17,11 +17,13 @@ def load_records(path: Path, record_type: type[T]) -> Iterable[T]:
 
     The column/field names and values must match those in the record type.
     """
+    logger = logging.getLogger(__name__)
+    logger.info(f"Loading records from {path}")
     if path.suffix == ".csv":
         return load_records_csv(path, record_type)
     if path.suffix == ".jsonl":
         return load_records_jsonl(path, record_type)
-    logging.getLogger(__name__).error(
+    logger.error(
         f"Unsupported file extension: {path.suffix}."
         + " Allowed extensions are .csv and .jsonl."
     )
