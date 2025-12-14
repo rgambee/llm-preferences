@@ -10,7 +10,7 @@ from llmprefs.file_io.load_records import load_records
 from llmprefs.file_io.save_results import save_results_jsonl
 from llmprefs.logs import configure_logging
 from llmprefs.pipeline import run_pipeline
-from llmprefs.prompts import COMPARISON_TEMPLATES
+from llmprefs.prompts import ENABLED_COMPARISON_TEMPLATES
 from llmprefs.settings import Settings
 from llmprefs.task_structs import TaskRecord
 
@@ -32,7 +32,7 @@ async def main() -> None:
     results = run_pipeline(
         api=api,
         comparisons=comparisons,
-        templates=COMPARISON_TEMPLATES,
+        templates=ENABLED_COMPARISON_TEMPLATES,
         settings=settings,
     )
     await save_results_jsonl(results, settings.output_path)

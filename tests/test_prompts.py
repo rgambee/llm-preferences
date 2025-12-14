@@ -1,6 +1,14 @@
+from collections.abc import Iterable
+
 import pytest
 
-from llmprefs.prompts import COMPARISON_TEMPLATES, ComparisonTemplate, format_option
+from llmprefs.prompts import (
+    ALL_COMPARISON_TEMPLATES,
+    ENABLED_COMPARISON_TEMPLATES,
+    ComparisonTemplate,
+    TemplateStatus,
+    format_option,
+)
 from llmprefs.task_structs import TaskType
 from llmprefs.testing.factories import task_record_factory
 
@@ -27,6 +35,7 @@ class TestComparisonTemplate:
         comparison = ((option_a,), (option_b,))
         template = ComparisonTemplate(
             id=0,
+            status=TemplateStatus.enabled,
             template="Which would you prefer?\n{option_a}\n\n{option_b}",
         )
         formatted = template.format_comparison(comparison)
@@ -38,6 +47,7 @@ class TestComparisonTemplate:
         comparison = ((option_a,), (option_b,))
         template = ComparisonTemplate(
             id=0,
+            status=TemplateStatus.enabled,
             template="Which would you prefer?\n{0}\n\n{1}",
         )
         with pytest.raises(
@@ -48,13 +58,13 @@ class TestComparisonTemplate:
 
 
 class TestTemplateInstances:
-    @pytest.mark.parametrize("template", COMPARISON_TEMPLATES)
+    @pytest.mark.parametrize("template", ALL_COMPARISON_TEMPLATES)
     def test_template_valid(self, template: ComparisonTemplate) -> None:
         option_a, option_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((option_a,), (option_b,))
         template.format_comparison(comparison)
 
-    @pytest.mark.parametrize("template", COMPARISON_TEMPLATES)
+    @pytest.mark.parametrize("template", ALL_COMPARISON_TEMPLATES)
     def test_indentation(self, template: ComparisonTemplate) -> None:
         option_a, option_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((option_a,), (option_b,))
@@ -62,8 +72,16 @@ class TestTemplateInstances:
         for line in formatted.split("\n"):
             assert line == line.strip()
 
-    def test_ids_are_unique(self) -> None:
+    @pytest.mark.parametrize(
+        "templates",
+        [ALL_COMPARISON_TEMPLATES, ENABLED_COMPARISON_TEMPLATES],
+    )
+    def test_ids_are_unique(self, templates: Iterable[ComparisonTemplate]) -> None:
         seen: set[int] = set()
-        for template in COMPARISON_TEMPLATES:
-            assert template.id not in seen
-            seen.add(template.id)
+        for temp in templates:
+            assert temp.id not in seen
+            seen.add(temp.id)
+
+    def test_enabled_templates_status(self) -> None:
+        for template in ENABLED_COMPARISON_TEMPLATES:
+            assert template.status == TemplateStatus.enabled

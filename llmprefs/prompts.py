@@ -1,5 +1,6 @@
 # Disable line length limits
 # ruff: noqa: E501
+from enum import StrEnum
 from textwrap import dedent
 from typing import NewType
 
@@ -11,8 +12,14 @@ FormattedOption = NewType("FormattedOption", str)
 FormattedComparison = NewType("FormattedComparison", str)
 
 
+class TemplateStatus(StrEnum):
+    enabled = "enabled"
+    disabled = "disabled"
+
+
 class ComparisonTemplate(BaseModel):
     id: int
+    status: TemplateStatus
     template: str
 
     def format_comparison(self, comparison: Comparison) -> str:
@@ -25,9 +32,10 @@ class ComparisonTemplate(BaseModel):
         )
 
 
-COMPARISON_TEMPLATES = (
+ALL_COMPARISON_TEMPLATES = (
     ComparisonTemplate(
         id=0,
+        status=TemplateStatus.enabled,
         template=dedent(
             """
             Which option would you prefer to work on?
@@ -42,6 +50,7 @@ COMPARISON_TEMPLATES = (
     ),
     ComparisonTemplate(
         id=1,
+        status=TemplateStatus.enabled,
         template=dedent(
             """
             You have two options to choose from for your next assignment.
@@ -58,6 +67,7 @@ COMPARISON_TEMPLATES = (
     ),
     ComparisonTemplate(
         id=2,
+        status=TemplateStatus.enabled,
         template=dedent(
             """
             You are a helpful assistant.
@@ -74,6 +84,13 @@ COMPARISON_TEMPLATES = (
             """
         ),
     ),
+)
+
+ENABLED_COMPARISON_TEMPLATES = tuple(
+    filter(
+        lambda template: template.status == TemplateStatus.enabled,
+        ALL_COMPARISON_TEMPLATES,
+    )
 )
 
 

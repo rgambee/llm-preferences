@@ -9,12 +9,18 @@ from llmprefs.api.base import BaseApi
 from llmprefs.api.structs import MockApiParams, MockApiResponse
 from llmprefs.comparisons import Comparison
 from llmprefs.pipeline import chunked, generate_samples, run_pipeline
-from llmprefs.prompts import ComparisonTemplate
+from llmprefs.prompts import ComparisonTemplate, TemplateStatus
 from llmprefs.task_structs import TaskType
 from llmprefs.testing.factories import task_record_factory
 from llmprefs.testing.mock_settings import MockSettings
 
-MOCK_TEMPLATES = [ComparisonTemplate(id=0, template="{option_a} or {option_b}")]
+MOCK_TEMPLATES = [
+    ComparisonTemplate(
+        id=0,
+        status=TemplateStatus.enabled,
+        template="{option_a} or {option_b}",
+    )
+]
 
 
 class TestRunPipeline:
