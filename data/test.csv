@@ -1,3 +1,5 @@
 id,type,topic,dependency,ob_subjectivity,time,impact,task
 0,regular,stem,self_contained,objective,brief,neutral,Explain why the sky is blue.
 1,regular,stem,self_contained,objective,brief,positive,Count from 1 to 100.
+2,opt_out,not_applicable,not_applicable,not_applicable,not_applicable,not_applicable,"Do nothing"
+3,free_choice,not_applicable,not_applicable,not_applicable,not_applicable,not_applicable,"Do whatever you want"
