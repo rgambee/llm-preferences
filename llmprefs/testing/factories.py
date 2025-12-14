@@ -46,7 +46,7 @@ def result_record_factory() -> ResultRecord:
         preferred_option_index=0,
         api_params=AnthropicApiParams(
             provider=Provider.ANTHROPIC,
-            model=LLM.CLAUDE_SONNET_4_0_2025_05_14,
+            model=LLM.MOCK_MODEL,
             max_output_tokens=1000,
             system_prompt="You are a helpful assistant.",
             temperature=1.0,
@@ -56,7 +56,7 @@ def result_record_factory() -> ResultRecord:
         api_response=AnthropicApiResponse(
             id="123",
             type="message",
-            model=LLM.CLAUDE_SONNET_4_0_2025_05_14,
+            model=LLM.MOCK_MODEL,
             content=[TextBlock(text="Option 1", type="text")],
             role="assistant",
             usage=Usage(

@@ -15,9 +15,10 @@ from llmprefs.settings import Settings
 LLM_TO_PROVIDER: dict[LLM, Provider] = {
     LLM.MOCK_MODEL: Provider.MOCK,
     LLM.CLAUDE_HAIKU_4_5_2025_10_01: Provider.ANTHROPIC,
-    LLM.CLAUDE_SONNET_4_0_2025_05_14: Provider.ANTHROPIC,
-    LLM.CLAUDE_OPUS_4_0_2025_05_14: Provider.ANTHROPIC,
-    LLM.GPT_5_NANO: Provider.OPENAI,
+    LLM.CLAUDE_SONNET_4_5_2025_09_29: Provider.ANTHROPIC,
+    LLM.CLAUDE_OPUS_4_5_2025_11_01: Provider.ANTHROPIC,
+    LLM.GPT_5_NANO_2025_08_07: Provider.OPENAI,
+    LLM.GPT_5_2_2025_12_11: Provider.OPENAI,
 }
 
 

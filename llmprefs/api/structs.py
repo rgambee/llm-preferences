@@ -21,9 +21,10 @@ class Provider(enum.StrEnum):
 class LLM(enum.StrEnum):
     MOCK_MODEL = "mock-model"
     CLAUDE_HAIKU_4_5_2025_10_01 = "claude-haiku-4-5-20251001"
-    CLAUDE_SONNET_4_0_2025_05_14 = "claude-sonnet-4-20250514"
-    CLAUDE_OPUS_4_0_2025_05_14 = "claude-opus-4-20250514"
-    GPT_5_NANO = "gpt-5-nano"
+    CLAUDE_SONNET_4_5_2025_09_29 = "claude-sonnet-4-5-20250929"
+    CLAUDE_OPUS_4_5_2025_11_01 = "claude-opus-4-5-20251101"
+    GPT_5_NANO_2025_08_07 = "gpt-5-nano-2025-08-07"
+    GPT_5_2_2025_12_11 = "gpt-5.2-2025-12-11"
 
 
 class BaseApiParameters(BaseModel):
