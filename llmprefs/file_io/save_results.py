@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from collections.abc import AsyncIterable, Iterable
 from io import TextIOWrapper
 from pathlib import Path
@@ -15,6 +16,8 @@ async def save_results_jsonl(
 
     Append to the file if it already exists.
     """
+    logger = logging.getLogger(__name__)
+    logger.info(f"Saving results to {path}")
     with path.open("a", encoding="utf-8") as f:
         if isinstance(results, AsyncIterable):
             async for result in results:

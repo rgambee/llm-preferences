@@ -24,6 +24,7 @@ async def main() -> None:
     if not load_dotenv():
         logger.warning("No .env file found")
 
+    logger.info(f"Loading tasks from {settings.input_path}")
     tasks = load_records(settings.input_path, TaskRecord)
     comparisons = generate_comparisons(tasks, settings.tasks_per_option)
     if settings.count_comparisons_only:
