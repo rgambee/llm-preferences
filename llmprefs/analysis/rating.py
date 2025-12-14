@@ -45,6 +45,8 @@ def compile_matrix(results: Iterable[ResultRecord]) -> OptionMatrix:
     )
     unique_options: set[OptionById] = set()
     for result in results:
+        if result.preferred_option_index is None:
+            continue
         preferred_option = result.comparison[result.preferred_option_index]
         for i, option in enumerate(result.comparison):
             unique_options.add(option)

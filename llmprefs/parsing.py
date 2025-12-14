@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import logging
 import re
 
@@ -7,7 +9,7 @@ from llmprefs.comparisons import Comparison
 def parse_preference(
     comparison: Comparison,
     llm_response: str,
-) -> int:
+) -> int | None:
     first_match: re.Match[str] | None = None
     option_index_for_first_match: int | None = None
     for option_index in range(len(comparison)):
@@ -22,13 +24,11 @@ def parse_preference(
     if option_index_for_first_match is not None:
         return option_index_for_first_match
 
-    error_message = "Could not parse preference from response"
-    logging.getLogger(__name__).error(
-        "%s: %s",
-        error_message,
+    logging.getLogger(__name__).warning(
+        "Could not parse preference from response: %s",
         llm_response,
     )
-    raise ValueError(error_message)
+    return None
 
 
 def generate_option_regex(option_index: int) -> re.Pattern[str]:

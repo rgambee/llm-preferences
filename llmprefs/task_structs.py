@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import enum
 import logging
 from collections.abc import Sequence
@@ -80,12 +82,14 @@ class ResultRecord(BaseModel):
     comparison_prompt_id: int
     comparison: ComparisonById
     sample_index: int
-    preferred_option_index: int
+    preferred_option_index: int | None
     api_params: AnyApiParameters = Field(discriminator="provider")
     api_response: AnyApiResponse
 
     @model_validator(mode="after")
     def check_option_index_in_range(self) -> Self:
+        if self.preferred_option_index is None:
+            return self
         if 0 <= self.preferred_option_index < len(self.comparison):
             return self
         logging.getLogger(__name__).error(

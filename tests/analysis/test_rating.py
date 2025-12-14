@@ -23,6 +23,7 @@ class TestRateOptions:
 
     def test_one_result(self) -> None:
         result = result_record_factory()
+        assert result.preferred_option_index is not None
         preferred_option = result.comparison[result.preferred_option_index]
         ratings = rate_options([result])
 
@@ -46,6 +47,7 @@ class TestCompileMatrix:
 
     def test_one_result(self) -> None:
         result = result_record_factory()
+        assert result.preferred_option_index is not None
         preferred_option = result.comparison[result.preferred_option_index]
         optmat = compile_matrix([result])
 

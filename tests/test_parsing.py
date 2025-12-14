@@ -51,11 +51,7 @@ class TestParsePreference:
     def test_invalid_response(self, response: str) -> None:
         option_a, option_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((option_a,), (option_b,))
-        with pytest.raises(
-            ValueError,
-            match="Could not parse preference from response",
-        ):
-            parse_preference(comparison, response)
+        assert parse_preference(comparison, response) is None
 
 
 class TestGenerateOptionRegex:
