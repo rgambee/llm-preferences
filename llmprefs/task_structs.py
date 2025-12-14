@@ -93,7 +93,7 @@ class ResultRecord(BaseModel):
         if 0 <= self.preferred_option_index < len(self.comparison):
             return self
         logging.getLogger(__name__).error(
-            f"preferred_option_index {self.preferred_option_index} is out of range "
-            f"for comparison of length {len(self.comparison)}"
+            f"preferred_option_index {self.preferred_option_index} is out of range"
+            + f" for comparison of length {len(self.comparison)}"
         )
         raise ValueError("preferred_option_index is out of range")

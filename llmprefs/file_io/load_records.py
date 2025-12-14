@@ -22,8 +22,8 @@ def load_records(path: Path, record_type: type[T]) -> Iterable[T]:
     if path.suffix == ".jsonl":
         return load_records_jsonl(path, record_type)
     logging.getLogger(__name__).error(
-        f"Unsupported file extension: {path.suffix}. "
-        "Allowed extensions are .csv and .jsonl."
+        f"Unsupported file extension: {path.suffix}."
+        + " Allowed extensions are .csv and .jsonl."
     )
     raise ValueError("Unsupported file extension")
 
