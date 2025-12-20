@@ -9,6 +9,8 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
+from llmprefs.task_structs import ResultRecord, ResultRecordKey
+
 T = TypeVar("T", bound=BaseModel)
 
 
@@ -50,3 +52,9 @@ def load_records_jsonl(path: Path, record_type: type[T]) -> Iterable[T]:
     with path.open("r") as f:
         for line in f:
             yield record_type.model_validate(json.loads(line))
+
+
+def load_existing_results(path: Path) -> set[ResultRecordKey]:
+    if not path.exists():
+        return set()
+    return {rec.key for rec in load_records(path, ResultRecord)}

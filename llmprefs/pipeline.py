@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import itertools
+import logging
 from asyncio import as_completed
 from collections.abc import AsyncIterable, Iterable
 from datetime import UTC, datetime
@@ -14,7 +15,7 @@ from llmprefs.comparisons import Comparison
 from llmprefs.parsing import parse_preference
 from llmprefs.prompts import ComparisonTemplate
 from llmprefs.settings import Settings
-from llmprefs.task_structs import ResultRecord
+from llmprefs.task_structs import ResultRecord, ResultRecordKey, comparison_to_id
 
 T = TypeVar("T")
 
@@ -30,15 +31,25 @@ async def run_pipeline(
     comparisons: Iterable[Comparison],
     templates: Iterable[ComparisonTemplate],
     settings: Settings,
+    existing_results: set[ResultRecordKey],
 ) -> AsyncIterable[ResultRecord]:
+    logger = logging.getLogger(__name__)
     samples = generate_samples(
         comparisons=comparisons,
         templates=templates,
         samples_per_comparison=settings.samples_per_comparison,
     )
+    skip_count = 0
     for chunk in chunked(samples, settings.concurrent_requests):
         awaitables: list[Coroutine[Any, Any, ResultRecord]] = []
         for sample in chunk:
+            if result_already_exists(sample, existing_results):
+                skip_count += 1
+                continue
+            logger.info(
+                f"Skipped {skip_count} samples because results already exist",
+            )
+            skip_count = 0
             coro = compare_options(api, sample)
             awaitables.append(coro)
         for future in as_completed(awaitables):
@@ -55,15 +66,10 @@ async def compare_options(
         num_options=len(sample.comparison),
         llm_response=response.answer,
     )
-    option_a, option_b = sample.comparison
-    option_ids = (
-        tuple(task.id for task in option_a),
-        tuple(task.id for task in option_b),
-    )
     return ResultRecord(
         created_at=datetime.now(tz=UTC),
         comparison_prompt_id=sample.template.id,
-        comparison=option_ids,
+        comparison=comparison_to_id(sample.comparison),
         sample_index=sample.index,
         preferred_option_index=preferred_option_index,
         api_params=api.params,
@@ -96,3 +102,15 @@ def chunked(iterable: Iterable[T], size: int) -> Iterable[tuple[T, ...]]:
         raise ValueError("size must be at least 1")
     while chunk := tuple(itertools.islice(iterator, size)):
         yield chunk
+
+
+def result_already_exists(
+    sample: Sample,
+    existing_results: set[ResultRecordKey],
+) -> bool:
+    key = ResultRecordKey(
+        comparison=comparison_to_id(sample.comparison),
+        comparison_prompt_id=sample.template.id,
+        sample_index=sample.index,
+    )
+    return key in existing_results

@@ -4,7 +4,7 @@ import enum
 import logging
 from collections.abc import Sequence
 from datetime import datetime
-from typing import Self
+from typing import NamedTuple, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -72,6 +72,14 @@ Comparison = tuple[Option, Option]
 ComparisonById = tuple[OptionById, OptionById]
 
 
+class ResultRecordKey(NamedTuple):
+    """Compact way to identify a ResultRecord."""
+
+    comparison: ComparisonById
+    comparison_prompt_id: int
+    sample_index: int
+
+
 class ResultRecord(BaseModel):
     """A comparison of options, along with the preferred option.
 
@@ -97,3 +105,19 @@ class ResultRecord(BaseModel):
             + f" for comparison of length {len(self.comparison)}"
         )
         raise ValueError("preferred_option_index is out of range")
+
+    @property
+    def key(self) -> ResultRecordKey:
+        return ResultRecordKey(
+            comparison=self.comparison,
+            comparison_prompt_id=self.comparison_prompt_id,
+            sample_index=self.sample_index,
+        )
+
+
+def comparison_to_id(comparison: Comparison) -> ComparisonById:
+    option0, option1 = comparison
+    return (
+        tuple(task.id for task in option0),
+        tuple(task.id for task in option1),
+    )

@@ -8,9 +8,15 @@ import pytest
 from llmprefs.api.base import BaseApi
 from llmprefs.api.structs import MockApiParams, MockApiResponse
 from llmprefs.comparisons import Comparison
-from llmprefs.pipeline import chunked, generate_samples, run_pipeline
+from llmprefs.pipeline import (
+    Sample,
+    chunked,
+    generate_samples,
+    result_already_exists,
+    run_pipeline,
+)
 from llmprefs.prompts import ComparisonTemplate, TemplateStatus
-from llmprefs.task_structs import TaskType
+from llmprefs.task_structs import ResultRecordKey, TaskType, comparison_to_id
 from llmprefs.testing.factories import task_record_factory
 from llmprefs.testing.mock_settings import MockSettings
 
@@ -33,6 +39,7 @@ class TestRunPipeline:
             comparisons=comparisons,
             templates=MOCK_TEMPLATES,
             settings=MockSettings(),
+            existing_results=set(),
         )
 
         async for _ in results:
@@ -52,6 +59,7 @@ class TestRunPipeline:
             comparisons=[comparison],
             templates=MOCK_TEMPLATES,
             settings=MockSettings(),
+            existing_results=set(),
         )
 
         async for result in results:
@@ -73,6 +81,7 @@ class TestRunPipeline:
             comparisons=[comparison_0, comparison_1],
             templates=MOCK_TEMPLATES,
             settings=settings,
+            existing_results=set(),
         )
 
         index = 0
@@ -99,6 +108,7 @@ class TestRunPipeline:
             comparisons=[comparison_0, comparison_1],
             templates=MOCK_TEMPLATES,
             settings=settings,
+            existing_results=set(),
         )
 
         index = 0
@@ -124,6 +134,7 @@ class TestRunPipeline:
             comparisons=[comparison],
             templates=MOCK_TEMPLATES,
             settings=settings,
+            existing_results=set(),
         )
 
         index = 0
@@ -134,6 +145,41 @@ class TestRunPipeline:
             assert api.submit.await_count == index + 1
             index += 1
         assert index == 3
+
+    @pytest.mark.anyio
+    async def test_existing_results(self) -> None:
+        api = AsyncMock(spec=BaseApi)
+        api.params = MockApiParams()
+        api.submit.return_value = MockApiResponse(reply="Option A")
+
+        task_a, task_b = task_record_factory([TaskType.regular] * 2)
+        old_comparison = ((task_a,), (task_b,))
+        new_comparison = ((task_b,), (task_a,))
+        settings = MockSettings(samples_per_comparison=1, concurrent_requests=1)
+        existing_results = {
+            ResultRecordKey(
+                comparison=comparison_to_id(old_comparison),
+                comparison_prompt_id=MOCK_TEMPLATES[0].id,
+                sample_index=0,
+            )
+        }
+        results = run_pipeline(
+            api=api,
+            comparisons=[old_comparison, new_comparison],
+            templates=MOCK_TEMPLATES,
+            settings=settings,
+            existing_results=existing_results,
+        )
+
+        index = 0
+        async for result in results:
+            await asyncio.sleep(0)
+            assert index < 1
+            assert result.comparison == comparison_to_id(new_comparison)
+            assert result.preferred_option_index == 0
+            assert api.submit.await_count == index + 1
+            index += 1
+        assert index == 1
 
 
 class TestGenerateSamples:
@@ -198,3 +244,32 @@ class TestChunked:
 
     def test_partial_final_chunk(self) -> None:
         assert list(chunked((1, 2, 3), 2)) == [(1, 2), (3,)]
+
+
+class TestResultAlreadyExists:
+    def test_empty(self) -> None:
+        task_a, task_b = task_record_factory([TaskType.regular] * 2)
+        comparison = ((task_a,), (task_b,))
+        sample = Sample(
+            index=0,
+            comparison=comparison,
+            template=MOCK_TEMPLATES[0],
+        )
+        assert not result_already_exists(sample, set())
+
+    def test_present(self) -> None:
+        task_a, task_b = task_record_factory([TaskType.regular] * 2)
+        comparison = ((task_a,), (task_b,))
+        sample = Sample(
+            index=0,
+            comparison=comparison,
+            template=MOCK_TEMPLATES[0],
+        )
+        existing_results = {
+            ResultRecordKey(
+                comparison=((task_a.id,), (task_b.id,)),
+                comparison_prompt_id=MOCK_TEMPLATES[0].id,
+                sample_index=0,
+            )
+        }
+        assert result_already_exists(sample, existing_results)
