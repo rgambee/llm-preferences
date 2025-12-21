@@ -16,7 +16,7 @@ def plot_ratings_stem(rated_options: RatedOptions) -> Figure:
 
     ax.stem(
         [str(key) for key in rated_options],
-        list(rated_options.values()),
+        [vci.value for vci in rated_options.values()],
     )
 
     return fig
@@ -38,7 +38,7 @@ def plot_ratings_heatmap(rated_options: RatedOptions) -> Figure:
     task_1_ids_to_index = {task_id: i for i, task_id in enumerate(task_1_ids)}
     ratings = np.full((len(task_0_ids), len(task_1_ids)), np.nan, dtype=float)
     for (task0, task1), rating in rated_options.items():
-        ratings[task_0_ids_to_index[task0], task_1_ids_to_index[task1]] = rating
+        ratings[task_0_ids_to_index[task0], task_1_ids_to_index[task1]] = rating.value
 
     fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
         nrows=1,

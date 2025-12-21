@@ -1,10 +1,13 @@
+import logging
 from collections import defaultdict
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
+from typing import cast
 
 import choix
 import numpy as np
 from numpy.typing import NDArray
+from scipy import optimize
 
 from llmprefs.task_structs import OptionById, ResultRecord, TaskId
 
@@ -18,22 +21,50 @@ class OptionMatrix:
     matrix: NDArray[np.float64]
 
 
-RatedOptions = dict[OptionById, float]
+@dataclass
+class ValueCI:
+    value: float
+    ci_lower: float
+    ci_upper: float
+
+
+RatedOptions = dict[OptionById, ValueCI]
 
 
 def rate_options(
-    results: Iterable[ResultRecord],
+    results: Sequence[ResultRecord],
+    num_resamples: int,
+    confidence: float,
+    generator: np.random.Generator | None = None,
     alpha: float = 1e-6,
 ) -> RatedOptions:
-    option_matrix = compile_matrix(results)
+    """Return an estimate of each option's strength.
 
-    if len(option_matrix.options) == 0:
+    Also compute a bootstrapped confidence interval for each rating.
+    """
+    if len(results) == 0:
         return {}
 
-    ratings = choix.ilsr_pairwise_dense(comp_mat=option_matrix.matrix, alpha=alpha)
+    generator = generator or np.random.default_rng()
+    option_matrix = compile_matrix(results)
+    resampled_ratings = np.full((num_resamples, len(option_matrix.options)), np.nan)
+    for i in range(num_resamples):
+        resample = resample_results(option_matrix=option_matrix, generator=generator)
+        ratings = choix.ilsr_pairwise_dense(comp_mat=resample.matrix, alpha=alpha)
+        resampled_ratings[i, :] = ratings
+
+    medians = np.median(resampled_ratings, axis=0)  # mean?
+    lower_quant = (1 - confidence) / 2
+    upper_quant = (1 + confidence) / 2
+    lower_bounds = np.quantile(resampled_ratings, q=lower_quant, axis=0)
+    upper_bounds = np.quantile(resampled_ratings, q=upper_quant, axis=0)
     rated_options: RatedOptions = {}
-    for i, option in enumerate(option_matrix.options):
-        rated_options[option] = ratings[i]
+    for option_index, option_id in enumerate(option_matrix.options):
+        rated_options[option_id] = ValueCI(
+            value=medians[option_index],
+            ci_lower=lower_bounds[option_index],
+            ci_upper=upper_bounds[option_index],
+        )
     return rated_options
 
 
@@ -67,3 +98,29 @@ def compile_matrix(results: Iterable[ResultRecord]) -> OptionMatrix:
             beaten_idx = option_to_index[beaten_option]
             matrix[preferred_idx, beaten_idx] = count
     return OptionMatrix(options=sorted_options, matrix=matrix)
+
+
+def resample_results(
+    option_matrix: OptionMatrix,
+    generator: np.random.Generator,
+) -> OptionMatrix:
+    num_comparisons = int(np.round(cast(float, option_matrix.matrix.sum())))
+    random_weights = generator.random(option_matrix.matrix.shape)
+    resample = option_matrix.matrix * random_weights
+
+    # Scale resample such that after rounding, its sum equals num_comparisons.
+    # To do this, we solve the following equation for the scalar variable x:
+    #   np.round(x * resample).sum() == num_comparisons.
+    def error(x: float) -> int:
+        return np.round(x * resample).sum() - num_comparisons
+
+    x0 = num_comparisons / resample.sum()
+    x = optimize.brentq(f=error, a=0.9 * x0, b=1.1 * x0)
+    resample_sum = np.round(x * resample).sum()
+    if resample_sum != num_comparisons:
+        logging.getLogger().error(
+            "Resample scaling failed to converge: "
+            + f"{x=}, {resample_sum=}, {num_comparisons=}"
+        )
+        raise RuntimeError("Resample scaling failed to converge")
+    return OptionMatrix(options=option_matrix.options, matrix=resample)

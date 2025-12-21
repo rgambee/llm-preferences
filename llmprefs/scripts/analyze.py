@@ -19,7 +19,7 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO)
     results = load_records(args.input_path, ResultRecord)
-    rated_options = rate_options(results)
+    rated_options = rate_options(list(results), num_resamples=100, confidence=0.75)
 
     fig = plot_ratings_stem(rated_options)
     fig.show()
