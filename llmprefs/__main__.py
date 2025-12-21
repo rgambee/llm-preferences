@@ -5,6 +5,7 @@ from collections.abc import Iterable
 
 from dotenv import load_dotenv
 from tqdm.asyncio import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from llmprefs.api.instantiate import instantiate_api
 from llmprefs.comparisons import count_comparisons_approx, generate_comparisons
@@ -63,7 +64,8 @@ async def main() -> None:
         results,
         total=sample_count_approx,
     )
-    await save_results_jsonl(progress, settings.output_path)
+    with logging_redirect_tqdm():
+        await save_results_jsonl(progress, settings.output_path)
 
 
 if __name__ == "__main__":
