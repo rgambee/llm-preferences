@@ -1,13 +1,26 @@
+from __future__ import annotations
+
+from collections.abc import Sequence
 from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 
-from llmprefs.analysis.rating import RatedOptions
+from llmprefs.analysis.rating import RatedOptions, ValueCI
+
+
+def error_bars(values: Sequence[ValueCI]) -> tuple[list[float], list[float]]:
+    """Return error bars compatible with Matplotlib."""
+    diff_low = [vci.value - vci.ci_lower for vci in values]
+    diff_high = [vci.ci_upper - vci.value for vci in values]
+    return diff_low, diff_high
 
 
 def plot_ratings_stem(rated_options: RatedOptions) -> Figure:
+    xcoords = np.arange(len(rated_options))
+    rating_values = [vci.value for vci in rated_options.values()]
+
     fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
         nrows=1,
         ncols=1,
@@ -15,8 +28,18 @@ def plot_ratings_stem(rated_options: RatedOptions) -> Figure:
     )
 
     ax.stem(
-        [str(key) for key in rated_options],
-        [vci.value for vci in rated_options.values()],
+        xcoords,
+        rating_values,
+    )
+    ax.errorbar(  # pyright: ignore[reportUnknownMemberType]
+        x=xcoords,
+        y=rating_values,
+        yerr=error_bars(list(rated_options.values())),
+        marker="None",
+        linestyle="None",
+        ecolor="black",
+        capsize=5.0,
+        label="Bootstrapped CI",
     )
 
     return fig
