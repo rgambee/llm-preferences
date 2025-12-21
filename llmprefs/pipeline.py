@@ -44,9 +44,10 @@ async def run_pipeline(
             if result_already_exists(sample, existing_results):
                 skip_count += 1
                 continue
-            logger.info(
-                f"Skipped {skip_count} samples because results already exist",
-            )
+            if skip_count > 0:
+                logger.info(
+                    f"Skipped {skip_count} samples because results already exist",
+                )
             skip_count = 0
             coro = compare_options(api, sample)
             awaitables.append(coro)
