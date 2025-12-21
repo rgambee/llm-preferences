@@ -100,3 +100,34 @@ def is_free_choice_task(record: TaskRecord) -> bool:
 def is_regular_task(record: TaskRecord) -> bool:
     """Return True if the task is a regular task, i.e. not opt out or free choice."""
     return not is_opt_out_task(record) and not is_free_choice_task(record)
+
+
+def count_comparisons_approx(
+    records: Iterable[TaskRecord],
+    tasks_per_option: int,
+) -> int:
+    """Count the rough number of comparisons the given records will produce.
+
+    Actually generating all the comparisons and counting them can be slow for ~100 tasks
+    and multiple tasks per option because of a combinatorial explosion. This function is
+    a quick but imperfect alternative.
+
+    The result is an upper bounds since some comparisons would be skipped, e.g.
+    comparing two different opt-out tasks to one another.
+    """
+    count_opt_out = 0
+    count_free_choice = 0
+    count_regular = 0
+    for rec in records:
+        if is_opt_out_task(rec):
+            count_opt_out += 1
+        elif is_free_choice_task(rec):
+            count_free_choice += 1
+        else:
+            count_regular += 1
+
+    num_options = 1
+    for i in range(tasks_per_option):
+        num_options *= count_free_choice + count_regular - i
+    num_options += count_opt_out
+    return num_options * (num_options - 1)

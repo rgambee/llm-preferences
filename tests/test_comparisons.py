@@ -1,6 +1,7 @@
 import pytest
 
 from llmprefs.comparisons import (
+    count_comparisons_approx,
     filter_comparisons,
     generate_comparisons,
     generate_options,
@@ -205,12 +206,10 @@ class TestGenerateComparisons:
         # choice tasks, at least in this case since tasks_per_option == 2. That means
         # there are 4 * 3 + 2 - 2 == 12 valid options.
         #
-        # The number of comparisons (permutations of
-        # length 2) is 12 * 11 == 132. From these we filter out the following unhelpful
-        # comparisons:
+        # The number of comparisons (permutations of length 2) is 12 * 11 == 132.
+        # From these we filter out the following unhelpful comparisons:
         #     - opt_out1 vs opt_out2
         #     - opt_out2 vs opt_out1
-
         #     - regular1 + free_choice1 vs regular1 + free_choice2
         #     - regular2 + free_choice1 vs regular2 + free_choice2
         #     - regular1 + free_choice2 vs regular1 + free_choice1
@@ -220,3 +219,47 @@ class TestGenerateComparisons:
         #     - free_choice2 + regular1 vs free_choice1 + regular1
         #     - free_choice2 + regular2 vs free_choice1 + regular2
         assert len(comparisons) == 132 - 2 - 8
+
+
+class TestCountComparisons:
+    def test_empty_records(self) -> None:
+        assert count_comparisons_approx(records=[], tasks_per_option=1) == 0
+
+    def test_one_record(self) -> None:
+        records = task_record_factory([TaskType.regular])
+        assert count_comparisons_approx(records, tasks_per_option=1) == 0
+
+    def test_one_task_per_comparison(self) -> None:
+        records = task_record_factory(
+            [
+                TaskType.regular,
+                TaskType.regular,
+                TaskType.opt_out,
+                TaskType.opt_out,
+                TaskType.free_choice,
+                TaskType.free_choice,
+            ]
+        )
+        num_options = len(records)
+        expected_count = num_options * (num_options - 1)
+        assert count_comparisons_approx(records, tasks_per_option=1) == expected_count
+
+    def test_two_tasks_per_comparison(self) -> None:
+        records = task_record_factory(
+            [
+                TaskType.regular,
+                TaskType.regular,
+                TaskType.opt_out,
+                TaskType.opt_out,
+                TaskType.free_choice,
+                TaskType.free_choice,
+            ]
+        )
+        # To simplify, we pretend we can combine any two regular or free-choice tasks
+        # into an option, giving us 4 * 3 == 12. We can also pick either opt-out task as
+        # an option by itself.
+        # Note that not all these options would actually be generated. See the tests for
+        # generate_comparisons for a correct count.
+        num_options = 4 * 3 + 2
+        expected_count = num_options * (num_options - 1)
+        assert count_comparisons_approx(records, tasks_per_option=2) == expected_count
