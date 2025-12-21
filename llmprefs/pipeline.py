@@ -1,7 +1,7 @@
 import itertools
 import logging
 from asyncio import as_completed
-from collections.abc import AsyncIterable, Coroutine, Iterable
+from collections.abc import AsyncGenerator, Coroutine, Iterable
 from datetime import UTC, datetime
 from typing import Any, TypeVar
 
@@ -30,7 +30,7 @@ async def run_pipeline(
     templates: Iterable[ComparisonTemplate],
     settings: Settings,
     existing_results: set[ResultRecordKey],
-) -> AsyncIterable[ResultRecord]:
+) -> AsyncGenerator[ResultRecord, None]:
     logger = logging.getLogger(__name__)
     samples = generate_samples(
         comparisons=comparisons,
