@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from pathlib import Path
 
 from openai.types.shared_params.reasoning_effort import ReasoningEffort

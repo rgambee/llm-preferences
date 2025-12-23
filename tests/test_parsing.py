@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import pytest
 
 from llmprefs.parsing import generate_option_regex, parse_preference

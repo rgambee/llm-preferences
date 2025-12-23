@@ -31,7 +31,7 @@ def plot_ratings_heatmap(rated_options: RatedOptions) -> Figure:
             f"Heatmap only accepts options containing {expected_num_tasks} tasks"
         )
 
-    task_0_ids, task_1_ids = zip(*rated_options.keys())
+    task_0_ids, task_1_ids = zip(*rated_options.keys(), strict=True)
     task_0_ids = sorted(set(task_0_ids))
     task_1_ids = sorted(set(task_1_ids))
     task_0_ids_to_index = {task_id: i for i, task_id in enumerate(task_0_ids)}

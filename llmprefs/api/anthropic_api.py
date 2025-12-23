@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from anthropic import AsyncAnthropic
 from anthropic.types import (
     MessageParam,

@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 import itertools
 import logging
 from asyncio import as_completed
-from collections.abc import AsyncIterable, Iterable
+from collections.abc import AsyncIterable, Coroutine, Iterable
 from datetime import UTC, datetime
-from typing import Any, Coroutine, TypeVar
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 

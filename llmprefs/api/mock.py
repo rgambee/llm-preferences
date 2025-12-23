@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Callable
+from collections.abc import Callable
 
 from llmprefs.api.base import BaseApi
 from llmprefs.api.structs import MockApiParams, MockApiResponse
