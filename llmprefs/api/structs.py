@@ -31,7 +31,6 @@ class BaseApiParameters(BaseModel):
     max_output_tokens: int
     system_prompt: str
     temperature: float
-    structured_output: bool
 
 
 class MockApiParams(BaseApiParameters):
@@ -45,11 +44,13 @@ class MockApiParams(BaseApiParameters):
 
 class AnthropicApiParams(BaseApiParameters):
     provider: Literal[Provider.ANTHROPIC] = Provider.ANTHROPIC
+    tool_config: ToolParam | None
     thinking_budget: int
 
 
 class OpenAiApiParams(BaseApiParameters):
     provider: Literal[Provider.OPENAI] = Provider.OPENAI
+    tool_config: ResponseFormatTextJSONSchemaConfigParam | None
     reasoning_effort: ReasoningEffort
 
 

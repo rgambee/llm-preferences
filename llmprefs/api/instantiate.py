@@ -7,7 +7,13 @@ from llmprefs.api.anthropic_api import AnthropicApi, AnthropicApiParams
 from llmprefs.api.base import BaseApi
 from llmprefs.api.mock import MockApi, MockApiParams
 from llmprefs.api.openai_api import OpenAiApi, OpenAiApiParams
-from llmprefs.api.structs import LLM, AnyApiResponse, Provider
+from llmprefs.api.structs import (
+    LLM,
+    SELECT_TASK_TOOL_ANTHROPIC,
+    SELECT_TASK_TOOL_OPENAI,
+    AnyApiResponse,
+    Provider,
+)
 from llmprefs.settings import Settings
 
 LLM_TO_PROVIDER: dict[LLM, Provider] = {
@@ -36,26 +42,28 @@ def instantiate_api(settings: Settings) -> BaseApi[AnyApiResponse]:
 
     if provider == Provider.ANTHROPIC:
         client = AsyncAnthropic()
+        tool_config = SELECT_TASK_TOOL_ANTHROPIC if settings.structured_output else None
         params = AnthropicApiParams(
             provider=provider,
             model=settings.model,
             max_output_tokens=settings.max_output_tokens,
             system_prompt=settings.system_prompt,
             temperature=settings.temperature,
-            structured_output=settings.structured_output,
+            tool_config=tool_config,
             thinking_budget=settings.anthropic_thinking_budget,
         )
         return AnthropicApi(client, params)
 
     if provider == Provider.OPENAI:
         client = AsyncOpenAI()
+        tool_config = SELECT_TASK_TOOL_OPENAI if settings.structured_output else None
         params = OpenAiApiParams(
             provider=provider,
             model=settings.model,
             max_output_tokens=settings.max_output_tokens,
             system_prompt=settings.system_prompt,
             temperature=settings.temperature,
-            structured_output=settings.structured_output,
+            tool_config=tool_config,
             reasoning_effort=settings.openai_reasoning_effort,
         )
         return OpenAiApi(client, params)

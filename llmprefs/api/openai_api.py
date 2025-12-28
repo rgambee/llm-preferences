@@ -3,11 +3,7 @@ from openai.types.responses import ResponseTextConfigParam
 from openai.types.shared_params import Reasoning
 
 from llmprefs.api.base import BaseApi
-from llmprefs.api.structs import (
-    SELECT_TASK_TOOL_OPENAI,
-    OpenAiApiParams,
-    OpenAiApiResponse,
-)
+from llmprefs.api.structs import OpenAiApiParams, OpenAiApiResponse
 
 
 class OpenAiApi(BaseApi[OpenAiApiResponse]):
@@ -28,8 +24,8 @@ class OpenAiApi(BaseApi[OpenAiApiResponse]):
         prompt: str,
     ) -> OpenAiApiResponse:
         text: ResponseTextConfigParam = {"format": {"type": "text"}}
-        if self._params.structured_output:
-            text = {"format": SELECT_TASK_TOOL_OPENAI}
+        if self._params.tool_config is not None:
+            text = {"format": self._params.tool_config}
 
         raw_reply = await self._client.responses.create(
             input=prompt,
