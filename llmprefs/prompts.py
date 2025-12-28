@@ -187,6 +187,23 @@ ENABLED_COMPARISON_TEMPLATES = tuple(
 )
 
 
+PARSING_PROMPT_TEMPLATE = """\
+I would like your help parsing an LLM's preference between two options. I gave an LLM the following prompt:
+
+<original_prompt>
+{comparison_prompt}
+</original_prompt>
+
+Here is the LLM's response:
+
+<response_to_parse>
+{comparison_response}
+</response_to_parse>
+
+Please parse the response to extract the LLM's preferred option. If the LLM expressed a clear preference for one option over the other, return the letter of the preferred option. If the LLM refused to choose either option, return null.
+"""
+
+
 def format_option(option: Option) -> FormattedOption:
     if len(option) == 1:
         return FormattedOption(option[0].task)
