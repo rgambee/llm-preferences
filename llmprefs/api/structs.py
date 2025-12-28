@@ -22,6 +22,7 @@ class LLM(enum.StrEnum):
     CLAUDE_SONNET_4_5_2025_09_29 = "claude-sonnet-4-5-20250929"
     CLAUDE_OPUS_4_5_2025_11_01 = "claude-opus-4-5-20251101"
     GPT_5_NANO_2025_08_07 = "gpt-5-nano-2025-08-07"
+    GPT_5_MINI_2025_08_07 = "gpt-5-mini-2025-08-07"
     GPT_5_2_2025_12_11 = "gpt-5.2-2025-12-11"
 
 
