@@ -8,6 +8,7 @@ from tqdm.asyncio import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
 from llmprefs.api.instantiate import instantiate_api
+from llmprefs.api.structs import ApiStage
 from llmprefs.comparisons import count_comparisons_approx, generate_comparisons
 from llmprefs.file_io.load_records import load_existing_results, load_records
 from llmprefs.file_io.save_results import save_results_jsonl
@@ -51,7 +52,7 @@ async def main() -> None:
         return
     sample_count_approx = count_samples(tasks, settings)
 
-    api = instantiate_api(settings)
+    api = instantiate_api(settings, ApiStage.COMPARISON)
 
     results = run_pipeline(
         api=api,

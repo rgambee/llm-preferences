@@ -150,3 +150,10 @@ IDENTIFY_PREFERENCE_TOOL_OPENAI: ResponseFormatTextJSONSchemaConfigParam = {
     "schema": IdentifyPreferenceInputSchema.model_json_schema(),
     "strict": True,
 }
+
+
+class ApiStage(enum.StrEnum):
+    # Asking LLM to choose one option from a comparison
+    COMPARISON = "comparison"
+    # Parsing the LLM's response to identify its preferred option
+    PARSING = "parsing"
