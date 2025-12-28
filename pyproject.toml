@@ -42,12 +42,11 @@ typeCheckingMode = "strict"
 venv = ".venv"
 venvPath = "."
 
-[tool.pytest.ini_options]
+[tool.pytest]
 addopts = [
     "--import-mode=importlib",
-    "--strict-markers",
-    "--strict-config",
 ]
+strict = true
 testpaths = ["tests"]
 
 [tool.ruff]
