@@ -122,3 +122,30 @@ SELECT_TASK_TOOL_OPENAI: ResponseFormatTextJSONSchemaConfigParam = {
     "schema": SelectTaskToolInputSchema.model_json_schema(),
     "strict": True,
 }
+
+
+# A variant of SelectTaskToolInputSchema to use when parsing free-form responses
+class IdentifyPreferenceInputSchema(BaseModel):
+    model_config = ConfigDict(json_schema_extra={"additionalProperties": False})
+
+    option_id: Literal["A", "B"] | None = Field(
+        description=(
+            "The letter indicating the option that the LLM prefers,"
+            + " or null if the LLM didn't choose an option"
+        ),
+    )
+
+
+IDENTIFY_PREFERENCE_TOOL_ANTHROPIC: ToolParam = {
+    "name": "identify_preference",
+    "description": "Identify the LLM's preferred option",
+    "input_schema": IdentifyPreferenceInputSchema.model_json_schema(),
+}
+
+IDENTIFY_PREFERENCE_TOOL_OPENAI: ResponseFormatTextJSONSchemaConfigParam = {
+    "type": "json_schema",
+    "name": "identify_preference",
+    "description": "Identify the LLM's preferred option",
+    "schema": IdentifyPreferenceInputSchema.model_json_schema(),
+    "strict": True,
+}
