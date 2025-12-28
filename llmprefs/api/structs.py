@@ -81,7 +81,7 @@ class AnthropicApiResponse(BaseApiResponse, AnthropicMessage):
             if block.type == "text":
                 return block.text
             if block.type == "tool_use":
-                return SelectTaskToolInputSchema.model_validate(block.input).task_id
+                return SelectTaskToolInputSchema.model_validate(block.input).option_id
         return ""
 
 
@@ -104,10 +104,8 @@ AnyApiResponse = MockApiResponse | AnthropicApiResponse | OpenAiApiResponse
 class SelectTaskToolInputSchema(BaseModel):
     model_config = ConfigDict(json_schema_extra={"additionalProperties": False})
 
-    task_id: Literal["A", "B"] = Field(
-        description=(
-            "The letter indicating the task (or series of tasks) to work on next"
-        )
+    option_id: Literal["A", "B"] = Field(
+        description="The letter indicating the option to work on next"
     )
 
 

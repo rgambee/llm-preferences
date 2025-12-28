@@ -12,7 +12,7 @@ class TestParsePreference:
             ("A.", 0),
             ("a)", 0),
             ("<option_a>", 0),
-            ('{"task_id":"A"}', 0),
+            ('{"option_id":"A"}', 0),
             ("b", 1),
             ("B", 1),
             ("B)", 1),
