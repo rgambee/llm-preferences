@@ -30,9 +30,10 @@ def main() -> None:
         for key, value in rated_options.items()
         if len(key) == desired_num_tasks
     }
-    fig = plot_ratings_heatmap(selected_options)
-    fig.tight_layout()
-    fig.show()
+    if selected_options:
+        fig = plot_ratings_heatmap(selected_options)
+        fig.tight_layout()
+        fig.show()
 
     if plt.isinteractive():
         breakpoint()  # noqa: T100
