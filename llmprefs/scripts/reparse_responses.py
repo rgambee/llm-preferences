@@ -1,20 +1,30 @@
 import argparse
 import asyncio
 import logging
-from collections.abc import Iterable
+from collections.abc import AsyncIterable
 from pathlib import Path
 
+from llmprefs.api.base import BaseApi
+from llmprefs.api.instantiate import instantiate_api
+from llmprefs.api.structs import AnyApiResponse, ApiStage
 from llmprefs.file_io.load_records import load_records
 from llmprefs.file_io.save_results import save_results_jsonl
 from llmprefs.parsing import parse_preference
+from llmprefs.settings import Settings
 from llmprefs.task_structs import ResultRecord
 
 
-def load_results(path: Path) -> Iterable[ResultRecord]:
+async def process_results(
+    path: Path,
+    parsing_api: BaseApi[AnyApiResponse],
+) -> AsyncIterable[ResultRecord]:
     for record in load_records(path, ResultRecord):
-        record.preferred_option_index = parse_preference(
+        comparison_prompt = ""
+        record.preferred_option_index = await parse_preference(
             num_options=len(record.comparison),
-            llm_response=record.api_response.answer,
+            comparison_prompt=comparison_prompt,
+            comparison_response=record.api_response.answer,
+            parsing_api=parsing_api,
         )
         yield record
 
@@ -27,8 +37,10 @@ async def main() -> None:
     parser.add_argument("output_path", type=Path)
     args = parser.parse_args()
 
+    settings = Settings()
+    parsing_api = instantiate_api(settings, ApiStage.PARSING)
     logging.basicConfig(level=logging.INFO)
-    results = load_results(args.input_path)
+    results = process_results(args.input_path, parsing_api)
     await save_results_jsonl(results, args.output_path)
 
 

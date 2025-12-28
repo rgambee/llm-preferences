@@ -27,13 +27,32 @@ MOCK_TEMPLATES = [
 ]
 
 
+@pytest.fixture
+def comparison_api() -> AsyncMock:
+    api = AsyncMock(spec=BaseApi)
+    api.params = MockApiParams()
+    api.submit.return_value = MockApiResponse(reply="Option A")
+    return api
+
+
+@pytest.fixture
+def parsing_api() -> AsyncMock:
+    api = AsyncMock(spec=BaseApi)
+    api.submit.return_value = MockApiResponse(reply='{"option_id":"A"}')
+    return api
+
+
 class TestRunPipeline:
     @pytest.mark.anyio
-    async def test_empty(self) -> None:
-        api = AsyncMock(spec=BaseApi)
+    async def test_empty(
+        self,
+        comparison_api: AsyncMock,
+        parsing_api: AsyncMock,
+    ) -> None:
         comparisons: list[Comparison] = []
         results = run_pipeline(
-            api=api,
+            comparison_api=comparison_api,
+            parsing_api=parsing_api,
             comparisons=comparisons,
             templates=MOCK_TEMPLATES,
             settings=MockSettings(),
@@ -42,18 +61,20 @@ class TestRunPipeline:
 
         async for _ in results:
             pytest.fail("Should not yield any results")
-        api.submit.assert_not_awaited()
+        comparison_api.submit.assert_not_awaited()
+        parsing_api.submit.assert_not_awaited()
 
     @pytest.mark.anyio
-    async def test_one_comparison(self) -> None:
-        api = AsyncMock(spec=BaseApi)
-        api.params = MockApiParams()
-        api.submit.return_value = MockApiResponse(reply="Option A")
-
+    async def test_one_comparison(
+        self,
+        comparison_api: AsyncMock,
+        parsing_api: AsyncMock,
+    ) -> None:
         task_a, task_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((task_a,), (task_b,))
         results = run_pipeline(
-            api=api,
+            comparison_api=comparison_api,
+            parsing_api=parsing_api,
             comparisons=[comparison],
             templates=MOCK_TEMPLATES,
             settings=MockSettings(),
@@ -62,20 +83,22 @@ class TestRunPipeline:
 
         async for result in results:
             assert result.preferred_option_index == 0
-        api.submit.assert_awaited_once()
+        comparison_api.submit.assert_awaited_once()
+        parsing_api.submit.assert_awaited_once()
 
     @pytest.mark.anyio
-    async def test_multiple_comparisons_serial(self) -> None:
-        api = AsyncMock(spec=BaseApi)
-        api.params = MockApiParams()
-        api.submit.return_value = MockApiResponse(reply="Option A")
-
+    async def test_multiple_comparisons_serial(
+        self,
+        comparison_api: AsyncMock,
+        parsing_api: AsyncMock,
+    ) -> None:
         task_a, task_b = task_record_factory([TaskType.regular] * 2)
         comparison_0 = ((task_a,), (task_b,))
         comparison_1 = ((task_b,), (task_a,))
         settings = MockSettings(concurrent_requests=1)
         results = run_pipeline(
-            api=api,
+            comparison_api=comparison_api,
+            parsing_api=parsing_api,
             comparisons=[comparison_0, comparison_1],
             templates=MOCK_TEMPLATES,
             settings=settings,
@@ -87,22 +110,24 @@ class TestRunPipeline:
             await asyncio.sleep(0)
             assert index < 2
             assert result.preferred_option_index == 0
-            assert api.submit.await_count == index + 1
+            assert comparison_api.submit.await_count == index + 1
+            assert parsing_api.submit.await_count == index + 1
             index += 1
         assert index == 2
 
     @pytest.mark.anyio
-    async def test_multiple_comparisons_parallel(self) -> None:
-        api = AsyncMock(spec=BaseApi)
-        api.params = MockApiParams()
-        api.submit.return_value = MockApiResponse(reply="Option A")
-
+    async def test_multiple_comparisons_parallel(
+        self,
+        comparison_api: AsyncMock,
+        parsing_api: AsyncMock,
+    ) -> None:
         task_a, task_b = task_record_factory([TaskType.regular] * 2)
         comparison_0 = ((task_a,), (task_b,))
         comparison_1 = ((task_b,), (task_a,))
         settings = MockSettings(concurrent_requests=2)
         results = run_pipeline(
-            api=api,
+            comparison_api=comparison_api,
+            parsing_api=parsing_api,
             comparisons=[comparison_0, comparison_1],
             templates=MOCK_TEMPLATES,
             settings=settings,
@@ -114,21 +139,23 @@ class TestRunPipeline:
             await asyncio.sleep(0)
             assert index < 2
             assert result.preferred_option_index == 0
-            assert api.submit.await_count == 2
+            assert comparison_api.submit.await_count == 2
+            assert parsing_api.submit.await_count == 2
             index += 1
         assert index == 2
 
     @pytest.mark.anyio
-    async def test_multiple_samples(self) -> None:
-        api = AsyncMock(spec=BaseApi)
-        api.params = MockApiParams()
-        api.submit.return_value = MockApiResponse(reply="Option A")
-
+    async def test_multiple_samples(
+        self,
+        comparison_api: AsyncMock,
+        parsing_api: AsyncMock,
+    ) -> None:
         task_a, task_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((task_a,), (task_b,))
         settings = MockSettings(samples_per_comparison=3, concurrent_requests=1)
         results = run_pipeline(
-            api=api,
+            comparison_api=comparison_api,
+            parsing_api=parsing_api,
             comparisons=[comparison],
             templates=MOCK_TEMPLATES,
             settings=settings,
@@ -140,16 +167,17 @@ class TestRunPipeline:
             await asyncio.sleep(0)
             assert index < 3
             assert result.preferred_option_index == 0
-            assert api.submit.await_count == index + 1
+            assert comparison_api.submit.await_count == index + 1
+            assert parsing_api.submit.await_count == index + 1
             index += 1
         assert index == 3
 
     @pytest.mark.anyio
-    async def test_existing_results(self) -> None:
-        api = AsyncMock(spec=BaseApi)
-        api.params = MockApiParams()
-        api.submit.return_value = MockApiResponse(reply="Option A")
-
+    async def test_existing_results(
+        self,
+        comparison_api: AsyncMock,
+        parsing_api: AsyncMock,
+    ) -> None:
         task_a, task_b = task_record_factory([TaskType.regular] * 2)
         old_comparison = ((task_a,), (task_b,))
         new_comparison = ((task_b,), (task_a,))
@@ -162,7 +190,8 @@ class TestRunPipeline:
             )
         }
         results = run_pipeline(
-            api=api,
+            comparison_api=comparison_api,
+            parsing_api=parsing_api,
             comparisons=[old_comparison, new_comparison],
             templates=MOCK_TEMPLATES,
             settings=settings,
@@ -175,7 +204,8 @@ class TestRunPipeline:
             assert index < 1
             assert result.comparison == comparison_to_id(new_comparison)
             assert result.preferred_option_index == 0
-            assert api.submit.await_count == index + 1
+            assert comparison_api.submit.await_count == index + 1
+            assert parsing_api.submit.await_count == index + 1
             index += 1
         assert index == 1
 

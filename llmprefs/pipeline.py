@@ -24,8 +24,9 @@ class Sample(BaseModel):
     template: ComparisonTemplate
 
 
-async def run_pipeline(
-    api: BaseApi[AnyApiResponse],
+async def run_pipeline(  # noqa: PLR0913
+    comparison_api: BaseApi[AnyApiResponse],
+    parsing_api: BaseApi[AnyApiResponse],
     comparisons: Iterable[Comparison],
     templates: Iterable[ComparisonTemplate],
     settings: Settings,
@@ -49,21 +50,28 @@ async def run_pipeline(
                     f"Skipped {skip_count} samples because results already exist",
                 )
             skip_count = 0
-            coro = compare_options(api, sample)
+            coro = compare_options(
+                comparison_api=comparison_api,
+                parsing_api=parsing_api,
+                sample=sample,
+            )
             awaitables.append(coro)
         for future in as_completed(awaitables):
             yield await future
 
 
 async def compare_options(
-    api: BaseApi[AnyApiResponse],
+    comparison_api: BaseApi[AnyApiResponse],
+    parsing_api: BaseApi[AnyApiResponse],
     sample: Sample,
 ) -> ResultRecord:
-    prompt = sample.template.format_comparison(sample.comparison)
-    response = await api.submit(prompt)
-    preferred_option_index = parse_preference(
+    comparison_prompt = sample.template.format_comparison(sample.comparison)
+    comparison_response = await comparison_api.submit(comparison_prompt)
+    preferred_option_index = await parse_preference(
         num_options=len(sample.comparison),
-        llm_response=response.answer,
+        comparison_prompt=comparison_prompt,
+        comparison_response=comparison_response.answer,
+        parsing_api=parsing_api,
     )
     return ResultRecord(
         created_at=datetime.now(tz=UTC),
@@ -71,8 +79,8 @@ async def compare_options(
         comparison=comparison_to_id(sample.comparison),
         sample_index=sample.index,
         preferred_option_index=preferred_option_index,
-        api_params=api.params,
-        api_response=response,
+        api_params=comparison_api.params,
+        api_response=comparison_response,
     )
 
 

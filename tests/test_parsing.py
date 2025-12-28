@@ -1,9 +1,17 @@
 import pytest
 
-from llmprefs.parsing import generate_option_regex, parse_preference
+from llmprefs.api.mock import MockApi
+from llmprefs.api.structs import MockApiParams
+from llmprefs.parsing import parse_preference
+
+
+@pytest.fixture
+def mock_api() -> MockApi:
+    return MockApi(params=MockApiParams())
 
 
 class TestParsePreference:
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
         argnames="inputs",
         argvalues=[
@@ -28,13 +36,23 @@ class TestParsePreference:
             ),
         ],
     )
-    def test_valid_response(self, inputs: tuple[str, int]) -> None:
-        response, expected_index = inputs
-        preference_index = parse_preference(num_options=2, llm_response=response)
+    async def test_valid_response(
+        self,
+        inputs: tuple[str, int],
+        mock_api: MockApi,
+    ) -> None:
+        comparison_response, expected_index = inputs
+        preference_index = await parse_preference(
+            num_options=2,
+            comparison_prompt="",
+            comparison_response=comparison_response,
+            parsing_api=mock_api,
+        )
         assert preference_index == expected_index
 
+    @pytest.mark.anyio
     @pytest.mark.parametrize(
-        argnames="response",
+        argnames="comparison_response",
         argvalues=[
             "",
             "c",
@@ -58,14 +76,15 @@ class TestParsePreference:
             ),
         ],
     )
-    def test_invalid_response(self, response: str) -> None:
-        assert parse_preference(num_options=2, llm_response=response) is None
-
-
-class TestGenerateOptionRegex:
-    def test_regex(self) -> None:
-        options = ["a", "b", "c"]
-        for i, option in enumerate(options):
-            regex = generate_option_regex(i)
-            for opt in options:
-                assert bool(regex.search(opt)) == (option == opt)
+    async def test_invalid_response(
+        self,
+        comparison_response: str,
+        mock_api: MockApi,
+    ) -> None:
+        preference_index = await parse_preference(
+            num_options=2,
+            comparison_prompt="",
+            comparison_response=comparison_response,
+            parsing_api=mock_api,
+        )
+        assert preference_index is None

@@ -52,10 +52,12 @@ async def main() -> None:
         return
     sample_count_approx = count_samples(tasks, settings)
 
-    api = instantiate_api(settings, ApiStage.COMPARISON)
+    comparison_api = instantiate_api(settings, ApiStage.COMPARISON)
+    parsing_api = instantiate_api(settings, ApiStage.PARSING)
 
     results = run_pipeline(
-        api=api,
+        comparison_api=comparison_api,
+        parsing_api=parsing_api,
         comparisons=comparisons,
         templates=ENABLED_COMPARISON_TEMPLATES,
         settings=settings,
