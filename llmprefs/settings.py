@@ -7,13 +7,7 @@ from pydantic_settings import BaseSettings
 from llmprefs.api.structs import LLM
 
 
-class Settings(
-    BaseSettings,
-    cli_parse_args=True,
-    cli_enforce_required=True,
-    cli_kebab_case=True,
-    cli_implicit_flags=True,
-):
+class Settings(BaseSettings):
     # IO Settings
     input_path: Path = Field(
         default=...,
@@ -118,3 +112,13 @@ class Settings(
             structured_output is False and parsing_model is an OpenAI model.
         """,
     )
+
+
+class CLISettings(
+    Settings,
+    cli_parse_args=True,
+    cli_enforce_required=True,
+    cli_kebab_case=True,
+    cli_implicit_flags=True,
+):
+    pass
