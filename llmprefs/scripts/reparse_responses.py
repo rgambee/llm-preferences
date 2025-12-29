@@ -6,7 +6,7 @@ from pathlib import Path
 
 from llmprefs.api.base import BaseApi
 from llmprefs.api.instantiate import instantiate_api
-from llmprefs.api.structs import AnyApiResponse, ApiStage
+from llmprefs.api.structs import LLM, AnyApiResponse, ApiStage
 from llmprefs.file_io.load_records import load_records
 from llmprefs.file_io.save_results import save_results_jsonl
 from llmprefs.parsing import parse_preference
@@ -37,7 +37,11 @@ async def main() -> None:
     parser.add_argument("output_path", type=Path)
     args = parser.parse_args()
 
-    settings = Settings()
+    settings = Settings(
+        input_path=args.input_path,
+        output_path=args.output_path,
+        model=LLM.MOCK_MODEL,
+    )
     parsing_api = instantiate_api(settings, ApiStage.PARSING)
     logging.basicConfig(level=logging.INFO)
     results = process_results(args.input_path, parsing_api)
