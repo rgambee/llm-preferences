@@ -71,7 +71,7 @@ class Settings(BaseSettings):
         description="Model to use for parsing free-form responses",
     )
     parsing_temperature: float = Field(
-        default=0.0,
+        default=1.0,
         description="Temperature when parsing free-form responses",
     )
     parsing_max_output_tokens: int = Field(
