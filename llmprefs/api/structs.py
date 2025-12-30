@@ -1,4 +1,5 @@
 import enum
+import json
 from abc import ABC, abstractmethod
 from typing import Literal
 
@@ -82,7 +83,7 @@ class AnthropicApiResponse(BaseApiResponse, AnthropicMessage):
             if block.type == "text":
                 return block.text
             if block.type == "tool_use":
-                return SelectTaskToolInputSchema.model_validate(block.input).option_id
+                return json.dumps(block.input)
         return ""
 
 
