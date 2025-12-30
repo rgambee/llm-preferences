@@ -5,7 +5,7 @@ from typing import Literal
 
 from anthropic.types import Message as AnthropicMessage
 from anthropic.types import ToolParam
-from openai.types.responses import Response as _OpenAiResponse
+from openai.types.responses import Response as OpenAiResponse
 from openai.types.responses import ResponseFormatTextJSONSchemaConfigParam
 from openai.types.shared_params.reasoning_effort import ReasoningEffort
 from pydantic import BaseModel, ConfigDict, Field
@@ -87,7 +87,7 @@ class AnthropicApiResponse(BaseApiResponse, AnthropicMessage):
         return ""
 
 
-class OpenAiApiResponse(BaseApiResponse, _OpenAiResponse):
+class OpenAiApiResponse(BaseApiResponse, OpenAiResponse):
     provider: Literal[Provider.OPENAI] = Provider.OPENAI
 
     @property
