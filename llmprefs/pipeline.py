@@ -31,7 +31,6 @@ async def run_pipeline(
     settings: Settings,
     existing_results: set[ResultRecordKey],
 ) -> AsyncGenerator[ResultRecord, None]:
-    logger = logging.getLogger(__name__)
     comparison_api = instantiate_api(settings, ApiStage.COMPARISON)
     parsing_api = instantiate_api(settings, ApiStage.PARSING)
 
@@ -39,19 +38,11 @@ async def run_pipeline(
         comparisons=comparisons,
         templates=templates,
         samples_per_comparison=settings.samples_per_comparison,
+        existing_results=existing_results,
     )
-    skip_count = 0
     for chunk in chunked(samples, settings.concurrent_requests):
         awaitables: list[Coroutine[Any, Any, ResultRecord]] = []
         for sample in chunk:
-            if result_already_exists(sample, existing_results):
-                skip_count += 1
-                continue
-            if skip_count > 0:
-                logger.info(
-                    f"Skipped {skip_count} samples because results already exist",
-                )
-            skip_count = 0
             coro = compare_options(
                 comparison_api=comparison_api,
                 parsing_api=parsing_api,
@@ -90,14 +81,26 @@ def generate_samples(
     comparisons: Iterable[Comparison],
     templates: Iterable[ComparisonTemplate],
     samples_per_comparison: int,
+    existing_results: set[ResultRecordKey],
 ) -> Iterable[Sample]:
+    logger = logging.getLogger(__name__)
+    skip_count = 0
     for comparison, template in itertools.product(comparisons, templates):
         for sample_index in range(samples_per_comparison):
-            yield Sample(
+            sample = Sample(
                 index=sample_index,
                 comparison=comparison,
                 template=template,
             )
+            if result_already_exists(sample, existing_results):
+                skip_count += 1
+                continue
+            if skip_count > 0:
+                logger.info(
+                    f"Skipped {skip_count} samples because results already exist",
+                )
+            skip_count = 0
+            yield sample
 
 
 def chunked(iterable: Iterable[T], size: int) -> Iterable[tuple[T, ...]]:

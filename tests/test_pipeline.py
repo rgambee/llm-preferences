@@ -152,17 +152,49 @@ class TestGenerateSamples:
         task_a, task_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((task_a,), (task_b,))
 
-        assert list(generate_samples([], [], 1)) == []
-        assert list(generate_samples([], MOCK_TEMPLATES, 1)) == []
-        assert list(generate_samples([comparison], [], 1)) == []
-        assert list(generate_samples([comparison], MOCK_TEMPLATES, 0)) == []
+        samples = generate_samples(
+            comparisons=[],
+            templates=[],
+            samples_per_comparison=1,
+            existing_results=set(),
+        )
+        assert list(samples) == []
+
+        samples = generate_samples(
+            comparisons=[],
+            templates=MOCK_TEMPLATES,
+            samples_per_comparison=1,
+            existing_results=set(),
+        )
+        assert list(samples) == []
+
+        samples = generate_samples(
+            comparisons=[comparison],
+            templates=[],
+            samples_per_comparison=1,
+            existing_results=set(),
+        )
+        assert list(samples) == []
+
+        samples = generate_samples(
+            comparisons=[comparison],
+            templates=MOCK_TEMPLATES,
+            samples_per_comparison=0,
+            existing_results=set(),
+        )
+        assert list(samples) == []
 
     @pytest.mark.parametrize("samples_per_comparison", [1, 2])
     def test_repeated_sample(self, samples_per_comparison: int) -> None:
         task_a, task_b = task_record_factory([TaskType.regular] * 2)
         comparison = ((task_a,), (task_b,))
         samples = list(
-            generate_samples([comparison], MOCK_TEMPLATES, samples_per_comparison)
+            generate_samples(
+                [comparison],
+                MOCK_TEMPLATES,
+                samples_per_comparison,
+                existing_results=set(),
+            )
         )
         assert len(samples) == samples_per_comparison
         for i in range(len(samples)):
@@ -177,7 +209,12 @@ class TestGenerateSamples:
         comparison_1 = ((task_b,), (task_a,))
         comparisons = [comparison_0, comparison_1]
         samples = list(
-            generate_samples(comparisons, MOCK_TEMPLATES, samples_per_comparison)
+            generate_samples(
+                comparisons,
+                MOCK_TEMPLATES,
+                samples_per_comparison,
+                existing_results=set(),
+            )
         )
         assert len(samples) == (
             len(comparisons) * len(MOCK_TEMPLATES) * samples_per_comparison
@@ -186,6 +223,46 @@ class TestGenerateSamples:
         for comparison in comparisons:
             for template in MOCK_TEMPLATES:
                 for sample_index in range(samples_per_comparison):
+                    sample = samples[outer_index]
+                    assert sample.comparison == comparison
+                    assert sample.template == template
+                    assert sample.index == sample_index
+                    outer_index += 1
+
+    def test_existing_results(self) -> None:
+        task_a, task_b = task_record_factory([TaskType.regular] * 2)
+        comparison_0 = ((task_a,), (task_b,))
+        comparison_1 = ((task_b,), (task_a,))
+        comparisons = [comparison_0, comparison_1]
+        samples_per_comparison = 2
+        existing_results = {
+            ResultRecordKey(
+                comparison=comparison_to_id(comparison_0),
+                comparison_prompt_id=MOCK_TEMPLATES[0].id,
+                sample_index=0,
+            ),
+            ResultRecordKey(
+                comparison=comparison_to_id(comparison_1),
+                comparison_prompt_id=MOCK_TEMPLATES[0].id,
+                sample_index=1,
+            ),
+        }
+        samples = list(
+            generate_samples(
+                comparisons,
+                MOCK_TEMPLATES,
+                samples_per_comparison,
+                existing_results,
+            ),
+        )
+        full_length = len(comparisons) * len(MOCK_TEMPLATES) * samples_per_comparison
+        assert len(samples) == full_length - len(existing_results)
+        outer_index = 0
+        for comparison_index, comparison in enumerate(comparisons):
+            for template in MOCK_TEMPLATES:
+                for sample_index in range(samples_per_comparison):
+                    if comparison_index == sample_index:
+                        continue
                     sample = samples[outer_index]
                     assert sample.comparison == comparison
                     assert sample.template == template
