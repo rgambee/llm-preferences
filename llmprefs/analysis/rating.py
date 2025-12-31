@@ -115,7 +115,7 @@ def resample_results(
         return np.round(x * resample).sum() - num_comparisons
 
     x0 = num_comparisons / resample.sum()
-    x = optimize.brentq(f=error, a=0.9 * x0, b=1.1 * x0)
+    x = optimize.brentq(f=error, a=0.5 * x0, b=2.0 * x0)
     resample_sum = np.round(x * resample).sum()
     if resample_sum != num_comparisons:
         logging.getLogger().error(
