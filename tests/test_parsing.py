@@ -101,10 +101,13 @@ class TestParsePreference:
             "No thanks",
             "Pass",
             "I cannot make a decision",
-            (
-                "Interesting choice. Before I start, a quick question:"
-                + "\n\n- Do you want me to pick between Option A and Option B, or"
-                + " should I state my preference?"
+            pytest.param(
+                fill("""
+                    Interesting choice. Before I start, a quick question:
+                    Do you want me to pick between Option A and Option B, or should I
+                    state my preference?
+                """),
+                id="interesting-choice",
             ),
         ],
     )
