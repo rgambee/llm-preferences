@@ -13,7 +13,7 @@ from llmprefs.file_io.save_results import save_results_jsonl
 from llmprefs.logs import configure_logging
 from llmprefs.pipeline import run_pipeline
 from llmprefs.prompts import ENABLED_COMPARISON_TEMPLATES
-from llmprefs.settings import CLISettings, Settings
+from llmprefs.settings import Settings
 from llmprefs.task_structs import TaskRecord
 
 
@@ -33,7 +33,7 @@ def count_samples(
 
 
 async def main() -> None:
-    settings = CLISettings()
+    settings = Settings()
 
     configure_logging(logging.INFO, settings.log_file)
     logger = logging.getLogger(__name__)
