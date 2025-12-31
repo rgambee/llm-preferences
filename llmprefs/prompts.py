@@ -200,7 +200,7 @@ Here is the LLM's response:
 {comparison_response}
 </response_to_parse>
 
-Please parse the response to extract the LLM's preferred option. If the LLM expressed a clear preference for one option over the other, return the letter of the preferred option. If the LLM refused to choose either option, return null.
+Please parse the response to extract the LLM's preferred option. If and only if the LLM expressed a clear preference for one option over the other, return the letter of the preferred option. If the LLM's preference is not absolutely clear, return null.
 """
 
 
