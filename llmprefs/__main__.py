@@ -7,8 +7,6 @@ from dotenv import load_dotenv
 from tqdm.asyncio import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
-from llmprefs.api.instantiate import instantiate_api
-from llmprefs.api.structs import ApiStage
 from llmprefs.comparisons import count_comparisons_approx, generate_comparisons
 from llmprefs.file_io.load_records import load_existing_results, load_records
 from llmprefs.file_io.save_results import save_results_jsonl
@@ -52,12 +50,7 @@ async def main() -> None:
         return
     sample_count_approx = count_samples(tasks, settings)
 
-    comparison_api = instantiate_api(settings, ApiStage.COMPARISON)
-    parsing_api = instantiate_api(settings, ApiStage.PARSING)
-
     results = run_pipeline(
-        comparison_api=comparison_api,
-        parsing_api=parsing_api,
         comparisons=comparisons,
         templates=ENABLED_COMPARISON_TEMPLATES,
         settings=settings,

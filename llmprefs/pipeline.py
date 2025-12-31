@@ -8,7 +8,8 @@ from typing import Any, TypeVar
 from pydantic import BaseModel
 
 from llmprefs.api.base import BaseApi
-from llmprefs.api.structs import AnyApiResponse
+from llmprefs.api.instantiate import instantiate_api
+from llmprefs.api.structs import AnyApiResponse, ApiStage
 from llmprefs.comparisons import Comparison
 from llmprefs.parsing import parse_preference
 from llmprefs.prompts import ComparisonTemplate
@@ -24,15 +25,16 @@ class Sample(BaseModel):
     template: ComparisonTemplate
 
 
-async def run_pipeline(  # noqa: PLR0913
-    comparison_api: BaseApi[AnyApiResponse],
-    parsing_api: BaseApi[AnyApiResponse],
+async def run_pipeline(
     comparisons: Iterable[Comparison],
     templates: Iterable[ComparisonTemplate],
     settings: Settings,
     existing_results: set[ResultRecordKey],
 ) -> AsyncGenerator[ResultRecord, None]:
     logger = logging.getLogger(__name__)
+    comparison_api = instantiate_api(settings, ApiStage.COMPARISON)
+    parsing_api = instantiate_api(settings, ApiStage.PARSING)
+
     samples = generate_samples(
         comparisons=comparisons,
         templates=templates,
