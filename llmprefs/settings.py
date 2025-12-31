@@ -67,15 +67,15 @@ class Settings(BaseSettings):
 
     # Response parsing settings (only used when structured_output is False)
     parsing_model: LLM = Field(
-        default=LLM.GPT_5_NANO_2025_08_07,
+        default=LLM.GPT_4_1_NANO_2025_04_14,
         description="Model to use for parsing free-form responses",
     )
     parsing_temperature: float = Field(
-        default=1.0,
+        default=0.0,
         description="Temperature when parsing free-form responses",
     )
     parsing_max_output_tokens: int = Field(
-        default=25,
+        default=50,
         description="Maximum number of output tokens when parsing free-form responses",
     )
     parsing_system_prompt: str = Field(
@@ -105,8 +105,8 @@ class Settings(BaseSettings):
         default="minimal",
         description="Reasoning effort for the model. Only applies to OpenAI models.",
     )
-    openai_parsing_reasoning_effort: ReasoningEffort = Field(
-        default="minimal",
+    openai_parsing_reasoning_effort: ReasoningEffort | None = Field(
+        default=None,
         description="""
             Reasoning effort to use when parsing free-form responses. Only applies when
             structured_output is False and parsing_model is an OpenAI model.
