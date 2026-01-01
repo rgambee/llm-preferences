@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 from collections.abc import Sequence
-from typing import cast
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
+from matplotlib.image import AxesImage
+from numpy.typing import NDArray
 
 from llmprefs.analysis.rating import RatedOptions, ValueCI
 
@@ -69,29 +69,7 @@ def plot_ratings_heatmap(rated_options: RatedOptions) -> Figure:
         squeeze=True,
         figsize=(10, 10),
     )
-    im = ax.imshow(  # pyright: ignore[reportUnknownMemberType]
-        ratings,
-        cmap="viridis",
-    )
-
-    threshold = cast(float, im.norm(np.nanmax(ratings))) / 2.0
-    for task0 in task_0_ids:
-        for task1 in task_1_ids:
-            index0 = task_0_ids_to_index[task0]
-            index1 = task_1_ids_to_index[task1]
-            rating = ratings[index0, index1]
-            if np.isnan(rating):
-                continue
-            color = "white" if im.norm(rating) < threshold else "black"
-            ax.text(  # pyright: ignore[reportUnknownMemberType]
-                x=index1,
-                y=index0,
-                s=f"{rating:.3f}",
-                ha="center",
-                va="center",
-                color=color,
-                size=6,
-            )
+    im = annotated_heatmap(ax, ratings)
 
     ax.set_ylabel("First Task ID")  # pyright: ignore[reportUnknownMemberType]
     ax.set_yticks(  # pyright: ignore[reportUnknownMemberType]
@@ -106,3 +84,36 @@ def plot_ratings_heatmap(rated_options: RatedOptions) -> Figure:
     colorbar.ax.set_ylabel("Rating")  # pyright: ignore[reportUnknownMemberType]
 
     return fig
+
+
+def annotated_heatmap(
+    axes: Axes,
+    matrix: NDArray[np.float64],
+    precision: int = 3,
+) -> AxesImage:
+    expected_dimensionality = 2
+    if matrix.ndim != expected_dimensionality:
+        raise ValueError("Matrix has wrong number of dimensions")
+
+    image = axes.imshow(  # pyright: ignore[reportUnknownMemberType]
+        matrix,
+        cmap="viridis",
+    )
+
+    threshold = image.norm(np.nanmax(matrix)) / 2.0
+    for i in range(matrix.shape[0]):
+        for j in range(matrix.shape[1]):
+            value = matrix[i, j]
+            if np.isnan(value):
+                continue
+            color = "white" if image.norm(value) < threshold else "black"
+            axes.text(  # pyright: ignore[reportUnknownMemberType]
+                x=j,
+                y=i,
+                s=f"{value:.{precision}f}",
+                ha="center",
+                va="center",
+                color=color,
+                size=6,
+            )
+    return image
