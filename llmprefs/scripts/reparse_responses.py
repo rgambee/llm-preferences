@@ -1,8 +1,11 @@
-import argparse
 import asyncio
 import logging
-from collections.abc import AsyncIterable
+from collections.abc import AsyncGenerator
 from pathlib import Path
+
+from dotenv import load_dotenv
+from tqdm.asyncio import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 from llmprefs.api.base import BaseApi
 from llmprefs.api.instantiate import instantiate_api
@@ -14,38 +17,42 @@ from llmprefs.settings import Settings
 from llmprefs.task_structs import ResultRecord
 
 
+class ReparseSettings(Settings):
+    model: LLM = LLM.MOCK_MODEL
+
+
 async def process_results(
     path: Path,
     parsing_api: BaseApi[AnyApiResponse],
-) -> AsyncIterable[ResultRecord]:
+) -> AsyncGenerator[ResultRecord, None]:
     for record in load_records(path, ResultRecord):
-        comparison_prompt = ""
         record.preferred_option_index = await parse_preference(
             num_options=len(record.comparison),
-            comparison_prompt=comparison_prompt,
+            comparison_prompt=record.comparison_prompt,
             comparison_response=record.api_response.answer,
             parsing_api=parsing_api,
         )
         yield record
 
 
-async def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Reparse LLM responses using current parsing logic",
-    )
-    parser.add_argument("input_path", type=Path)
-    parser.add_argument("output_path", type=Path)
-    args = parser.parse_args()
+def count_lines(path: Path) -> int:
+    with path.open(encoding="utf-8") as fin:
+        return sum(1 for _ in fin)
 
-    settings = Settings(
-        input_path=args.input_path,
-        output_path=args.output_path,
-        model=LLM.MOCK_MODEL,
-    )
-    parsing_api = instantiate_api(settings, ApiStage.PARSING)
+
+async def main() -> None:
+    settings = ReparseSettings()
     logging.basicConfig(level=logging.INFO)
-    results = process_results(args.input_path, parsing_api)
-    await save_results_jsonl(results, args.output_path)
+    logger = logging.getLogger(__name__)
+    if not load_dotenv():
+        logger.warning("No .env file found")
+
+    parsing_api = instantiate_api(settings, ApiStage.PARSING)
+    line_count = count_lines(settings.input_path)
+    results = process_results(settings.input_path, parsing_api)
+    progress = tqdm(results, total=line_count)
+    with logging_redirect_tqdm():
+        await save_results_jsonl(progress, settings.output_path)
 
 
 if __name__ == "__main__":
