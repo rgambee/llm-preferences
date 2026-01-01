@@ -4,7 +4,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from llmprefs.analysis.rating import rate_options
+from llmprefs.analysis.rating import compile_matrix, rate_options
 from llmprefs.analysis.visualization import plot_ratings_heatmap, plot_ratings_stem
 from llmprefs.file_io.load_records import load_records
 from llmprefs.task_structs import ResultRecord
@@ -19,7 +19,8 @@ def main() -> None:
 
     logging.basicConfig(level=logging.INFO)
     results = load_records(args.input_path, ResultRecord)
-    rated_options = rate_options(list(results), num_resamples=100, confidence=0.75)
+    option_matrix = compile_matrix(results)
+    rated_options = rate_options(option_matrix, num_resamples=100, confidence=0.75)
 
     fig = plot_ratings_stem(rated_options)
     fig.show()

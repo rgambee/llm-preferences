@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass
 from typing import cast
 
@@ -32,7 +32,7 @@ RatedOptions = dict[OptionById, ValueCI]
 
 
 def rate_options(
-    results: Sequence[ResultRecord],
+    option_matrix: OptionMatrix,
     num_resamples: int,
     confidence: float,
     generator: np.random.Generator | None = None,
@@ -42,11 +42,10 @@ def rate_options(
 
     Also compute a bootstrapped confidence interval for each rating.
     """
-    if len(results) == 0:
+    if option_matrix.matrix.size == 0:
         return {}
 
     generator = generator or np.random.default_rng()
-    option_matrix = compile_matrix(results)
     resampled_ratings = np.full((num_resamples, len(option_matrix.options)), np.nan)
     for i in range(num_resamples):
         resample = resample_results(option_matrix=option_matrix, generator=generator)
