@@ -13,6 +13,7 @@ from llmprefs.api.structs import LLM, AnyApiResponse, ApiStage
 from llmprefs.file_io.load_records import load_records
 from llmprefs.file_io.save_results import save_results_jsonl
 from llmprefs.parsing import parse_preference
+from llmprefs.pipeline import chunked_async_map
 from llmprefs.settings import Settings
 from llmprefs.task_structs import ResultRecord
 
@@ -21,18 +22,30 @@ class ReparseSettings(Settings):
     model: LLM = LLM.MOCK_MODEL
 
 
-async def process_results(
+def process_results(
     path: Path,
-    parsing_api: BaseApi[AnyApiResponse],
+    settings: Settings,
 ) -> AsyncGenerator[ResultRecord, None]:
-    for record in load_records(path, ResultRecord):
-        record.preferred_option_index = await parse_preference(
-            num_options=len(record.comparison),
-            comparison_prompt=record.comparison_prompt,
-            comparison_response=record.api_response.answer,
-            parsing_api=parsing_api,
-        )
-        yield record
+    parsing_api = instantiate_api(settings, ApiStage.PARSING)
+    records = load_records(path, ResultRecord)
+    return chunked_async_map(
+        func=lambda record: process_single_result(record, parsing_api),
+        iterable=records,
+        size=settings.concurrent_requests,
+    )
+
+
+async def process_single_result(
+    record: ResultRecord,
+    parsing_api: BaseApi[AnyApiResponse],
+) -> ResultRecord:
+    record.preferred_option_index = await parse_preference(
+        num_options=len(record.comparison),
+        comparison_prompt=record.comparison_prompt,
+        comparison_response=record.api_response.answer,
+        parsing_api=parsing_api,
+    )
+    return record
 
 
 def count_lines(path: Path) -> int:
@@ -47,9 +60,8 @@ async def main() -> None:
     if not load_dotenv():
         logger.warning("No .env file found")
 
-    parsing_api = instantiate_api(settings, ApiStage.PARSING)
     line_count = count_lines(settings.input_path)
-    results = process_results(settings.input_path, parsing_api)
+    results = process_results(settings.input_path, settings)
     progress = tqdm(results, total=line_count)
     with logging_redirect_tqdm():
         await save_results_jsonl(progress, settings.output_path)
