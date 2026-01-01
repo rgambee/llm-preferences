@@ -68,6 +68,11 @@ def rate_options(
 
 
 def compile_matrix(results: Iterable[ResultRecord]) -> OptionMatrix:
+    """Compile comparison results into a square matrix.
+
+    The matrix has size N_options x N_options. The entry at [i, j] is the number of
+    times option i was preferred over option j.
+    """
     counts: dict[OptionById, dict[OptionById, int]] = defaultdict(
         lambda: defaultdict(int),
     )
