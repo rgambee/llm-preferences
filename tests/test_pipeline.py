@@ -148,10 +148,7 @@ class TestRunPipeline:
 
 
 class TestGenerateSamples:
-    def test_empty(self) -> None:
-        task_a, task_b = task_record_factory([TaskType.regular] * 2)
-        comparison = ((task_a,), (task_b,))
-
+    def test_empty_comparisons(self) -> None:
         samples = generate_samples(
             comparisons=[],
             templates=[],
@@ -168,6 +165,9 @@ class TestGenerateSamples:
         )
         assert list(samples) == []
 
+    def test_empty_templates(self) -> None:
+        task_a, task_b = task_record_factory([TaskType.regular] * 2)
+        comparison = ((task_a,), (task_b,))
         samples = generate_samples(
             comparisons=[comparison],
             templates=[],
@@ -176,6 +176,9 @@ class TestGenerateSamples:
         )
         assert list(samples) == []
 
+    def test_zero_samples_per_comparison(self) -> None:
+        task_a, task_b = task_record_factory([TaskType.regular] * 2)
+        comparison = ((task_a,), (task_b,))
         samples = generate_samples(
             comparisons=[comparison],
             templates=MOCK_TEMPLATES,
