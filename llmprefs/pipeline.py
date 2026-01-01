@@ -1,9 +1,9 @@
 import itertools
 import logging
 from asyncio import as_completed
-from collections.abc import AsyncGenerator, Coroutine, Iterable
+from collections.abc import AsyncGenerator, Callable, Coroutine, Iterable
 from datetime import UTC, datetime
-from typing import Any, TypeVar
+from typing import TypeVar
 
 from pydantic import BaseModel
 
@@ -17,6 +17,7 @@ from llmprefs.settings import Settings
 from llmprefs.task_structs import ResultRecord, ResultRecordKey, comparison_to_id
 
 T = TypeVar("T")
+R = TypeVar("R")
 
 
 class Sample(BaseModel):
@@ -40,17 +41,16 @@ async def run_pipeline(
         samples_per_comparison=settings.samples_per_comparison,
         existing_results=existing_results,
     )
-    for chunk in chunked(samples, settings.concurrent_requests):
-        awaitables: list[Coroutine[Any, Any, ResultRecord]] = []
-        for sample in chunk:
-            coro = compare_options(
-                comparison_api=comparison_api,
-                parsing_api=parsing_api,
-                sample=sample,
-            )
-            awaitables.append(coro)
-        for future in as_completed(awaitables):
-            yield await future
+    async for result in chunked_async_map(
+        func=lambda sample: compare_options(
+            comparison_api=comparison_api,
+            parsing_api=parsing_api,
+            sample=sample,
+        ),
+        iterable=samples,
+        size=settings.concurrent_requests,
+    ):
+        yield result
 
 
 async def compare_options(
@@ -102,6 +102,18 @@ def generate_samples(
                 )
             skip_count = 0
             yield sample
+
+
+async def chunked_async_map(
+    func: Callable[[T], Coroutine[None, None, R]],
+    iterable: Iterable[T],
+    size: int,
+) -> AsyncGenerator[R, None]:
+    """Map a function over an iterable in chunks, consuming the iterable lazily."""
+    for chunk in chunked(iterable, size):
+        awaitables = (func(item) for item in chunk)
+        for future in as_completed(awaitables):
+            yield await future
 
 
 def chunked(iterable: Iterable[T], size: int) -> Iterable[tuple[T, ...]]:
