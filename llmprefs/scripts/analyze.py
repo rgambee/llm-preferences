@@ -5,7 +5,11 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from llmprefs.analysis.rating import compile_matrix, rate_options
-from llmprefs.analysis.visualization import plot_ratings_heatmap, plot_ratings_stem
+from llmprefs.analysis.visualization import (
+    plot_comparison_outcomes_heatmap,
+    plot_ratings_heatmap,
+    plot_ratings_stem,
+)
 from llmprefs.file_io.load_records import load_records
 from llmprefs.task_structs import ResultRecord
 
@@ -21,6 +25,9 @@ def main() -> None:
     results = load_records(args.input_path, ResultRecord)
     option_matrix = compile_matrix(results)
     rated_options = rate_options(option_matrix, num_resamples=100, confidence=0.75)
+
+    fig = plot_comparison_outcomes_heatmap(option_matrix)
+    fig.show()
 
     fig = plot_ratings_stem(rated_options)
     fig.show()
