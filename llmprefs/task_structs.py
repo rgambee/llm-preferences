@@ -88,6 +88,7 @@ class ResultRecord(BaseModel):
     comparison_prompt_id: int
     comparison: ComparisonById
     sample_index: int
+    comparison_prompt: str
     preferred_option_index: int | None
     api_params: AnyApiParameters = Field(discriminator="provider")
     api_response: AnyApiResponse

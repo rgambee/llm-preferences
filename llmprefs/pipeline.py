@@ -71,6 +71,7 @@ async def compare_options(
         comparison_prompt_id=sample.template.id,
         comparison=comparison_to_id(sample.comparison),
         sample_index=sample.index,
+        comparison_prompt=comparison_prompt,
         preferred_option_index=preferred_option_index,
         api_params=comparison_api.params,
         api_response=comparison_response,

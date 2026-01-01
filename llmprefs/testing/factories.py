@@ -52,6 +52,7 @@ def result_record_factory() -> ResultRecord:
         comparison_prompt_id=123,
         comparison=((1,), (2,)),
         sample_index=0,
+        comparison_prompt="Do you want to do Option 1 or Option 2?",
         preferred_option_index=0,
         api_params=MockApiParams(
             provider=Provider.MOCK,
