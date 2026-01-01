@@ -23,6 +23,15 @@ def plot_comparison_outcomes_heatmap(option_matrix: OptionMatrix) -> Figure:
         squeeze=True,
     )
     annotated_heatmap(ax, option_matrix.matrix, precision=0)
+    ax.set_title(  # pyright: ignore[reportUnknownMemberType]
+        "Comparison Outcome Counts"
+    )
+    ax.set_xlabel(  # pyright: ignore[reportUnknownMemberType]
+        "Index of Disfavored Option"
+    )
+    ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
+        "Index of Favored Option"
+    )
     return fig
 
 
@@ -57,6 +66,9 @@ def plot_ratings_stem(rated_options: RatedOptions) -> Figure:
         capsize=5.0,
         label="Bootstrapped CI",
     )
+    ax.set_title("Rated Options")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_xlabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_ylabel("Rating")  # pyright: ignore[reportUnknownMemberType]
 
     return fig
 
@@ -87,6 +99,7 @@ def plot_ratings_heatmap(rated_options: RatedOptions) -> Figure:
     )
     im = annotated_heatmap(ax, ratings)
 
+    ax.set_title("Rated Options")  # pyright: ignore[reportUnknownMemberType]
     ax.set_ylabel("First Task ID")  # pyright: ignore[reportUnknownMemberType]
     ax.set_yticks(  # pyright: ignore[reportUnknownMemberType]
         range(len(task_0_ids)), labels=task_0_ids
