@@ -7,7 +7,23 @@ from matplotlib.figure import Figure
 from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
-from llmprefs.analysis.rating import RatedOptions, ValueCI
+from llmprefs.analysis.rating import OptionMatrix, RatedOptions, ValueCI
+
+
+def plot_comparison_outcomes_heatmap(option_matrix: OptionMatrix) -> Figure:
+    expected_dimensionality = 2
+    if option_matrix.matrix.ndim != expected_dimensionality:
+        raise ValueError("Option has wrong number of dimensions")
+    if option_matrix.matrix.shape[0] != option_matrix.matrix.shape[1]:
+        raise ValueError("Option matrix must be square")
+
+    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+        nrows=1,
+        ncols=1,
+        squeeze=True,
+    )
+    annotated_heatmap(ax, option_matrix.matrix, precision=0)
+    return fig
 
 
 def error_bars(values: Sequence[ValueCI]) -> tuple[list[float], list[float]]:
