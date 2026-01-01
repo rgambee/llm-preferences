@@ -22,8 +22,14 @@ def main() -> None:
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
     results = load_records(args.input_path, ResultRecord)
     option_matrix = compile_matrix(results)
+    logger.info(
+        f"Analyzing {option_matrix.matrix.sum():.0f} preferences "
+        + f"across {len(option_matrix.options)} options"
+    )
     rated_options = rate_options(option_matrix, num_resamples=100, confidence=0.75)
 
     fig = plot_comparison_outcomes_heatmap(option_matrix)
