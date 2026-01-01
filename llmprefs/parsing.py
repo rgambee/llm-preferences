@@ -1,4 +1,5 @@
 import logging
+import textwrap
 
 from pydantic import ValidationError
 
@@ -30,8 +31,9 @@ async def parse_preference(
     if index is not None:
         return index
 
+    shortened_response = textwrap.shorten(comparison_response, width=100)
     logging.getLogger(__name__).warning(
-        f"Could not parse preference from response: '{comparison_response}'",
+        f"Could not parse preference from response: '{shortened_response}'",
     )
     return None
 
