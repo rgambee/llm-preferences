@@ -4,11 +4,12 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
-from llmprefs.analysis.rating import compile_matrix, rate_options
-from llmprefs.analysis.visualization import (
-    plot_comparison_outcomes_heatmap,
+from llmprefs.analysis.outcomes import plot_comparison_outcomes_heatmap
+from llmprefs.analysis.rating import (
+    compile_matrix,
     plot_ratings_heatmap,
     plot_ratings_stem,
+    rate_options,
 )
 from llmprefs.file_io.load_records import load_records
 from llmprefs.task_structs import ResultRecord
