@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from llmprefs.analysis.rating import (
-    OptionMatrix,
+    OptionRatingMatrix,
     RatedOptions,
     ValueCI,
     compile_matrix,
@@ -27,7 +27,7 @@ def highest_rating(ratings: RatedOptions) -> ValueCI:
 
 class TestRateOptions:
     def test_zero_results(self) -> None:
-        option_matrix = OptionMatrix(options=(), matrix=np.array([]))
+        option_matrix = OptionRatingMatrix(options=(), matrix=np.array([]))
         assert rate_options(option_matrix, num_resamples=1, confidence=0.0) == {}
 
     def test_one_result(self) -> None:

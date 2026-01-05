@@ -2,11 +2,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 
-from llmprefs.analysis.rating import OptionMatrix
+from llmprefs.analysis.rating import OptionRatingMatrix
 from llmprefs.analysis.visualization import annotated_heatmap
 
 
-def plot_comparison_outcomes_heatmap(option_matrix: OptionMatrix) -> Figure:
+def plot_comparison_outcomes_heatmap(option_matrix: OptionRatingMatrix) -> Figure:
     expected_dimensionality = 2
     if option_matrix.matrix.ndim != expected_dimensionality:
         raise ValueError("Option has wrong number of dimensions")

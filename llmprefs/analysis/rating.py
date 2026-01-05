@@ -16,7 +16,7 @@ from llmprefs.task_structs import OptionById, ResultRecord, TaskId
 
 
 @dataclass
-class OptionMatrix:
+class OptionRatingMatrix:
     # A tuple of unique options. The order matches the indices of the matrix.
     options: tuple[OptionById, ...]
     # A matrix of size N_opts x N_opts. The entry at [i, j] is the number of times
@@ -35,7 +35,7 @@ RatedOptions = dict[OptionById, ValueCI]
 
 
 def rate_options(
-    option_matrix: OptionMatrix,
+    option_matrix: OptionRatingMatrix,
     num_resamples: int,
     confidence: float,
     generator: np.random.Generator | None = None,
@@ -70,7 +70,7 @@ def rate_options(
     return rated_options
 
 
-def compile_matrix(results: Iterable[ResultRecord]) -> OptionMatrix:
+def compile_matrix(results: Iterable[ResultRecord]) -> OptionRatingMatrix:
     """Compile comparison results into a square matrix.
 
     The matrix has size N_options x N_options. The entry at [i, j] is the number of
@@ -90,7 +90,7 @@ def compile_matrix(results: Iterable[ResultRecord]) -> OptionMatrix:
                 counts[preferred_option][option] += 1
 
     if len(unique_options) == 0:
-        return OptionMatrix(options=(), matrix=np.array([]))
+        return OptionRatingMatrix(options=(), matrix=np.array([]))
 
     sorted_options = tuple(sorted(unique_options))
     option_to_index: dict[tuple[TaskId, ...], int] = {
@@ -104,13 +104,13 @@ def compile_matrix(results: Iterable[ResultRecord]) -> OptionMatrix:
         for beaten_option, count in beaten_options.items():
             beaten_idx = option_to_index[beaten_option]
             matrix[preferred_idx, beaten_idx] = count
-    return OptionMatrix(options=sorted_options, matrix=matrix)
+    return OptionRatingMatrix(options=sorted_options, matrix=matrix)
 
 
 def resample_results(
-    option_matrix: OptionMatrix,
+    option_matrix: OptionRatingMatrix,
     generator: np.random.Generator,
-) -> OptionMatrix:
+) -> OptionRatingMatrix:
     num_comparisons = int(np.round(cast(float, option_matrix.matrix.sum())))
     random_weights = generator.random(option_matrix.matrix.shape)
     resample = option_matrix.matrix * random_weights
@@ -130,7 +130,7 @@ def resample_results(
             + f"{x=}, {resample_sum=}, {num_comparisons=}"
         )
         raise RuntimeError("Resample scaling failed to converge")
-    return OptionMatrix(options=option_matrix.options, matrix=resample)
+    return OptionRatingMatrix(options=option_matrix.options, matrix=resample)
 
 
 def error_bars(values: Sequence[ValueCI]) -> tuple[list[float], list[float]]:
