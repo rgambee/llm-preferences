@@ -12,7 +12,7 @@ from numpy.typing import NDArray
 from scipy import optimize
 
 from llmprefs.analysis.visualization import annotated_heatmap
-from llmprefs.task_structs import OptionById, ResultRecord, TaskId
+from llmprefs.task_structs import OptionById, ResultRecord
 
 
 @dataclass
@@ -93,7 +93,7 @@ def compile_matrix(results: Iterable[ResultRecord]) -> OptionRatingMatrix:
         return OptionRatingMatrix(options=(), matrix=np.array([]))
 
     sorted_options = tuple(sorted(unique_options))
-    option_to_index: dict[tuple[TaskId, ...], int] = {
+    option_to_index: dict[OptionById, int] = {
         option: i for i, option in enumerate(sorted_options)
     }
 
