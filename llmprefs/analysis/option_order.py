@@ -3,9 +3,12 @@ from dataclasses import dataclass
 from math import factorial
 from typing import Literal
 
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
+from llmprefs.analysis.visualization import annotated_heatmap
 from llmprefs.task_structs import OptionById, ResultRecord
 
 NUM_OPTIONS_PER_COMPARISON = 2
@@ -133,3 +136,14 @@ def compile_observations(results: Iterable[ResultRecord]) -> Observations:
         )
         observations[tensor_index] += 1
     return Observations(options=sorted_options, matrix=observations)
+
+
+def plot_order_analysis(analysis: OptionOrderAnalysis) -> Figure:
+    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+        nrows=1,
+        ncols=1,
+        squeeze=True,
+    )
+    annotated_heatmap(ax, analysis.cramer_v)
+    ax.set_title("Order Analysis")  # pyright: ignore[reportUnknownMemberType]
+    return fig

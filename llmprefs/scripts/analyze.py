@@ -4,6 +4,11 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 
+from llmprefs.analysis.option_order import (
+    analyze_observations,
+    compile_observations,
+    plot_order_analysis,
+)
 from llmprefs.analysis.outcomes import plot_comparison_outcomes_heatmap
 from llmprefs.analysis.rating import (
     compile_matrix,
@@ -25,7 +30,7 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
-    results = load_records(args.input_path, ResultRecord)
+    results = list(load_records(args.input_path, ResultRecord))
     option_matrix = compile_matrix(results)
     logger.info(
         f"Analyzing {option_matrix.matrix.sum():.0f} preferences "
@@ -49,6 +54,11 @@ def main() -> None:
         fig = plot_ratings_heatmap(selected_options)
         fig.tight_layout()
         fig.show()
+
+    observations = compile_observations(results)
+    order_analysis = analyze_observations(observations)
+    fig = plot_order_analysis(order_analysis)
+    fig.show()
 
     if plt.isinteractive():
         breakpoint()  # noqa: T100
