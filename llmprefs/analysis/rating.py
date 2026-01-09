@@ -172,8 +172,6 @@ def plot_ratings_stem(rated_options: RatedOptions) -> Figure:
 
 
 def plot_ratings_heatmap(rated_options: RatedOptions) -> Figure:
-    # Parts of this function are adapted from
-    # https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
     expected_num_tasks = 2
     if any(len(option) != expected_num_tasks for option in rated_options):
         raise ValueError(

@@ -9,6 +9,8 @@ def annotated_heatmap(
     matrix: NDArray[np.float64],
     precision: int = 3,
 ) -> AxesImage:
+    # Parts of this function are adapted from
+    # https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
     expected_dimensionality = 2
     if matrix.ndim != expected_dimensionality:
         raise ValueError("Matrix has wrong number of dimensions")
