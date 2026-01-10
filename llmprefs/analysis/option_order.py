@@ -43,6 +43,10 @@ class ReducedResult:
     second_option: OptionById
     preferred_option_index: int | None
 
+    def __post_init__(self) -> None:
+        if self.preferred_option_index not in {0, 1, None}:
+            raise ValueError("preferred_option_index must be 0, 1, or None")
+
     @property
     def smaller_option(self) -> OptionById:
         return min(self.first_option, self.second_option)
