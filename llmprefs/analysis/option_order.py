@@ -145,6 +145,12 @@ def plot_order_analysis(analysis: OptionOrderAnalysis) -> Figure:
         ncols=1,
         squeeze=True,
     )
-    annotated_heatmap(ax, analysis.cramer_v)
+    image = annotated_heatmap(ax, analysis.cramer_v, vmin=0.0, vmax=1.0)
+    colorbar = fig.colorbar(image, ax=ax)  # pyright: ignore[reportUnknownMemberType]
+    colorbar.ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
+        "Ordering Effect Strength",
+    )
     ax.set_title("Order Analysis")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_xlabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_ylabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
     return fig

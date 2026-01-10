@@ -1,3 +1,5 @@
+from typing import Any
+
 import numpy as np
 from matplotlib.axes import Axes
 from matplotlib.image import AxesImage
@@ -8,6 +10,7 @@ def annotated_heatmap(
     axes: Axes,
     matrix: NDArray[np.float64],
     precision: int = 3,
+    **imshow_kwargs: Any,
 ) -> AxesImage:
     # Parts of this function are adapted from
     # https://matplotlib.org/stable/gallery/images_contours_and_fields/image_annotated_heatmap.html
@@ -18,6 +21,7 @@ def annotated_heatmap(
     image = axes.imshow(  # pyright: ignore[reportUnknownMemberType]
         matrix,
         cmap="viridis",
+        **imshow_kwargs,
     )
 
     threshold = image.norm(np.nanmax(matrix)) / 2.0
