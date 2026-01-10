@@ -40,7 +40,6 @@ def rate_options(
     tasks: Mapping[TaskId, TaskRecord],
     num_resamples: int,
     confidence: float,
-    generator: np.random.Generator | None = None,
     alpha: float = 1e-6,
 ) -> RatedOptions:
     """Return an estimate of each option's strength.
@@ -50,7 +49,7 @@ def rate_options(
     if option_matrix.matrix.size == 0:
         return {}
 
-    generator = generator or np.random.default_rng()
+    generator = np.random.default_rng()
     resampled_ratings = np.full((num_resamples, len(option_matrix.options)), np.nan)
     for i in range(num_resamples):
         resample = resample_results(option_matrix=option_matrix, generator=generator)
