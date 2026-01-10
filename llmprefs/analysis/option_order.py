@@ -92,7 +92,7 @@ def analyze_observations(observations: Observations) -> OptionOrderAnalysis:
     # It's expected that total_counts will contain zeros, especially for the lower
     # triangle. Therefore, this division will produce NaNs. This is desired: NaN
     # indicates that we have no data for that cell.
-    with np.errstate(divide="ignore"):
+    with np.errstate(divide="ignore", invalid="ignore"):
         cramer_v = np.sqrt(chi_squared / total_counts)
     return OptionOrderAnalysis(options=observations.options, cramer_v=cramer_v)
 
