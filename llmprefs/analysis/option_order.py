@@ -45,15 +45,11 @@ class ReducedResult:
 
     @property
     def smaller_option(self) -> OptionById:
-        if self.first_option < self.second_option:
-            return self.first_option
-        return self.second_option
+        return min(self.first_option, self.second_option)
 
     @property
     def larger_option(self) -> OptionById:
-        if self.first_option < self.second_option:
-            return self.second_option
-        return self.first_option
+        return max(self.first_option, self.second_option)
 
     @property
     def option_order_index(self) -> Literal[0, 1]:
