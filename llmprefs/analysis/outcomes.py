@@ -1,12 +1,18 @@
+from collections.abc import Mapping
+
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 
 from llmprefs.analysis.rating import OptionRatingMatrix
-from llmprefs.analysis.visualization import annotated_heatmap
+from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
+from llmprefs.task_structs import TaskId, TaskRecord
 
 
-def plot_comparison_outcomes_heatmap(option_matrix: OptionRatingMatrix) -> Figure:
+def plot_comparison_outcomes_heatmap(
+    option_matrix: OptionRatingMatrix,
+    tasks: Mapping[TaskId, TaskRecord],
+) -> Figure:
     expected_dimensionality = 2
     if option_matrix.matrix.ndim != expected_dimensionality:
         raise ValueError("Option has wrong number of dimensions")
@@ -21,7 +27,8 @@ def plot_comparison_outcomes_heatmap(option_matrix: OptionRatingMatrix) -> Figur
         wspace=0.05,
     )
     ax_main = fig.add_subplot(gridspec[0, 0])
-    annotated_heatmap(ax_main, option_matrix.matrix, precision=0)
+    tick_labels = get_tick_labels(option_matrix.options, tasks)
+    annotated_heatmap(ax_main, option_matrix.matrix, tick_labels, precision=0)
     ax_main.set_title(  # pyright: ignore[reportUnknownMemberType]
         "Comparison Outcome Counts"
     )

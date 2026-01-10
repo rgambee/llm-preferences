@@ -1,3 +1,4 @@
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
 
 import numpy as np
@@ -5,10 +6,28 @@ from matplotlib.axes import Axes
 from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
+from llmprefs.task_structs import OptionById, TaskId, TaskRecord
+
+
+def get_tick_labels(
+    options: Iterable[OptionById],
+    tasks: Mapping[TaskId, TaskRecord],
+    tick_label_length: int = 15,
+) -> list[str]:
+    labels: list[str] = []
+    for option in options:
+        tasks_in_option = [tasks[task_id] for task_id in option]
+        task_labels = [
+            f"{task.id}:{task.task}"[:tick_label_length] for task in tasks_in_option
+        ]
+        labels.append("\n".join(task_labels))
+    return labels
+
 
 def annotated_heatmap(
     axes: Axes,
     matrix: NDArray[np.float64],
+    tick_labels: Sequence[str],
     precision: int = 3,
     **imshow_kwargs: Any,
 ) -> AxesImage:
@@ -17,6 +36,8 @@ def annotated_heatmap(
     expected_dimensionality = 2
     if matrix.ndim != expected_dimensionality:
         raise ValueError("Matrix has wrong number of dimensions")
+    if len(tick_labels) != matrix.shape[0] or len(tick_labels) != matrix.shape[1]:
+        raise ValueError("Length of tick labels must match matrix dimensions")
 
     image = axes.imshow(  # pyright: ignore[reportUnknownMemberType]
         matrix,
@@ -40,4 +61,16 @@ def annotated_heatmap(
                 color=color,
                 size=6,
             )
+
+    axes.set_xticks(  # pyright: ignore[reportUnknownMemberType]
+        ticks=range(len(tick_labels)),
+        labels=tick_labels,
+        fontsize="x-small",
+        rotation="vertical",
+    )
+    axes.set_yticks(  # pyright: ignore[reportUnknownMemberType]
+        ticks=range(len(tick_labels)),
+        labels=tick_labels,
+        fontsize="xx-small",
+    )
     return image

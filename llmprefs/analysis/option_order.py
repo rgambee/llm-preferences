@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from math import factorial
 from typing import Literal
@@ -8,8 +8,8 @@ import numpy as np
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
-from llmprefs.analysis.visualization import annotated_heatmap
-from llmprefs.task_structs import OptionById, ResultRecord
+from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
+from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
 NUM_OPTIONS_PER_COMPARISON = 2
 NUM_OPTION_ORDERINGS = factorial(NUM_OPTIONS_PER_COMPARISON)
@@ -139,13 +139,17 @@ def compile_observations(results: Iterable[ResultRecord]) -> Observations:
     return Observations(options=sorted_options, matrix=observations)
 
 
-def plot_order_analysis(analysis: OptionOrderAnalysis) -> Figure:
+def plot_order_analysis(
+    analysis: OptionOrderAnalysis,
+    tasks: Mapping[TaskId, TaskRecord],
+) -> Figure:
     fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
         nrows=1,
         ncols=1,
         squeeze=True,
     )
-    image = annotated_heatmap(ax, analysis.cramer_v, vmin=0.0, vmax=1.0)
+    tick_labels = get_tick_labels(analysis.options, tasks)
+    image = annotated_heatmap(ax, analysis.cramer_v, tick_labels, vmin=0.0, vmax=1.0)
     colorbar = fig.colorbar(image, ax=ax)  # pyright: ignore[reportUnknownMemberType]
     colorbar.ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
         "Ordering Effect Strength",

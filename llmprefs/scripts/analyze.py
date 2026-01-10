@@ -17,20 +17,33 @@ from llmprefs.analysis.rating import (
     rate_options,
 )
 from llmprefs.file_io.load_records import load_records
-from llmprefs.task_structs import ResultRecord
+from llmprefs.task_structs import ResultRecord, TaskId, TaskRecord
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Analyze LLM responses",
     )
-    parser.add_argument("input_path", type=Path)
+    parser.add_argument(
+        "--tasks-path",
+        type=Path,
+        required=True,
+        help="Path to the tasks file",
+    )
+    parser.add_argument(
+        "--results-path",
+        type=Path,
+        required=True,
+        help="Path to the results file",
+    )
     args = parser.parse_args()
 
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger(__name__)
 
-    results = list(load_records(args.input_path, ResultRecord))
+    task_list = list(load_records(args.tasks_path, TaskRecord))
+    tasks: dict[TaskId, TaskRecord] = {task.id: task for task in task_list}
+    results = list(load_records(args.results_path, ResultRecord))
     option_matrix = compile_matrix(results)
     logger.info(
         f"Analyzing {option_matrix.matrix.sum():.0f} preferences "
@@ -38,10 +51,10 @@ def main() -> None:
     )
     rated_options = rate_options(option_matrix, num_resamples=100, confidence=0.75)
 
-    fig = plot_comparison_outcomes_heatmap(option_matrix)
+    fig = plot_comparison_outcomes_heatmap(option_matrix, tasks)
     fig.show()
 
-    fig = plot_ratings_stem(rated_options)
+    fig = plot_ratings_stem(rated_options, tasks)
     fig.show()
 
     desired_num_tasks = 2
@@ -51,13 +64,13 @@ def main() -> None:
         if len(key) == desired_num_tasks
     }
     if selected_options:
-        fig = plot_ratings_heatmap(selected_options)
+        fig = plot_ratings_heatmap(selected_options, tasks)
         fig.tight_layout()
         fig.show()
 
     observations = compile_observations(results)
     order_analysis = analyze_observations(observations)
-    fig = plot_order_analysis(order_analysis)
+    fig = plot_order_analysis(order_analysis, tasks)
     fig.show()
 
     if plt.isinteractive():

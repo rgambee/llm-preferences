@@ -1,6 +1,6 @@
 import logging
 from collections import defaultdict
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import cast
 
@@ -11,8 +11,8 @@ from matplotlib.figure import Figure
 from numpy.typing import NDArray
 from scipy import optimize
 
-from llmprefs.analysis.visualization import annotated_heatmap
-from llmprefs.task_structs import OptionById, ResultRecord
+from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
+from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
 
 @dataclass
@@ -140,7 +140,10 @@ def error_bars(values: Sequence[ValueCI]) -> tuple[list[float], list[float]]:
     return diff_low, diff_high
 
 
-def plot_ratings_stem(rated_options: RatedOptions) -> Figure:
+def plot_ratings_stem(
+    rated_options: RatedOptions,
+    tasks: Mapping[TaskId, TaskRecord],
+) -> Figure:
     xcoords = np.arange(len(rated_options))
     rating_values = [vci.value for vci in rated_options.values()]
 
@@ -166,12 +169,21 @@ def plot_ratings_stem(rated_options: RatedOptions) -> Figure:
     )
     ax.set_title("Rated Options")  # pyright: ignore[reportUnknownMemberType]
     ax.set_xlabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_xticks(  # pyright: ignore[reportUnknownMemberType]
+        ticks=xcoords,
+        labels=get_tick_labels(rated_options.keys(), tasks),
+        rotation="vertical",
+        fontsize="x-small",
+    )
     ax.set_ylabel("Rating")  # pyright: ignore[reportUnknownMemberType]
 
     return fig
 
 
-def plot_ratings_heatmap(rated_options: RatedOptions) -> Figure:
+def plot_ratings_heatmap(
+    rated_options: RatedOptions,
+    tasks: Mapping[TaskId, TaskRecord],
+) -> Figure:
     expected_num_tasks = 2
     if any(len(option) != expected_num_tasks for option in rated_options):
         raise ValueError(
@@ -193,7 +205,8 @@ def plot_ratings_heatmap(rated_options: RatedOptions) -> Figure:
         squeeze=True,
         figsize=(10, 10),
     )
-    im = annotated_heatmap(ax, ratings)
+    tick_labels = get_tick_labels(rated_options.keys(), tasks)
+    im = annotated_heatmap(ax, ratings, tick_labels)
 
     ax.set_title("Rated Options")  # pyright: ignore[reportUnknownMemberType]
     ax.set_ylabel("First Task ID")  # pyright: ignore[reportUnknownMemberType]
