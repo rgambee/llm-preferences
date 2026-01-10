@@ -206,33 +206,35 @@ def plot_ratings_heatmap(
             f"Heatmap only accepts options containing {expected_num_tasks} tasks"
         )
 
-    task_0_ids, task_1_ids = zip(*rated_options.keys(), strict=True)
-    task_0_ids = sorted(set(task_0_ids))
-    task_1_ids = sorted(set(task_1_ids))
-    task_0_ids_to_index = {task_id: i for i, task_id in enumerate(task_0_ids)}
-    task_1_ids_to_index = {task_id: i for i, task_id in enumerate(task_1_ids)}
-    ratings = np.full((len(task_0_ids), len(task_1_ids)), np.nan, dtype=float)
+    task_0_and_1_ids: zip[tuple[TaskId, TaskId]] = zip(
+        *rated_options.keys(),
+        strict=True,
+    )
+    task_0_ids, task_1_ids = task_0_and_1_ids
+    task_0_ids: Sequence[TaskId] = sorted(set(task_0_ids))
+    task_1_ids: Sequence[TaskId] = sorted(set(task_1_ids))
+    if not task_0_ids == task_1_ids:
+        raise ValueError("Task IDs are not the same")
+    del task_1_ids
+    task_ids_to_index = {task_id: i for i, task_id in enumerate(task_0_ids)}
+    ratings = np.full((len(task_0_ids), len(task_0_ids)), np.nan, dtype=float)
     for (task0, task1), rating in rated_options.items():
-        ratings[task_0_ids_to_index[task0], task_1_ids_to_index[task1]] = rating.value
+        ratings[task_ids_to_index[task0], task_ids_to_index[task1]] = rating.value
 
     fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
         nrows=1,
         ncols=1,
         squeeze=True,
-        figsize=(10, 10),
     )
-    tick_labels = get_tick_labels(rated_options.keys(), tasks)
+    tick_labels = get_tick_labels(
+        options=((task_id,) for task_id in task_0_ids),
+        tasks=tasks,
+    )
     im = annotated_heatmap(ax, ratings, tick_labels)
 
     ax.set_title("Rated Options")  # pyright: ignore[reportUnknownMemberType]
     ax.set_ylabel("First Task ID")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_yticks(  # pyright: ignore[reportUnknownMemberType]
-        range(len(task_0_ids)), labels=task_0_ids
-    )
     ax.set_xlabel("Second Task ID")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_xticks(  # pyright: ignore[reportUnknownMemberType]
-        range(len(task_1_ids)), labels=task_1_ids
-    )
 
     colorbar = fig.colorbar(im, ax=ax)  # pyright: ignore[reportUnknownMemberType]
     colorbar.ax.set_ylabel("Rating")  # pyright: ignore[reportUnknownMemberType]
