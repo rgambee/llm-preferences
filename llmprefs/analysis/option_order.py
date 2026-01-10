@@ -59,9 +59,14 @@ class ReducedResult:
 
     @property
     def outcome_index(self) -> int:
+        """The logical index of the preferred option.
+
+        Return 0 if the smaller option is preferred, 1 if the larger option is
+        preferred, or 2 if neither.
+        """
         if self.preferred_option_index is None:
             return NUM_OPTIONS_PER_COMPARISON
-        return self.preferred_option_index
+        return int(self.preferred_option_index != self.option_order_index)
 
 
 def analyze_option_order(results: Iterable[ResultRecord]) -> OptionOrderAnalysis:

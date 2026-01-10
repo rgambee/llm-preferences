@@ -28,6 +28,7 @@ class TestAnalyzeOptionOrder:
     def test_no_order_effect(self) -> None:
         results = [result_record_factory() for _ in range(2)]
         results[1].comparison = ((2,), (1,))
+        results[1].preferred_option_index = 1
         analysis = analyze_option_order(results=results)
 
         assert analysis.options == ((1,), (2,))
@@ -38,7 +39,6 @@ class TestAnalyzeOptionOrder:
     def test_perfect_order_effect(self) -> None:
         results = [result_record_factory() for _ in range(2)]
         results[1].comparison = ((2,), (1,))
-        results[1].preferred_option_index = 1
         analysis = analyze_option_order(results=results)
 
         assert analysis.options == ((1,), (2,))
@@ -82,7 +82,6 @@ class TestCompileObservations:
 
     def test_multiple_results(self) -> None:
         results = [result_record_factory() for _ in range(3)]
-        results[0].preferred_option_index = 0
         results[1].comparison = ((2,), (1,))
         results[1].preferred_option_index = 1
         results[2].preferred_option_index = None
@@ -94,7 +93,7 @@ class TestCompileObservations:
         expected = np.array(
             [
                 [1, 0, 1],
-                [0, 1, 0],
+                [1, 0, 0],
             ],
         )
         assert np.all(matrix[0, 1, :, :] == expected)
