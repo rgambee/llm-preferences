@@ -8,6 +8,7 @@ import numpy as np
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
+from llmprefs.analysis.structs import ReducedResultBase
 from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
 from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
@@ -38,15 +39,7 @@ class OptionOrderAnalysis:
 
 
 @dataclass
-class ReducedResult:
-    first_option: OptionById
-    second_option: OptionById
-    preferred_option_index: int | None
-
-    def __post_init__(self) -> None:
-        if self.preferred_option_index not in {0, 1, None}:
-            raise ValueError("preferred_option_index must be 0, 1, or None")
-
+class ReducedResult(ReducedResultBase):
     @property
     def smaller_option(self) -> OptionById:
         return min(self.first_option, self.second_option)
