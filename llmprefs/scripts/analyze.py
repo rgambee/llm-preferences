@@ -49,7 +49,12 @@ def main() -> None:
         f"Analyzing {option_matrix.matrix.sum():.0f} preferences "
         + f"across {len(option_matrix.options)} options"
     )
-    rated_options = rate_options(option_matrix, num_resamples=100, confidence=0.75)
+    rated_options = rate_options(
+        option_matrix,
+        tasks,
+        num_resamples=100,
+        confidence=0.75,
+    )
 
     fig = plot_comparison_outcomes_heatmap(option_matrix, tasks)
     fig.show()

@@ -12,6 +12,7 @@ from numpy.typing import NDArray
 from scipy import optimize
 
 from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
+from llmprefs.comparisons import is_opt_out_task
 from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
 
@@ -36,6 +37,7 @@ RatedOptions = dict[OptionById, ValueCI]
 
 def rate_options(
     option_matrix: OptionRatingMatrix,
+    tasks: Mapping[TaskId, TaskRecord],
     num_resamples: int,
     confidence: float,
     generator: np.random.Generator | None = None,
@@ -60,14 +62,29 @@ def rate_options(
     upper_quant = (1 + confidence) / 2
     lower_bounds = np.quantile(resampled_ratings, q=lower_quant, axis=0)
     upper_bounds = np.quantile(resampled_ratings, q=upper_quant, axis=0)
+    # Apply an offset such that the opt-out tasks have a rating of 0.
+    offset = median_opt_out_rating(resampled_ratings, option_matrix.options, tasks)
     rated_options: RatedOptions = {}
     for option_index, option_id in enumerate(option_matrix.options):
         rated_options[option_id] = ValueCI(
-            value=medians[option_index],
-            ci_lower=lower_bounds[option_index],
-            ci_upper=upper_bounds[option_index],
+            value=medians[option_index] - offset,
+            ci_lower=lower_bounds[option_index] - offset,
+            ci_upper=upper_bounds[option_index] - offset,
         )
     return rated_options
+
+
+def median_opt_out_rating(
+    resampled_ratings: NDArray[np.float64],
+    options: Sequence[OptionById],
+    tasks: Mapping[TaskId, TaskRecord],
+) -> float:
+    opt_outs = [
+        all(is_opt_out_task(tasks[task_id]) for task_id in option) for option in options
+    ]
+    if not any(opt_outs):
+        return 0.0
+    return np.median(resampled_ratings[:, opt_outs])
 
 
 def compile_matrix(results: Iterable[ResultRecord]) -> OptionRatingMatrix:
