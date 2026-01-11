@@ -10,7 +10,7 @@ from llmprefs.analysis.task_order import (
     TaskOrder,
     UnorderedTaskPair,
     analyze_task_order,
-    compute_delta,
+    compute_delta_indirect,
     find_relevant_comparisons,
     task_order,
 )
@@ -104,13 +104,13 @@ class TestAnalyzeTaskOrder:
         analysis = analyze_task_order(results=[])
 
         assert len(analysis.tasks) == 0
-        assert analysis.deltas.size == 0
+        assert analysis.deltas_indirect.size == 0
 
     def test_multiple_results(self, mock_results: list[ResultRecord]) -> None:
         analysis = analyze_task_order(mock_results)
 
         assert analysis.tasks == (1, 2, 3, 4)
-        assert analysis.deltas.shape == (4, 4)
+        assert analysis.deltas_indirect.shape == (4, 4)
         expected = np.array(
             [
                 [np.nan, 0.5, 1.0, np.nan],
@@ -122,14 +122,14 @@ class TestAnalyzeTaskOrder:
         for i in range(len(analysis.tasks)):
             for j in range(len(analysis.tasks)):
                 if np.isnan(expected[i, j]):
-                    assert np.isnan(analysis.deltas[i, j])
+                    assert np.isnan(analysis.deltas_indirect[i, j])
                 else:
-                    assert expected[i, j] == analysis.deltas[i, j]
+                    assert expected[i, j] == analysis.deltas_indirect[i, j]
 
 
-class TestComputeDelta:
+class TestComputeDeltaIndirect:
     def test_empty_results(self) -> None:
-        delta = compute_delta(
+        delta = compute_delta_indirect(
             results=[],
             desired_option=UnorderedTaskPair((1, 2)),
         )
@@ -137,7 +137,7 @@ class TestComputeDelta:
 
     def test_one_result(self, mock_results: list[ResultRecord]) -> None:
         with pytest.raises(ValueError, match="Missing outcomes for one or more orders"):
-            compute_delta(
+            compute_delta_indirect(
                 results=mock_results[:1],
                 desired_option=UnorderedTaskPair((1, 2)),
             )
@@ -149,7 +149,7 @@ class TestComputeDelta:
         result1.comparison = ((3, 4), (2, 1))
         result1.preferred_option_index = 1
 
-        delta = compute_delta(
+        delta = compute_delta_indirect(
             results=[result0, result1],
             desired_option=UnorderedTaskPair((1, 2)),
         )
@@ -161,7 +161,7 @@ class TestComputeDelta:
         result1 = result_record_factory()
         result1.comparison = ((3, 4), (2, 1))
 
-        delta = compute_delta(
+        delta = compute_delta_indirect(
             results=[result0, result1],
             desired_option=UnorderedTaskPair((1, 2)),
         )
@@ -170,14 +170,14 @@ class TestComputeDelta:
         result0.preferred_option_index = 1
         result1.preferred_option_index = 1
 
-        delta = compute_delta(
+        delta = compute_delta_indirect(
             results=[result0, result1],
             desired_option=UnorderedTaskPair((1, 2)),
         )
         assert delta == -1.0
 
     def test_partial_order_effect(self, mock_results: list[ResultRecord]) -> None:
-        delta = compute_delta(
+        delta = compute_delta_indirect(
             results=mock_results,
             desired_option=UnorderedTaskPair((1, 2)),
         )

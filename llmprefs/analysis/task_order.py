@@ -42,7 +42,7 @@ class TaskOrderAnalysis:
     # If i < j, the entry at [i, j] indicates the net preference for tasks (i, j) in
     # ascending order. A negative value indicates a preference for descending order,
     # i.e. (j, i).
-    deltas: NDArray[np.float64]
+    deltas_indirect: NDArray[np.float64]
 
 
 class TaskOrder(Enum):
@@ -89,7 +89,7 @@ def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
         )
     )
     num_tasks = len(task_ids)
-    matrix = np.full(
+    deltas_indirect = np.full(
         shape=(num_tasks, num_tasks),
         fill_value=np.nan,
         dtype=np.float64,
@@ -97,19 +97,20 @@ def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
     for task_a_index, task_b_index in combinations(range(num_tasks), r=2):
         task_a = task_ids[task_a_index]
         task_b = task_ids[task_b_index]
-        delta = compute_delta(
+        index = min(task_a_index, task_b_index), max(task_a_index, task_b_index)
+        indirect_delta = compute_delta_indirect(
             results,
             desired_option=UnorderedTaskPair((task_a, task_b)),
         )
-        matrix[min(task_a_index, task_b_index), max(task_a_index, task_b_index)] = delta
+        deltas_indirect[index] = indirect_delta
 
     return TaskOrderAnalysis(
         tasks=task_ids,
-        deltas=matrix,
+        deltas_indirect=deltas_indirect,
     )
 
 
-def compute_delta(
+def compute_delta_indirect(
     results: Sequence[ResultRecord],
     desired_option: UnorderedOption,
 ) -> float:
@@ -196,7 +197,13 @@ def plot_task_order_analysis(
         options=((task_id,) for task_id in analysis.tasks),
         tasks=tasks,
     )
-    image = annotated_heatmap(ax, analysis.deltas, tick_labels, vmin=-1.0, vmax=1.0)
+    image = annotated_heatmap(
+        axes=ax,
+        matrix=analysis.deltas_indirect,
+        tick_labels=tick_labels,
+        vmin=-1.0,
+        vmax=1.0,
+    )
     colorbar = fig.colorbar(image, ax=ax)  # pyright: ignore[reportUnknownMemberType]
     colorbar.ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
         "Task Ordering Effect Strength",
