@@ -60,12 +60,9 @@ def main() -> None:
         confidence=0.75,
     )
 
-    fig = plot_comparison_outcomes_heatmap(option_matrix, tasks)
-    fig.show()
+    plot_comparison_outcomes_heatmap(option_matrix, tasks)
 
-    fig = plot_ratings_stem(rated_options, tasks)
-    fig.show()
-
+    plot_ratings_stem(rated_options, tasks)
     desired_num_tasks = 2
     selected_options = {
         key: value
@@ -75,17 +72,15 @@ def main() -> None:
     if selected_options:
         fig = plot_ratings_heatmap(selected_options, tasks)
         fig.tight_layout()
-        fig.show()
 
     observations = compile_observations(results)
     option_order_analysis = analyze_observations(observations)
-    fig = plot_option_order_analysis(option_order_analysis, tasks)
-    fig.show()
+    plot_option_order_analysis(option_order_analysis, tasks)
 
     task_order_analysis = analyze_task_order(results)
-    fig = plot_task_order_analysis(task_order_analysis, tasks)
-    fig.show()
+    plot_task_order_analysis(task_order_analysis, tasks)
 
+    plt.show()  # pyright: ignore[reportUnknownMemberType]
     if plt.isinteractive():
         breakpoint()  # noqa: T100
 
