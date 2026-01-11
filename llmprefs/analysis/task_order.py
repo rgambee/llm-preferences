@@ -17,13 +17,17 @@ from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 OrderedOption = OptionById
 
 
+class OptionSizeError(Exception):
+    pass
+
+
 class UnorderedTaskPair(frozenset[TaskId]):
     EXPECTED_SIZE = 2
 
     def __new__(cls, tasks: Iterable[TaskId]) -> Self:
         instance = super().__new__(cls, tasks)
         if len(instance) != cls.EXPECTED_SIZE:
-            raise ValueError(
+            raise OptionSizeError(
                 f"Size of {instance.__class__.__name__} must be {cls.EXPECTED_SIZE}",
             )
         return instance

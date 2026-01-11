@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 
 from llmprefs.analysis.task_order import (
+    OptionSizeError,
     OrderedOption,
     ReducedResult,
     TaskOrder,
@@ -56,10 +57,7 @@ class TestUnorderedTaskPair:
         ],
     )
     def test_size_invalid(self, tasks: Iterable[TaskId]) -> None:
-        with pytest.raises(
-            ValueError,
-            match="Size of UnorderedTaskPair must be 2",
-        ):
+        with pytest.raises(OptionSizeError):
             UnorderedTaskPair(tasks)
 
 
