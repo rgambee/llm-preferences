@@ -64,21 +64,22 @@ def main() -> None:
 
     plot_ratings_stem(rated_options, tasks)
     desired_num_tasks = 2
-    selected_options = {
+    two_tasks_per_option = {
         key: value
         for key, value in rated_options.items()
         if len(key) == desired_num_tasks
     }
-    if selected_options:
-        fig = plot_ratings_heatmap(selected_options, tasks)
+    if two_tasks_per_option:
+        fig = plot_ratings_heatmap(two_tasks_per_option, tasks)
         fig.tight_layout()
 
     observations = compile_observations(results)
     option_order_analysis = analyze_observations(observations)
     plot_option_order_analysis(option_order_analysis, tasks)
 
-    task_order_analysis = analyze_task_order(results)
-    plot_task_order_analysis(task_order_analysis, tasks)
+    if two_tasks_per_option:
+        task_order_analysis = analyze_task_order(results)
+        plot_task_order_analysis(task_order_analysis, tasks)
 
     plt.show()  # pyright: ignore[reportUnknownMemberType]
     if plt.isinteractive():
