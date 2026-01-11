@@ -41,7 +41,11 @@ class TaskOrderAnalysis:
     # A 2D matrix of shape N_tasks x N_tasks. Only the upper triangle is populated.
     # If i < j, the entry at [i, j] indicates the net preference for tasks (i, j) in
     # ascending order. A negative value indicates a preference for descending order,
-    # i.e. (j, i).
+    # i.e. (j, i). Only direct task order comparisons, e.g. (i, j) vs (j, i), are
+    # considered.
+    deltas_direct: NDArray[np.float64]
+    # Similar to deltas_direct but computed from indirect comparisons of task orders,
+    # such as (i, j) vs (k, l) and (j, i) vs (k, l).
     deltas_indirect: NDArray[np.float64]
 
 
@@ -110,15 +114,23 @@ def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
         )
     )
     num_tasks = len(task_ids)
-    deltas_indirect = np.full(
+    deltas_direct = np.full(
         shape=(num_tasks, num_tasks),
         fill_value=np.nan,
         dtype=np.float64,
     )
+    deltas_indirect = deltas_direct.copy()
+
     for task_a_index, task_b_index in combinations(range(num_tasks), r=2):
         task_a = task_ids[task_a_index]
         task_b = task_ids[task_b_index]
         index = min(task_a_index, task_b_index), max(task_a_index, task_b_index)
+        direct_delta = compute_delta_direct(
+            results,
+            desired_option=UnorderedTaskPair((task_a, task_b)),
+        )
+
+        deltas_direct[index] = direct_delta
         indirect_delta = compute_delta_indirect(
             results,
             desired_option=UnorderedTaskPair((task_a, task_b)),
@@ -127,6 +139,7 @@ def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
 
     return TaskOrderAnalysis(
         tasks=task_ids,
+        deltas_direct=deltas_direct,
         deltas_indirect=deltas_indirect,
     )
 
@@ -249,28 +262,38 @@ def task_order(option: OrderedOption) -> TaskOrder:
 def plot_task_order_analysis(
     analysis: TaskOrderAnalysis,
     tasks: Mapping[TaskId, TaskRecord],
-) -> Figure:
-    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
-        nrows=1,
-        ncols=1,
-        squeeze=True,
-    )
+) -> list[Figure]:
     tick_labels = get_tick_labels(
         options=((task_id,) for task_id in analysis.tasks),
         tasks=tasks,
     )
-    image = annotated_heatmap(
-        axes=ax,
-        matrix=analysis.deltas_indirect,
-        tick_labels=tick_labels,
-        vmin=-1.0,
-        vmax=1.0,
-    )
-    colorbar = fig.colorbar(image, ax=ax)  # pyright: ignore[reportUnknownMemberType]
-    colorbar.ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
-        "Task Ordering Effect Strength",
-    )
-    ax.set_title("Task Order Analysis")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_xlabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_ylabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
-    return fig
+
+    figures: list[Figure] = []
+    for direct in (True, False):
+        fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+            nrows=1,
+            ncols=1,
+            squeeze=True,
+        )
+        figures.append(fig)
+
+        image = annotated_heatmap(
+            axes=ax,
+            matrix=analysis.deltas_direct if direct else analysis.deltas_indirect,
+            tick_labels=tick_labels,
+            vmin=-1.0,
+            vmax=1.0,
+        )
+        colorbar = fig.colorbar(image, ax=ax)  # pyright: ignore[reportUnknownMemberType]
+        colorbar.ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
+            "Task Ordering Effect Strength",
+        )
+
+        comparison_type = "Direct" if direct else "Indirect"
+        ax.set_title(  # pyright: ignore[reportUnknownMemberType]
+            f"Task Order Analysis: {comparison_type} Comparisons",
+        )
+        ax.set_xlabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
+        ax.set_ylabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
+
+    return figures
