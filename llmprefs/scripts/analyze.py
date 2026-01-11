@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from llmprefs.analysis.option_order import (
     analyze_observations,
     compile_observations,
-    plot_order_analysis,
+    plot_option_order_analysis,
 )
 from llmprefs.analysis.outcomes import plot_comparison_outcomes_heatmap
 from llmprefs.analysis.rating import (
@@ -74,8 +74,8 @@ def main() -> None:
         fig.show()
 
     observations = compile_observations(results)
-    order_analysis = analyze_observations(observations)
-    fig = plot_order_analysis(order_analysis, tasks)
+    option_order_analysis = analyze_observations(observations)
+    fig = plot_option_order_analysis(option_order_analysis, tasks)
     fig.show()
 
     if plt.isinteractive():

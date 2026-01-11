@@ -136,7 +136,7 @@ def compile_observations(results: Iterable[ResultRecord]) -> Observations:
     return Observations(options=sorted_options, matrix=observations)
 
 
-def plot_order_analysis(
+def plot_option_order_analysis(
     analysis: OptionOrderAnalysis,
     tasks: Mapping[TaskId, TaskRecord],
 ) -> Figure:
@@ -149,9 +149,9 @@ def plot_order_analysis(
     image = annotated_heatmap(ax, analysis.cramer_v, tick_labels, vmin=0.0, vmax=1.0)
     colorbar = fig.colorbar(image, ax=ax)  # pyright: ignore[reportUnknownMemberType]
     colorbar.ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
-        "Ordering Effect Strength",
+        "Option Ordering Effect Strength",
     )
-    ax.set_title("Order Analysis")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_title("Option Order Analysis")  # pyright: ignore[reportUnknownMemberType]
     ax.set_xlabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
     ax.set_ylabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
     return fig
