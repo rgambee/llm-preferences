@@ -62,14 +62,27 @@ class TestUnorderedTaskPair:
 
 
 class TestReducedResult:
-    def test_unordered_options(self) -> None:
+    def test_unordered_pairs(self) -> None:
         result = ReducedResult(
             first_option=(1, 2),
             second_option=(3, 4),
             preferred_option_index=0,
         )
+        assert result.unordered_first_pair == {1, 2}
+        assert result.unordered_second_pair == {3, 4}
+
+        result.second_option = (3,)
+        with pytest.raises(OptionSizeError):
+            _ = result.unordered_second_pair
+
+    def test_unordered_options(self) -> None:
+        result = ReducedResult(
+            first_option=(1, 2),
+            second_option=(3,),
+            preferred_option_index=0,
+        )
         assert result.unordered_first_option == {1, 2}
-        assert result.unordered_second_option == {3, 4}
+        assert result.unordered_second_option == {3}
 
     def test_signed_outcome(self) -> None:
         result = ReducedResult(
@@ -81,7 +94,7 @@ class TestReducedResult:
         assert result.signed_outcome(UnorderedTaskPair((3, 4))) == -1
         with pytest.raises(
             ValueError,
-            match="Result does not contain the desired pair",
+            match="Result does not contain the desired option",
         ):
             assert result.signed_outcome(UnorderedTaskPair((1, 3)))
 
@@ -118,7 +131,7 @@ class TestComputeDelta:
     def test_empty_results(self) -> None:
         delta = compute_delta(
             results=[],
-            desired_pair=UnorderedTaskPair((1, 2)),
+            desired_option=UnorderedTaskPair((1, 2)),
         )
         assert np.isnan(delta)
 
@@ -126,7 +139,7 @@ class TestComputeDelta:
         with pytest.raises(ValueError, match="Missing outcomes for one or more orders"):
             compute_delta(
                 results=mock_results[:1],
-                desired_pair=UnorderedTaskPair((1, 2)),
+                desired_option=UnorderedTaskPair((1, 2)),
             )
 
     def test_no_order_effect(self) -> None:
@@ -138,7 +151,7 @@ class TestComputeDelta:
 
         delta = compute_delta(
             results=[result0, result1],
-            desired_pair=UnorderedTaskPair((1, 2)),
+            desired_option=UnorderedTaskPair((1, 2)),
         )
         assert delta == 0.0
 
@@ -150,7 +163,7 @@ class TestComputeDelta:
 
         delta = compute_delta(
             results=[result0, result1],
-            desired_pair=UnorderedTaskPair((1, 2)),
+            desired_option=UnorderedTaskPair((1, 2)),
         )
         assert delta == 1.0
 
@@ -159,14 +172,14 @@ class TestComputeDelta:
 
         delta = compute_delta(
             results=[result0, result1],
-            desired_pair=UnorderedTaskPair((1, 2)),
+            desired_option=UnorderedTaskPair((1, 2)),
         )
         assert delta == -1.0
 
     def test_partial_order_effect(self, mock_results: list[ResultRecord]) -> None:
         delta = compute_delta(
             results=mock_results,
-            desired_pair=UnorderedTaskPair((1, 2)),
+            desired_option=UnorderedTaskPair((1, 2)),
         )
         # The ascending task order (1, 2) both won and lost. The descending order (2, 1)
         # lost. Therefore, the delta should be positive, indicating a slight preference
@@ -183,7 +196,7 @@ class TestFindRelevantComparisons:
         relevant_results = list(
             find_relevant_comparisons(
                 results=[],
-                desired_pair=UnorderedTaskPair((1, 2)),
+                desired_option=UnorderedTaskPair((1, 2)),
                 direct=direct,
             )
         )
@@ -194,19 +207,19 @@ class TestFindRelevantComparisons:
         relevant_results = list(
             find_relevant_comparisons(
                 results=mock_results,
-                desired_pair=desired_pair,
+                desired_option=desired_pair,
                 direct=False,
             )
         )
         assert len(relevant_results) == 3
         for res in relevant_results:
             assert desired_pair in {
-                res.unordered_first_option,
-                res.unordered_second_option,
+                res.unordered_first_pair,
+                res.unordered_second_pair,
             }
             assert not (
-                res.unordered_first_option == desired_pair
-                and res.unordered_second_option == desired_pair
+                res.unordered_first_pair == desired_pair
+                and res.unordered_second_pair == desired_pair
             )
 
     def test_indirect_comparisons(self, mock_results: list[ResultRecord]) -> None:
@@ -214,14 +227,14 @@ class TestFindRelevantComparisons:
         relevant_results = list(
             find_relevant_comparisons(
                 results=mock_results,
-                desired_pair=desired_pair,
+                desired_option=desired_pair,
                 direct=True,
             )
         )
         assert len(relevant_results) == 1
         for res in relevant_results:
-            assert res.unordered_first_option == desired_pair
-            assert res.unordered_second_option == desired_pair
+            assert res.unordered_first_pair == desired_pair
+            assert res.unordered_second_pair == desired_pair
 
 
 class TestTaskOrder:

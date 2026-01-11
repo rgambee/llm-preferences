@@ -15,6 +15,7 @@ from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
 from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
 OrderedOption = OptionById
+UnorderedOption = frozenset[TaskId]
 
 
 class OptionSizeError(Exception):
@@ -52,21 +53,29 @@ class TaskOrder(Enum):
 @dataclass
 class ReducedResult(ReducedResultBase):
     @property
-    def unordered_first_option(self) -> UnorderedTaskPair:
+    def unordered_first_option(self) -> UnorderedOption:
+        return UnorderedOption(self.first_option)
+
+    @property
+    def unordered_first_pair(self) -> UnorderedTaskPair:
         return UnorderedTaskPair(self.first_option)
 
     @property
-    def unordered_second_option(self) -> UnorderedTaskPair:
+    def unordered_second_option(self) -> UnorderedOption:
+        return UnorderedOption(self.second_option)
+
+    @property
+    def unordered_second_pair(self) -> UnorderedTaskPair:
         return UnorderedTaskPair(self.second_option)
 
-    def signed_outcome(self, desired_pair: UnorderedTaskPair) -> int:
+    def signed_outcome(self, desired_option: UnorderedOption) -> int:
         if self.preferred_option_index is None:
             return 0
-        if self.unordered_first_option == desired_pair:
+        if self.unordered_first_option == desired_option:
             return 1 if self.preferred_option_index == 0 else -1
-        if self.unordered_second_option == desired_pair:
+        if self.unordered_second_option == desired_option:
             return -1 if self.preferred_option_index == 0 else 1
-        raise ValueError("Result does not contain the desired pair")
+        raise ValueError("Result does not contain the desired option")
 
 
 def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
@@ -88,7 +97,10 @@ def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
     for task_a_index, task_b_index in combinations(range(num_tasks), r=2):
         task_a = task_ids[task_a_index]
         task_b = task_ids[task_b_index]
-        delta = compute_delta(results, desired_pair=UnorderedTaskPair((task_a, task_b)))
+        delta = compute_delta(
+            results,
+            desired_option=UnorderedTaskPair((task_a, task_b)),
+        )
         matrix[min(task_a_index, task_b_index), max(task_a_index, task_b_index)] = delta
 
     return TaskOrderAnalysis(
@@ -99,26 +111,26 @@ def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
 
 def compute_delta(
     results: Sequence[ResultRecord],
-    desired_pair: UnorderedTaskPair,
+    desired_option: UnorderedOption,
 ) -> float:
     relevant_results = find_relevant_comparisons(
         results,
-        desired_pair,
+        desired_option,
         direct=False,
     )
-    outcomes: dict[UnorderedTaskPair, dict[TaskOrder, list[int]]] = defaultdict(
+    outcomes: dict[UnorderedOption, dict[TaskOrder, list[int]]] = defaultdict(
         lambda: {TaskOrder.ASCENDING: [], TaskOrder.DESCENDING: []}
     )
     for result in relevant_results:
-        outcome = result.signed_outcome(desired_pair)
-        if result.unordered_first_option == desired_pair:
+        outcome = result.signed_outcome(desired_option)
+        if result.unordered_first_option == desired_option:
             order = task_order(result.first_option)
             outcomes[result.unordered_second_option][order].append(outcome)
-        elif result.unordered_second_option == desired_pair:
+        elif result.unordered_second_option == desired_option:
             order = task_order(result.second_option)
             outcomes[result.unordered_first_option][order].append(outcome)
         else:
-            raise ValueError("Result does not contain the desired pair")
+            raise ValueError("Result does not contain the desired option")
 
     deltas: list[np.floating] = []
     for outcomes_by_order in outcomes.values():
@@ -135,7 +147,7 @@ def compute_delta(
 
 def find_relevant_comparisons(
     results: Iterable[ResultRecord],
-    desired_pair: UnorderedTaskPair,
+    desired_option: UnorderedOption,
     *,
     direct: bool,
 ) -> Iterable[ReducedResult]:
@@ -156,7 +168,7 @@ def find_relevant_comparisons(
         )
         unordered_option_a = reduced_result.unordered_first_option
         unordered_option_b = reduced_result.unordered_second_option
-        if desired_pair not in {unordered_option_a, unordered_option_b}:
+        if desired_option not in {unordered_option_a, unordered_option_b}:
             continue
         if (unordered_option_a == unordered_option_b and direct) or (
             unordered_option_a != unordered_option_b and not direct
