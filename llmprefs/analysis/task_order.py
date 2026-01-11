@@ -78,7 +78,7 @@ def compute_delta(
         desc_outcomes = outcomes_by_order[TaskOrder.DESCENDING]
         if not asc_outcomes or not desc_outcomes:
             raise ValueError("Missing outcomes for one or more orders")
-        delta = np.mean(asc_outcomes) - np.mean(desc_outcomes)
+        delta = (np.mean(asc_outcomes) - np.mean(desc_outcomes)) / 2.0
         deltas.append(delta)
     return float(np.mean(deltas))
 
