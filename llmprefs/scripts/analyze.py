@@ -16,6 +16,10 @@ from llmprefs.analysis.rating import (
     plot_ratings_stem,
     rate_options,
 )
+from llmprefs.analysis.task_order import (
+    analyze_task_order,
+    plot_task_order_analysis,
+)
 from llmprefs.file_io.load_records import load_records
 from llmprefs.task_structs import ResultRecord, TaskId, TaskRecord
 
@@ -76,6 +80,10 @@ def main() -> None:
     observations = compile_observations(results)
     option_order_analysis = analyze_observations(observations)
     fig = plot_option_order_analysis(option_order_analysis, tasks)
+    fig.show()
+
+    task_order_analysis = analyze_task_order(results)
+    fig = plot_task_order_analysis(task_order_analysis, tasks)
     fig.show()
 
     if plt.isinteractive():

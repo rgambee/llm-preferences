@@ -1,15 +1,18 @@
 from collections import defaultdict
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
 from itertools import chain, combinations
 from typing import Self
 
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
 from llmprefs.analysis.structs import ReducedResultBase
-from llmprefs.task_structs import OptionById, ResultRecord, TaskId
+from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
+from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
 OrderedOption = OptionById
 
@@ -160,3 +163,27 @@ def task_order(option: OrderedOption) -> TaskOrder:
     if first_task < second_task:
         return TaskOrder.ASCENDING
     return TaskOrder.DESCENDING
+
+
+def plot_task_order_analysis(
+    analysis: TaskOrderAnalysis,
+    tasks: Mapping[TaskId, TaskRecord],
+) -> Figure:
+    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+        nrows=1,
+        ncols=1,
+        squeeze=True,
+    )
+    tick_labels = get_tick_labels(
+        options=((task_id,) for task_id in analysis.tasks),
+        tasks=tasks,
+    )
+    image = annotated_heatmap(ax, analysis.deltas, tick_labels, vmin=-1.0, vmax=1.0)
+    colorbar = fig.colorbar(image, ax=ax)  # pyright: ignore[reportUnknownMemberType]
+    colorbar.ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
+        "Task Ordering Effect Strength",
+    )
+    ax.set_title("Task Order Analysis")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_xlabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_ylabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
+    return fig
