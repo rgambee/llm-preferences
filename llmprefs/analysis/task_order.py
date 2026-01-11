@@ -17,7 +17,7 @@ from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 OrderedOption = OptionById
 
 
-class UnorderedOption(frozenset[TaskId]):
+class UnorderedTaskPair(frozenset[TaskId]):
     EXPECTED_SIZE = 2
 
     def __new__(cls, tasks: Iterable[TaskId]) -> Self:
@@ -48,14 +48,14 @@ class TaskOrder(Enum):
 @dataclass
 class ReducedResult(ReducedResultBase):
     @property
-    def unordered_first_option(self) -> UnorderedOption:
-        return UnorderedOption(self.first_option)
+    def unordered_first_option(self) -> UnorderedTaskPair:
+        return UnorderedTaskPair(self.first_option)
 
     @property
-    def unordered_second_option(self) -> UnorderedOption:
-        return UnorderedOption(self.second_option)
+    def unordered_second_option(self) -> UnorderedTaskPair:
+        return UnorderedTaskPair(self.second_option)
 
-    def signed_outcome(self, desired_pair: UnorderedOption) -> int:
+    def signed_outcome(self, desired_pair: UnorderedTaskPair) -> int:
         if self.preferred_option_index is None:
             return 0
         if self.unordered_first_option == desired_pair:
@@ -84,7 +84,7 @@ def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
     for task_a_index, task_b_index in combinations(range(num_tasks), r=2):
         task_a = task_ids[task_a_index]
         task_b = task_ids[task_b_index]
-        delta = compute_delta(results, desired_pair=UnorderedOption((task_a, task_b)))
+        delta = compute_delta(results, desired_pair=UnorderedTaskPair((task_a, task_b)))
         matrix[min(task_a_index, task_b_index), max(task_a_index, task_b_index)] = delta
 
     return TaskOrderAnalysis(
@@ -95,14 +95,14 @@ def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
 
 def compute_delta(
     results: Sequence[ResultRecord],
-    desired_pair: UnorderedOption,
+    desired_pair: UnorderedTaskPair,
 ) -> float:
     relevant_results = find_relevant_comparisons(
         results,
         desired_pair,
         direct=False,
     )
-    outcomes: dict[UnorderedOption, dict[TaskOrder, list[int]]] = defaultdict(
+    outcomes: dict[UnorderedTaskPair, dict[TaskOrder, list[int]]] = defaultdict(
         lambda: {TaskOrder.ASCENDING: [], TaskOrder.DESCENDING: []}
     )
     for result in relevant_results:
@@ -131,7 +131,7 @@ def compute_delta(
 
 def find_relevant_comparisons(
     results: Iterable[ResultRecord],
-    desired_pair: UnorderedOption,
+    desired_pair: UnorderedTaskPair,
     *,
     direct: bool,
 ) -> Iterable[ReducedResult]:

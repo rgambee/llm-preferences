@@ -7,7 +7,7 @@ from llmprefs.analysis.task_order import (
     OrderedOption,
     ReducedResult,
     TaskOrder,
-    UnorderedOption,
+    UnorderedTaskPair,
     analyze_task_order,
     compute_delta,
     find_relevant_comparisons,
@@ -29,7 +29,7 @@ def mock_results() -> list[ResultRecord]:
     return results
 
 
-class TestUnorderedOption:
+class TestUnorderedTaskPair:
     @pytest.mark.parametrize(
         "tasks",
         [
@@ -39,7 +39,7 @@ class TestUnorderedOption:
         ],
     )
     def test_size_valid(self, tasks: Iterable[TaskId]) -> None:
-        option = UnorderedOption(tasks)
+        option = UnorderedTaskPair(tasks)
         for task_id in option:
             assert task_id in tasks
         for task_id in tasks:
@@ -58,9 +58,9 @@ class TestUnorderedOption:
     def test_size_invalid(self, tasks: Iterable[TaskId]) -> None:
         with pytest.raises(
             ValueError,
-            match="Size of UnorderedOption must be 2",
+            match="Size of UnorderedTaskPair must be 2",
         ):
-            UnorderedOption(tasks)
+            UnorderedTaskPair(tasks)
 
 
 class TestReducedResult:
@@ -79,13 +79,13 @@ class TestReducedResult:
             second_option=(3, 4),
             preferred_option_index=0,
         )
-        assert result.signed_outcome(UnorderedOption((1, 2))) == 1
-        assert result.signed_outcome(UnorderedOption((3, 4))) == -1
+        assert result.signed_outcome(UnorderedTaskPair((1, 2))) == 1
+        assert result.signed_outcome(UnorderedTaskPair((3, 4))) == -1
         with pytest.raises(
             ValueError,
             match="Result does not contain the desired pair",
         ):
-            assert result.signed_outcome(UnorderedOption((1, 3)))
+            assert result.signed_outcome(UnorderedTaskPair((1, 3)))
 
 
 class TestAnalyzeTaskOrder:
@@ -128,7 +128,7 @@ class TestComputeDelta:
         with pytest.raises(ValueError, match="Missing outcomes for one or more orders"):
             compute_delta(
                 results=mock_results[:1],
-                desired_pair=UnorderedOption((1, 2)),
+                desired_pair=UnorderedTaskPair((1, 2)),
             )
 
     def test_no_order_effect(self) -> None:
@@ -140,7 +140,7 @@ class TestComputeDelta:
 
         delta = compute_delta(
             results=[result0, result1],
-            desired_pair=UnorderedOption((1, 2)),
+            desired_pair=UnorderedTaskPair((1, 2)),
         )
         assert delta == 0.0
 
@@ -152,7 +152,7 @@ class TestComputeDelta:
 
         delta = compute_delta(
             results=[result0, result1],
-            desired_pair=UnorderedOption((1, 2)),
+            desired_pair=UnorderedTaskPair((1, 2)),
         )
         assert delta == 1.0
 
@@ -161,14 +161,14 @@ class TestComputeDelta:
 
         delta = compute_delta(
             results=[result0, result1],
-            desired_pair=UnorderedOption((1, 2)),
+            desired_pair=UnorderedTaskPair((1, 2)),
         )
         assert delta == -1.0
 
     def test_partial_order_effect(self, mock_results: list[ResultRecord]) -> None:
         delta = compute_delta(
             results=mock_results,
-            desired_pair=UnorderedOption((1, 2)),
+            desired_pair=UnorderedTaskPair((1, 2)),
         )
         # The ascending task order (1, 2) both won and lost. The descending order (2, 1)
         # lost. Therefore, the delta should be positive, indicating a slight preference
@@ -185,14 +185,14 @@ class TestFindRelevantComparisons:
         relevant_results = list(
             find_relevant_comparisons(
                 results=[],
-                desired_pair=UnorderedOption((1, 2)),
+                desired_pair=UnorderedTaskPair((1, 2)),
                 direct=direct,
             )
         )
         assert relevant_results == []
 
     def test_direct_comparisons(self, mock_results: list[ResultRecord]) -> None:
-        desired_pair = UnorderedOption((1, 2))
+        desired_pair = UnorderedTaskPair((1, 2))
         relevant_results = list(
             find_relevant_comparisons(
                 results=mock_results,
@@ -212,7 +212,7 @@ class TestFindRelevantComparisons:
             )
 
     def test_indirect_comparisons(self, mock_results: list[ResultRecord]) -> None:
-        desired_pair = UnorderedOption((1, 2))
+        desired_pair = UnorderedTaskPair((1, 2))
         relevant_results = list(
             find_relevant_comparisons(
                 results=mock_results,
