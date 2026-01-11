@@ -2,9 +2,11 @@ from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
+from itertools import chain, combinations
 from typing import Self
 
 import numpy as np
+from numpy.typing import NDArray
 
 from llmprefs.analysis.structs import ReducedResultBase
 from llmprefs.task_structs import OptionById, ResultRecord, TaskId
@@ -22,6 +24,17 @@ class UnorderedOption(frozenset[TaskId]):
                 f"Size of {instance.__class__.__name__} must be {cls.EXPECTED_SIZE}",
             )
         return instance
+
+
+@dataclass
+class TaskOrderAnalysis:
+    # A tuple of unique task IDs. The order matches the indices of the matrix.
+    tasks: tuple[TaskId, ...]
+    # A 2D matrix of shape N_tasks x N_tasks. Only the upper triangle is populated.
+    # If i < j, the entry at [i, j] indicates the net preference for tasks (i, j) in
+    # ascending order. A negative value indicates a preference for descending order,
+    # i.e. (j, i).
+    deltas: NDArray[np.float64]
 
 
 class TaskOrder(Enum):
@@ -47,6 +60,34 @@ class ReducedResult(ReducedResultBase):
         if self.unordered_second_option == desired_pair:
             return -1 if self.preferred_option_index == 0 else 1
         raise ValueError("Result does not contain the desired pair")
+
+
+def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
+    task_ids = tuple(
+        sorted(
+            {
+                task_id
+                for result in results
+                for task_id in chain.from_iterable(result.comparison)
+            },
+        )
+    )
+    num_tasks = len(task_ids)
+    matrix = np.full(
+        shape=(num_tasks, num_tasks),
+        fill_value=np.nan,
+        dtype=np.float64,
+    )
+    for task_a_index, task_b_index in combinations(range(num_tasks), r=2):
+        task_a = task_ids[task_a_index]
+        task_b = task_ids[task_b_index]
+        delta = compute_delta(results, desired_pair=UnorderedOption((task_a, task_b)))
+        matrix[min(task_a_index, task_b_index), max(task_a_index, task_b_index)] = delta
+
+    return TaskOrderAnalysis(
+        tasks=task_ids,
+        deltas=matrix,
+    )
 
 
 def compute_delta(

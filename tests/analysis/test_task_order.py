@@ -9,6 +9,7 @@ from llmprefs.analysis.task_order import (
     ReducedResult,
     TaskOrder,
     UnorderedOption,
+    analyze_task_order,
     compute_delta,
     find_relevant_comparisons,
     task_order,
@@ -19,12 +20,13 @@ from llmprefs.testing.factories import result_record_factory
 
 @pytest.fixture
 def mock_results() -> list[ResultRecord]:
-    results = [result_record_factory() for _ in range(5)]
+    results = [result_record_factory() for _ in range(6)]
     results[0].comparison = ((1, 2), (3, 4))
     results[1].comparison = ((3, 4), (1, 2))
-    results[2].comparison = ((3, 4), (2, 1))
+    results[2].comparison = ((4, 3), (2, 1))
     results[3].comparison = ((1, 3), (2, 4))
-    results[4].comparison = ((1, 2), (2, 1))
+    results[4].comparison = ((4, 2), (3, 1))
+    results[5].comparison = ((1, 2), (2, 1))
     return results
 
 
@@ -85,6 +87,34 @@ class TestReducedResult:
             match="Result does not contain the desired pair",
         ):
             assert result.signed_outcome(UnorderedOption((1, 3)))
+
+
+class TestAnalyzeTaskOrder:
+    def test_empty_results(self) -> None:
+        analysis = analyze_task_order(results=[])
+
+        assert len(analysis.tasks) == 0
+        assert analysis.deltas.size == 0
+
+    def test_multiple_results(self, mock_results: list[ResultRecord]) -> None:
+        analysis = analyze_task_order(mock_results)
+
+        assert analysis.tasks == (1, 2, 3, 4)
+        assert analysis.deltas.shape == (4, 4)
+        expected = np.array(
+            [
+                [np.nan, 0.5, 1.0, np.nan],
+                [np.nan, np.nan, np.nan, -1.0],
+                [np.nan, np.nan, np.nan, -0.5],
+                [np.nan, np.nan, np.nan, np.nan],
+            ],
+        )
+        for i in range(len(analysis.tasks)):
+            for j in range(len(analysis.tasks)):
+                if np.isnan(expected[i, j]):
+                    assert np.isnan(analysis.deltas[i, j])
+                else:
+                    assert expected[i, j] == analysis.deltas[i, j]
 
 
 class TestComputeDelta:
