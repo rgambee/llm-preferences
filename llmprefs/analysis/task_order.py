@@ -124,6 +124,8 @@ def compute_delta(
             raise ValueError("Missing outcomes for one or more orders")
         delta = (np.mean(asc_outcomes) - np.mean(desc_outcomes)) / 2.0
         deltas.append(delta)
+    if not deltas:
+        return np.nan
     return float(np.mean(deltas))
 
 

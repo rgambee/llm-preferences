@@ -1,4 +1,3 @@
-import warnings
 from collections.abc import Iterable
 
 import numpy as np
@@ -119,21 +118,11 @@ class TestAnalyzeTaskOrder:
 
 class TestComputeDelta:
     def test_empty_results(self) -> None:
-        with (
-            np.errstate(invalid="ignore"),
-            warnings.catch_warnings(
-                record=True,
-                action="default",
-                category=RuntimeWarning,
-            ) as captured,
-        ):
-            delta = compute_delta(
-                results=[],
-                desired_pair=UnorderedOption((1, 2)),
-            )
+        delta = compute_delta(
+            results=[],
+            desired_pair=UnorderedTaskPair((1, 2)),
+        )
         assert np.isnan(delta)
-        assert len(captured) == 1
-        assert str(captured[0].message) == "Mean of empty slice"
 
     def test_one_result(self, mock_results: list[ResultRecord]) -> None:
         with pytest.raises(ValueError, match="Missing outcomes for one or more orders"):
