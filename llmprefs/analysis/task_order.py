@@ -131,6 +131,21 @@ def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
     )
 
 
+def compute_delta_direct(
+    results: Sequence[ResultRecord],
+    desired_option: UnorderedOption,
+) -> float:
+    relevant_results = find_relevant_comparisons(
+        results,
+        desired_option,
+        direct=True,
+    )
+    outcomes = [result.signed_outcome() for result in relevant_results]
+    if not outcomes:
+        return np.nan
+    return float(np.mean(outcomes))
+
+
 def compute_delta_indirect(
     results: Sequence[ResultRecord],
     desired_option: UnorderedOption,
