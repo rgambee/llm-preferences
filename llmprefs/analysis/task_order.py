@@ -3,7 +3,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
 from itertools import chain, combinations
-from typing import Self
+from typing import Literal, Self, overload
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -67,6 +67,27 @@ class ReducedResult(ReducedResultBase):
     @property
     def unordered_second_pair(self) -> UnorderedTaskPair:
         return UnorderedTaskPair(self.second_option)
+
+
+class DirectComparison(ReducedResult):
+    def __post_init__(self) -> None:
+        if self.unordered_first_option != self.unordered_second_option:
+            raise ValueError("Comparison is not direct")
+
+    def signed_outcome(self) -> int:
+        if self.preferred_option_index is None:
+            return 0
+        if self.preferred_option_index == 0:
+            return 1 if task_order(self.first_option) is TaskOrder.ASCENDING else -1
+        if self.preferred_option_index == 1:
+            return 1 if task_order(self.second_option) is TaskOrder.ASCENDING else -1
+        raise ValueError("Invalid preferred_option_index")
+
+
+class IndirectComparison(ReducedResult):
+    def __post_init__(self) -> None:
+        if self.unordered_first_option == self.unordered_second_option:
+            raise ValueError("Comparison is not indirect")
 
     def signed_outcome(self, desired_option: UnorderedOption) -> int:
         if self.preferred_option_index is None:
@@ -146,6 +167,24 @@ def compute_delta_indirect(
     return float(np.mean(deltas))
 
 
+@overload
+def find_relevant_comparisons(
+    results: Iterable[ResultRecord],
+    desired_option: UnorderedOption,
+    *,
+    direct: Literal[True],
+) -> Iterable[DirectComparison]: ...
+
+
+@overload
+def find_relevant_comparisons(
+    results: Iterable[ResultRecord],
+    desired_option: UnorderedOption,
+    *,
+    direct: Literal[False],
+) -> Iterable[IndirectComparison]: ...
+
+
 def find_relevant_comparisons(
     results: Iterable[ResultRecord],
     desired_option: UnorderedOption,
@@ -171,10 +210,18 @@ def find_relevant_comparisons(
         unordered_option_b = reduced_result.unordered_second_option
         if desired_option not in {unordered_option_a, unordered_option_b}:
             continue
-        if (unordered_option_a == unordered_option_b and direct) or (
-            unordered_option_a != unordered_option_b and not direct
-        ):
-            yield reduced_result
+        if unordered_option_a == unordered_option_b and direct:
+            yield DirectComparison(
+                first_option=reduced_result.first_option,
+                second_option=reduced_result.second_option,
+                preferred_option_index=reduced_result.preferred_option_index,
+            )
+        elif unordered_option_a != unordered_option_b and not direct:
+            yield IndirectComparison(
+                first_option=reduced_result.first_option,
+                second_option=reduced_result.second_option,
+                preferred_option_index=reduced_result.preferred_option_index,
+            )
 
 
 def task_order(option: OrderedOption) -> TaskOrder:

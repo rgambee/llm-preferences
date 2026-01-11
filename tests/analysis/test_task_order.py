@@ -4,6 +4,8 @@ import numpy as np
 import pytest
 
 from llmprefs.analysis.task_order import (
+    DirectComparison,
+    IndirectComparison,
     OptionSizeError,
     OrderedOption,
     ReducedResult,
@@ -84,8 +86,59 @@ class TestReducedResult:
         assert result.unordered_first_option == {1, 2}
         assert result.unordered_second_option == {3}
 
+
+class TestDirectComparison:
+    def test_validation(self) -> None:
+        DirectComparison(
+            first_option=(1, 2),
+            second_option=(2, 1),
+            preferred_option_index=None,
+        )
+        with pytest.raises(ValueError, match="Comparison is not direct"):
+            DirectComparison(
+                first_option=(1, 2),
+                second_option=(2, 3),
+                preferred_option_index=None,
+            )
+
     def test_signed_outcome(self) -> None:
-        result = ReducedResult(
+        result = DirectComparison(
+            first_option=(1, 2),
+            second_option=(2, 1),
+            preferred_option_index=0,
+        )
+        assert result.signed_outcome() == 1
+
+        result.preferred_option_index = 1
+        assert result.signed_outcome() == -1
+
+        result.first_option = (2, 1)
+        result.second_option = (1, 2)
+        assert result.signed_outcome() == 1
+
+        result.preferred_option_index = 0
+        assert result.signed_outcome() == -1
+
+        result.preferred_option_index = None
+        assert result.signed_outcome() == 0
+
+
+class TestIndirectComparison:
+    def test_validation(self) -> None:
+        IndirectComparison(
+            first_option=(1, 2),
+            second_option=(2, 3),
+            preferred_option_index=None,
+        )
+        with pytest.raises(ValueError, match="Comparison is not indirect"):
+            IndirectComparison(
+                first_option=(1, 2),
+                second_option=(2, 1),
+                preferred_option_index=None,
+            )
+
+    def test_signed_outcome(self) -> None:
+        result = IndirectComparison(
             first_option=(1, 2),
             second_option=(3, 4),
             preferred_option_index=0,
