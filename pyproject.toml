@@ -70,12 +70,14 @@ ignore = [
     "D106",      # Missing docstring in public nested class
     "D107",      # Missing docstring in __init__
     "EM",        # flake8-errmsg
+    "FIX",       # flake8-fixme
     "G003",      # Logging statement uses `+`
     "G004",      # Logging statement uses f-string
     "TC001",     # Move application import `...` into a type-checking block
     "TC002",     # Move third-party import `...` into a type-checking block
     "TC003",     # Move standard library import `...` into a type-checking block
     "TC006",     # Add quotes to type expression in typing.cast()
+    "TD",        # flake8-todos
     "TRY003",    # Avoid specifying long messages outside the exception class
 ]
 
