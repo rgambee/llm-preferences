@@ -163,12 +163,7 @@ def plot_ratings_stem(
     xcoords = np.arange(len(rated_options))
     rating_values = [vci.value for vci in rated_options.values()]
 
-    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
-        nrows=1,
-        ncols=1,
-        squeeze=True,
-    )
-
+    fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
     ax.stem(
         xcoords,
         rating_values,
@@ -221,11 +216,7 @@ def plot_ratings_heatmap(
     for (task0, task1), rating in rated_options.items():
         ratings[task_ids_to_index[task0], task_ids_to_index[task1]] = rating.value
 
-    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
-        nrows=1,
-        ncols=1,
-        squeeze=True,
-    )
+    fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
     tick_labels = get_tick_labels(
         options=((task_id,) for task_id in task_0_ids),
         tasks=tasks,
