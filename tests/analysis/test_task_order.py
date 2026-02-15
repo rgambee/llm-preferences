@@ -168,7 +168,7 @@ class TestAnalyzeTaskOrder:
 
         assert analysis.tasks == (1, 2, 3, 4)
         assert analysis.deltas_indirect.shape == (4, 4)
-        expected = np.array(
+        expected_indirect = np.array(
             [
                 [np.nan, 0.5, 1.0, np.nan],
                 [np.nan, np.nan, np.nan, -1.0],
@@ -178,7 +178,7 @@ class TestAnalyzeTaskOrder:
         )
         for i in range(len(analysis.tasks)):
             for j in range(len(analysis.tasks)):
-                if np.isnan(expected[i, j]):
+                if np.isnan(expected_indirect[i, j]):
                     assert np.isnan(analysis.deltas_indirect[i, j])
                 else:
                     assert expected_indirect[i, j] == analysis.deltas_indirect[i, j]
