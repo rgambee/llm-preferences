@@ -23,27 +23,8 @@ from llmprefs.file_io.load_records import load_records
 from llmprefs.task_structs import ResultRecord, TaskId, TaskRecord
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Analyze LLM responses",
-    )
-    parser.add_argument(
-        "--tasks-path",
-        type=Path,
-        required=True,
-        help="Path to the tasks file",
-    )
-    parser.add_argument(
-        "--results-path",
-        type=Path,
-        required=True,
-        help="Path to the results file",
-    )
-    args = parser.parse_args()
-
-    logging.basicConfig(level=logging.INFO)
+def analyze_one_set_of_results(args: argparse.Namespace) -> None:
     logger = logging.getLogger(__name__)
-
     task_list = list(load_records(args.tasks_path, TaskRecord))
     tasks: dict[TaskId, TaskRecord] = {task.id: task for task in task_list}
     results = list(load_records(args.results_path, ResultRecord))
@@ -78,6 +59,57 @@ def main() -> None:
     if two_tasks_per_option:
         task_order_analysis = analyze_task_order(results)
         plot_task_order_analysis(task_order_analysis, tasks)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Analyze LLM task preference responses",
+    )
+    subparsers = parser.add_subparsers(required=True)
+
+    analyze_one_parser = subparsers.add_parser(
+        "analyze-one",
+        help="Analyze a single set of results",
+    )
+    analyze_one_parser.add_argument(
+        "--tasks-path",
+        type=Path,
+        required=True,
+        help="Path to the tasks file",
+    )
+    analyze_one_parser.add_argument(
+        "--results-path",
+        type=Path,
+        required=True,
+        help="Path to the results file",
+    )
+    analyze_one_parser.set_defaults(func=analyze_one_set_of_results)
+
+    analyze_two_parser = subparsers.add_parser(
+        "analyze-two",
+        help="Analyze two sets of results",
+    )
+    analyze_two_parser.add_argument(
+        "--tasks-path",
+        type=Path,
+        required=True,
+        help="Path to the tasks file",
+    )
+    analyze_two_parser.add_argument(
+        "--1-task-per-option-results-path",
+        type=Path,
+        required=True,
+        help="Path to the results file for one task per option",
+    )
+    analyze_two_parser.add_argument(
+        "--2-tasks-per-option-results-path",
+        type=Path,
+        required=True,
+        help="Path to the results file for two tasks per option",
+    )
+    args = parser.parse_args()
+    logging.basicConfig(level=logging.INFO)
+    args.func(args)
 
     plt.show()  # pyright: ignore[reportUnknownMemberType]
     if plt.isinteractive():
