@@ -5,8 +5,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from llmprefs.analysis.option_order import (
-    analyze_observations,
-    compile_observations,
+    analyze_option_order,
     plot_option_order_analysis,
 )
 from llmprefs.analysis.outcomes import plot_comparison_outcomes_heatmap
@@ -73,8 +72,7 @@ def main() -> None:
         fig = plot_ratings_heatmap(two_tasks_per_option, tasks)
         fig.tight_layout()
 
-    observations = compile_observations(results)
-    option_order_analysis = analyze_observations(observations)
+    option_order_analysis = analyze_option_order(results)
     plot_option_order_analysis(option_order_analysis, tasks)
 
     if two_tasks_per_option:

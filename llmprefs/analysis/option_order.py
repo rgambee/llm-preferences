@@ -1,7 +1,6 @@
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from math import factorial
-from typing import Literal
+from enum import Enum, auto
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,30 +11,20 @@ from llmprefs.analysis.structs import ReducedResultBase
 from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
 from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
-NUM_OPTIONS_PER_COMPARISON = 2
-NUM_OPTION_ORDERINGS = factorial(NUM_OPTIONS_PER_COMPARISON)
-# The number of possible outcomes is one more than the number of options per
-# comparison because it's possible neither option was chosen.
-NUM_POSSIBLE_OUTCOMES = NUM_OPTIONS_PER_COMPARISON + 1
-
-
-@dataclass
-class Observations:
-    # A tuple of unique options. The order matches the indices of the matrix.
-    options: tuple[OptionById, ...]
-    # A 4D tensor of shape N_opts x N_opts x N_orderings x N_outcomes. It is triangular
-    # over the first two dimensions. Only elements where i < j are populated.
-    matrix: NDArray[np.float64]
-
 
 @dataclass
 class OptionOrderAnalysis:
-    # A tuple of unique options. The order matches the indices of the matrix.
+    # A tuple of unique options. The order matches the indices of the matrices.
     options: tuple[OptionById, ...]
     # A 2D matrix of shape N_opts x N_opts. Only the upper triangle is populated.
-    # If i < j, the entry at [i, j] is Cramér's V, which indicates the strength of the
-    # ordering effect for options i and j.
-    cramer_v: NDArray[np.float64]
+    # If i < j, the entry at [i, j] indicates the net preference for the first presented
+    # option in comparisons of option i vs. option j.
+    deltas: NDArray[np.float64]
+
+
+class OptionOrder(Enum):
+    ASCENDING = auto()
+    DESCENDING = auto()
 
 
 @dataclass
@@ -49,57 +38,18 @@ class ReducedResult(ReducedResultBase):
         return max(self.first_option, self.second_option)
 
     @property
-    def option_order_index(self) -> Literal[0, 1]:
-        if self.first_option < self.second_option:
-            return 0
-        return 1
-
-    @property
-    def outcome_index(self) -> int:
-        """The logical index of the preferred option.
-
-        Return 0 if the smaller option is preferred, 1 if the larger option is
-        preferred, or 2 if neither.
-        """
+    def signed_outcome(self) -> int:
         if self.preferred_option_index is None:
-            return NUM_OPTIONS_PER_COMPARISON
-        return int(self.preferred_option_index != self.option_order_index)
+            return 0
+        if self.preferred_option_index == 0:
+            return 1
+        if self.preferred_option_index == 1:
+            return -1
+        raise ValueError("Invalid preferred option index")
 
 
-def analyze_option_order(results: Iterable[ResultRecord]) -> OptionOrderAnalysis:
+def analyze_option_order(results: Sequence[ResultRecord]) -> OptionOrderAnalysis:
     """Analyze whether the model is sensitive to the order of the options."""
-    observations = compile_observations(results)
-    return analyze_observations(observations)
-
-
-def analyze_observations(observations: Observations) -> OptionOrderAnalysis:
-    ordering_counts = observations.matrix.sum(axis=3)
-    outcome_counts = observations.matrix.sum(axis=2)
-    total_counts = observations.matrix.sum(axis=(2, 3))
-    expected = np.zeros_like(observations.matrix)
-    np.divide(
-        ordering_counts[..., :, None] * outcome_counts[..., None, :],
-        total_counts[..., None, None],
-        out=expected,
-        where=total_counts[..., None, None] != 0,
-    )
-    chi_squared_terms = np.zeros_like(observations.matrix)
-    np.divide(
-        (observations.matrix - expected) ** 2,
-        expected,
-        out=chi_squared_terms,
-        where=expected != 0,
-    )
-    chi_squared = chi_squared_terms.sum(axis=(2, 3))
-    # It's expected that total_counts will contain zeros, especially for the lower
-    # triangle. Therefore, this division will produce NaNs. This is desired: NaN
-    # indicates that we have no data for that cell.
-    with np.errstate(divide="ignore", invalid="ignore"):
-        cramer_v = np.sqrt(chi_squared / total_counts)
-    return OptionOrderAnalysis(options=observations.options, cramer_v=cramer_v)
-
-
-def compile_observations(results: Iterable[ResultRecord]) -> Observations:
     reduced_results: list[ReducedResult] = []
     unique_options: set[OptionById] = set()
     for result in results:
@@ -119,21 +69,22 @@ def compile_observations(results: Iterable[ResultRecord]) -> Observations:
     }
 
     n_options = len(unique_options)
-    # observations is triangular over the first two dimensions. Only elements where
+    # net_wins and totals are both triangular matrices. Only elements where
     # i < j will be populated.
-    observations = np.zeros(
-        shape=(n_options, n_options, NUM_OPTION_ORDERINGS, NUM_POSSIBLE_OUTCOMES),
-        dtype=np.float64,
-    )
+    net_wins = np.zeros(shape=(n_options, n_options), dtype=np.float64)
+    totals = net_wins.copy()
     for result in reduced_results:
         tensor_index = (
             option_to_index[result.smaller_option],
             option_to_index[result.larger_option],
-            result.option_order_index,
-            result.outcome_index,
         )
-        observations[tensor_index] += 1
-    return Observations(options=sorted_options, matrix=observations)
+        net_wins[tensor_index] += result.signed_outcome
+        totals[tensor_index] += 1
+    # We expect totals to contain zeros. We ignore the division by zero warnings and
+    # let the associated NaNs propagate.
+    with np.errstate(divide="ignore", invalid="ignore"):
+        deltas = np.divide(net_wins, totals)
+    return OptionOrderAnalysis(options=sorted_options, deltas=deltas)
 
 
 def plot_option_order_analysis(
@@ -146,7 +97,7 @@ def plot_option_order_analysis(
         squeeze=True,
     )
     tick_labels = get_tick_labels(analysis.options, tasks)
-    image = annotated_heatmap(ax, analysis.cramer_v, tick_labels, vmin=0.0, vmax=1.0)
+    image = annotated_heatmap(ax, analysis.deltas, tick_labels, vmin=-1.0, vmax=1.0)
     colorbar = fig.colorbar(image, ax=ax)  # pyright: ignore[reportUnknownMemberType]
     colorbar.ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
         "Option Ordering Effect Strength",
