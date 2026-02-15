@@ -36,7 +36,7 @@ class UnorderedTaskPair(frozenset[TaskId]):
 
 @dataclass
 class TaskOrderAnalysis:
-    # A tuple of unique task IDs. The order matches the indices of the matrix.
+    # A tuple of unique task IDs. The order matches the indices of the matrices.
     tasks: tuple[TaskId, ...]
     # A 2D matrix of shape N_tasks x N_tasks. Only the upper triangle is populated.
     # If i < j, the entry at [i, j] indicates the net preference for tasks (i, j) in
