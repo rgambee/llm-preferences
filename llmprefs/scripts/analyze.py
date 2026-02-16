@@ -99,12 +99,14 @@ def main() -> None:
         "--1-task-per-option-results-path",
         type=Path,
         required=True,
+        dest="results_1tpo_path",
         help="Path to the results file for one task per option",
     )
     analyze_two_parser.add_argument(
         "--2-tasks-per-option-results-path",
         type=Path,
         required=True,
+        dest="results_2tpo_path",
         help="Path to the results file for two tasks per option",
     )
     args = parser.parse_args()
