@@ -231,3 +231,35 @@ def plot_ratings_heatmap(
     colorbar.ax.set_ylabel("Rating")  # pyright: ignore[reportUnknownMemberType]
 
     return fig
+
+
+def plot_rating_additivity_scatter(
+    rated_options_1tpo: RatedOptions,
+    rated_options_2tpo: RatedOptions,
+) -> Figure:
+    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+        subplot_kw={"aspect": "equal"}
+    )
+
+    x_values = [
+        sum(rated_options_1tpo[(task_id,)].value for task_id in option)
+        for option in rated_options_2tpo
+    ]
+    y_values = [rated_options_2tpo[option].value for option in rated_options_2tpo]
+
+    # Add error bars
+    ax.plot(  # pyright: ignore[reportUnknownMemberType]
+        x_values,
+        y_values,
+        marker="o",
+        linestyle="None",
+        alpha=0.5,
+        markeredgewidth=0,
+        label="Data points",
+    )
+
+    ax.legend()  # pyright: ignore[reportUnknownMemberType]
+    ax.set_xlabel("Sum of Task Ratings")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_ylabel("Rating of Task Sequence")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_title("Task Rating Additivity")  # pyright: ignore[reportUnknownMemberType]
+    return fig

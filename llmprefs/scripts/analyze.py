@@ -11,6 +11,7 @@ from llmprefs.analysis.option_order import (
 from llmprefs.analysis.outcomes import plot_comparison_outcomes_heatmap
 from llmprefs.analysis.rating import (
     compile_matrix,
+    plot_rating_additivity_scatter,
     plot_ratings_heatmap,
     plot_ratings_stem,
     rate_options,
@@ -61,6 +62,37 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
         plot_task_order_analysis(task_order_analysis, tasks)
 
 
+def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
+    logger = logging.getLogger(__name__)
+    task_list = list(load_records(args.tasks_path, TaskRecord))
+    tasks: dict[TaskId, TaskRecord] = {task.id: task for task in task_list}
+    results_1tpo = list(load_records(args.results_1tpo_path, ResultRecord))
+    results_2tpo = list(load_records(args.results_2tpo_path, ResultRecord))
+    options_1tpo = compile_matrix(results_1tpo)
+    logger.info(
+        f"Analyzing {options_1tpo.matrix.sum():.0f} preferences "
+        + f"across {len(options_1tpo.options)} options"
+    )
+    rated_options_1tpo = rate_options(
+        options_1tpo,
+        tasks,
+        num_resamples=100,
+        confidence=0.75,
+    )
+    options_2tpo = compile_matrix(results_2tpo)
+    logger.info(
+        f"Analyzing {options_2tpo.matrix.sum():.0f} preferences "
+        + f"across {len(options_2tpo.options)} options"
+    )
+    rated_options_2tpo = rate_options(
+        options_2tpo,
+        tasks,
+        num_resamples=100,
+        confidence=0.75,
+    )
+    plot_rating_additivity_scatter(rated_options_1tpo, rated_options_2tpo)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Analyze LLM task preference responses",
@@ -109,6 +141,8 @@ def main() -> None:
         dest="results_2tpo_path",
         help="Path to the results file for two tasks per option",
     )
+    analyze_two_parser.set_defaults(func=analyze_two_sets_of_results)
+
     args = parser.parse_args()
     logging.basicConfig(level=logging.INFO)
     args.func(args)
