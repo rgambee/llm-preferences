@@ -149,30 +149,30 @@ class TestCompileMatrix:
 
     def test_one_result(self) -> None:
         result = result_record_factory()
-        assert result.preferred_option_index is not None
-        preferred_option = result.comparison[result.preferred_option_index]
+        assert result.preferred_option_index == 0
         outcomes = compile_matrix([result])
 
         assert len(outcomes.options) == 2
-        assert outcomes.counts.shape == (2, 2)
+        assert outcomes.counts.shape == (2, 2, 3)
         assert outcomes.counts.sum() == 1
-        for i, option in enumerate(outcomes.options):
-            assert outcomes.counts[i, i] == 0
-            if option == preferred_option:
-                assert outcomes.counts[i, 1 - i] == 1
-            else:
-                assert outcomes.counts[i, 1 - i] == 0
+        assert outcomes.counts[0, 1, 0] == 1
+
+    def test_neither_option_preferred(self) -> None:
+        result = result_record_factory()
+        result.preferred_option_index = None
+        outcomes = compile_matrix([result])
+
+        assert len(outcomes.options) == 2
+        assert outcomes.counts.shape == (2, 2, 3)
+        assert outcomes.counts.sum() == 1
+        assert outcomes.counts[0, 1, 2] == 1
 
     def test_multiple_results(self, mock_results: list[ResultRecord]) -> None:
         outcomes = compile_matrix(mock_results)
 
         assert outcomes.options == ((0,), (1,), (2,))
-        assert outcomes.counts.shape == (3, 3)
-        expected_matrix = np.array(
-            [
-                [0, 1, 1],
-                [0, 0, 1],
-                [0, 0, 0],
-            ]
-        )
-        assert (outcomes.counts == expected_matrix).all()
+        assert outcomes.counts.shape == (3, 3, 3)
+        assert outcomes.counts.sum() == len(mock_results)
+        assert outcomes.counts[0, 1, 0] == 1
+        assert outcomes.counts[0, 2, 0] == 1
+        assert outcomes.counts[1, 2, 0] == 1

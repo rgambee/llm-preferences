@@ -18,15 +18,18 @@ from llmprefs.analysis.visualization import (
     get_tick_labels,
 )
 from llmprefs.comparisons import is_opt_out_task
-from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
+from llmprefs.task_structs import OptionById, Outcome, ResultRecord, TaskId, TaskRecord
 
 
 @dataclass
 class ComparisonOutcomes:
     # A tuple of unique options. The order matches the indices of the matrix.
     options: tuple[OptionById, ...]
-    # A matrix of size N_opts x N_opts. The entry at [i, j] is the number of times
-    # option i was preferred over option j.
+    # A matrix of shape N_opts x N_opts x 3. The entry at [i, j, o] is the count of
+    # comparisons between options i and j with outcome o. The three outcomes are:
+    # - 0: option i beat j
+    # - 1: option j beat i
+    # - 2: neither option was preferred
     counts: NDArray[np.float64]
 
 
@@ -87,21 +90,20 @@ def median_opt_out_rating(
 def compile_matrix(results: Iterable[ResultRecord]) -> ComparisonOutcomes:
     """Compile comparison results into a square matrix.
 
-    The matrix has size N_options x N_options. The entry at [i, j] is the number of
-    times option i was preferred over option j.
+    The matrix has shape N_options x N_options x 3. The entry at [i, j, o] is the number
+    of comparisons between options i and j with outcome o. The three outcomes are:
+    - 0: option i beat j
+    - 1: option j beat i
+    - 2: neither option was preferred
     """
-    counts: dict[OptionById, dict[OptionById, int]] = defaultdict(
-        lambda: defaultdict(int),
+    counts: dict[OptionById, dict[OptionById, dict[Outcome, int]]] = defaultdict(
+        lambda: defaultdict(lambda: defaultdict(lambda: 0)),
     )
     unique_options: set[OptionById] = set()
     for result in results:
-        if result.preferred_option_index is None:
-            continue
-        preferred_option = result.comparison[result.preferred_option_index]
-        for i, option in enumerate(result.comparison):
-            unique_options.add(option)
-            if i != result.preferred_option_index:
-                counts[preferred_option][option] += 1
+        option_0, option_1 = result.comparison
+        counts[option_0][option_1][result.preferred_option_index] += 1
+        unique_options.update(result.comparison)
 
     if len(unique_options) == 0:
         return ComparisonOutcomes(options=(), counts=np.array([]))
@@ -112,12 +114,16 @@ def compile_matrix(results: Iterable[ResultRecord]) -> ComparisonOutcomes:
     }
 
     n_options = len(unique_options)
-    matrix: NDArray[np.float64] = np.zeros((n_options, n_options), dtype=np.float64)
-    for preferred_option, beaten_options in counts.items():
-        preferred_idx = option_to_index[preferred_option]
-        for beaten_option, count in beaten_options.items():
-            beaten_idx = option_to_index[beaten_option]
-            matrix[preferred_idx, beaten_idx] = count
+    matrix: NDArray[np.float64] = np.zeros((n_options, n_options, 3), dtype=np.float64)
+    for option_0, counts_for_opt_0 in counts.items():
+        for option_1, counts_for_opts_01 in counts_for_opt_0.items():
+            for outcome, count in counts_for_opts_01.items():
+                if outcome is None:
+                    outcome = 2  # noqa: PLW2901
+                index_0 = option_to_index[option_0]
+                index_1 = option_to_index[option_1]
+                matrix[index_0, index_1, outcome] = count
+
     return ComparisonOutcomes(options=sorted_options, counts=matrix)
 
 
