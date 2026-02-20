@@ -3,6 +3,7 @@ from typing import Any
 import pytest
 
 from llmprefs.analysis.structs import ReducedResultBase
+from llmprefs.task_structs import Outcome
 
 
 class TestReducedResultBase:
@@ -12,7 +13,7 @@ class TestReducedResultBase:
     )
     def test_preferred_option_valid(
         self,
-        preferred_option_index: int | None,
+        preferred_option_index: Outcome,
     ) -> None:
         ReducedResultBase(
             first_option=(1,),

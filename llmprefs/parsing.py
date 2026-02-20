@@ -6,6 +6,7 @@ from pydantic import ValidationError
 from llmprefs.api.base import BaseApi
 from llmprefs.api.structs import AnyApiResponse, IdentifyPreferenceInputSchema
 from llmprefs.prompts import PARSING_PROMPT_TEMPLATE
+from llmprefs.task_structs import Outcome
 
 
 async def parse_preference(
@@ -13,7 +14,7 @@ async def parse_preference(
     comparison_prompt: str,
     comparison_response: str,
     parsing_api: BaseApi[AnyApiResponse],
-) -> int | None:
+) -> Outcome:
     index = parse_preference_single_character(num_options, comparison_response)
     if index is not None:
         return index
@@ -41,7 +42,7 @@ async def parse_preference(
 def parse_preference_single_character(
     num_options: int,
     comparison_response: str,
-) -> int | None:
+) -> Outcome:
     logger = logging.getLogger(__name__)
     if len(comparison_response) != 1:
         return None
@@ -55,7 +56,7 @@ def parse_preference_single_character(
 def parse_preference_json(
     num_options: int,
     comparison_response: str,
-) -> int | None:
+) -> Outcome:
     logger = logging.getLogger(__name__)
     try:
         parsed_response = IdentifyPreferenceInputSchema.model_validate_json(
@@ -80,7 +81,7 @@ async def parse_preference_llm(
     comparison_prompt: str,
     comparison_response: str,
     parsing_api: BaseApi[AnyApiResponse],
-) -> int | None:
+) -> Outcome:
     parsing_prompt = PARSING_PROMPT_TEMPLATE.format(
         comparison_prompt=comparison_prompt,
         comparison_response=comparison_response,

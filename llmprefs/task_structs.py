@@ -68,6 +68,7 @@ Option = Sequence[TaskRecord]
 OptionById = tuple[TaskId, ...]  # Restrict to tuple for hashability
 Comparison = tuple[Option, Option]
 ComparisonById = tuple[OptionById, OptionById]
+Outcome = int | None
 
 
 class ResultRecordKey(NamedTuple):
@@ -89,7 +90,7 @@ class ResultRecord(BaseModel):
     comparison: ComparisonById
     sample_index: int
     comparison_prompt: str
-    preferred_option_index: int | None
+    preferred_option_index: Outcome
     api_params: AnyApiParameters = Field(discriminator="provider")
     api_response: AnyApiResponse
 
