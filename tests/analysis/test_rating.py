@@ -11,6 +11,7 @@ from llmprefs.analysis.rating import (
     compile_matrix,
     median_opt_out_rating,
     rate_options,
+    resample_results,
 )
 from llmprefs.task_structs import ResultRecord, TaskId, TaskRecord, TaskType
 from llmprefs.testing.factories import result_record_factory, task_record_factory
@@ -176,3 +177,24 @@ class TestCompileMatrix:
         assert outcomes.counts[0, 1, 0] == 1
         assert outcomes.counts[0, 2, 0] == 1
         assert outcomes.counts[1, 2, 0] == 1
+
+
+class TestResampleResults:
+    def test_zero_results(self) -> None:
+        counts = np.zeros((0, 0, 3), dtype=np.int64)
+        outcomes = ComparisonOutcomes(options=(), counts=counts)
+        resample = resample_results(outcomes, RNG)
+        assert resample.counts.shape == counts.shape
+        assert resample.counts.sum() == 0
+
+    def test_one_result(self) -> None:
+        outcomes = compile_matrix([result_record_factory()])
+        resample = resample_results(outcomes, RNG)
+        assert resample.counts.shape == outcomes.counts.shape
+        assert resample.counts.sum() == 1
+
+    def test_multiple_results(self, mock_results: list[ResultRecord]) -> None:
+        outcomes = compile_matrix(mock_results)
+        resample = resample_results(outcomes, RNG)
+        assert resample.counts.shape == outcomes.counts.shape
+        assert resample.counts.sum() == len(mock_results)

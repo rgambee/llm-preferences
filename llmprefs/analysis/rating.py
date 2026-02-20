@@ -1,15 +1,12 @@
-import logging
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import cast
 
 import choix
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
-from scipy import optimize
 
 from llmprefs.analysis.structs import ValueCI
 from llmprefs.analysis.visualization import (
@@ -134,28 +131,21 @@ def resample_results(
     outcomes: ComparisonOutcomes,
     generator: np.random.Generator,
 ) -> ComparisonOutcomes:
-    # TODO: check whether this respects the comparison constraints. Not all matrix
-    # elements are independent. We can't have A always beating B and B always beating A.
-    # TODO: move this elsewhere so other analyses can reuse it
-    num_comparisons = int(np.round(cast(float, outcomes.counts.sum())))
-    random_weights = generator.random(outcomes.counts.shape)
-    resample = outcomes.counts * random_weights
-
-    # Scale resample such that after rounding, its sum equals num_comparisons.
-    # To do this, we solve the following equation for the scalar variable x:
-    #   np.round(x * resample).sum() == num_comparisons.
-    def error(x: float) -> int:
-        return np.round(x * resample).sum() - num_comparisons
-
-    x0 = num_comparisons / resample.sum()
-    x = optimize.brentq(f=error, a=0.5 * x0, b=2.0 * x0)
-    resample_sum = np.round(x * resample).sum()
-    if resample_sum != num_comparisons:
-        logging.getLogger().error(
-            "Resample scaling failed to converge: "
-            + f"{x=}, {resample_sum=}, {num_comparisons=}"
-        )
-        raise RuntimeError("Resample scaling failed to converge")
+    # FIXME: consider symmetry
+    if outcomes.counts.size == 0:
+        return outcomes
+    sums = outcomes.counts.sum(axis=2, keepdims=True)
+    probabilities = np.zeros_like(outcomes.counts, dtype=np.float64)
+    np.divide(
+        outcomes.counts,
+        sums,
+        out=probabilities,
+        where=sums > 0,
+    )
+    resample = generator.multinomial(
+        n=sums.squeeze(axis=2),
+        pvals=probabilities,
+    )
     return ComparisonOutcomes(options=outcomes.options, counts=resample)
 
 
