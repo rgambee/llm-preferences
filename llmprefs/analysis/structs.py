@@ -4,6 +4,13 @@ from llmprefs.task_structs import OptionById
 
 
 @dataclass
+class ValueCI:
+    value: float
+    ci_lower: float
+    ci_upper: float
+
+
+@dataclass
 class ReducedResultBase:
     first_option: OptionById
     second_option: OptionById

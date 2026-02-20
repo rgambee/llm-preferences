@@ -11,7 +11,12 @@ from matplotlib.figure import Figure
 from numpy.typing import NDArray
 from scipy import optimize
 
-from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
+from llmprefs.analysis.structs import ValueCI
+from llmprefs.analysis.visualization import (
+    annotated_heatmap,
+    error_bars,
+    get_tick_labels,
+)
 from llmprefs.comparisons import is_opt_out_task
 from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
@@ -23,13 +28,6 @@ class ComparisonOutcomes:
     # A matrix of size N_opts x N_opts. The entry at [i, j] is the number of times
     # option i was preferred over option j.
     counts: NDArray[np.float64]
-
-
-@dataclass
-class ValueCI:
-    value: float
-    ci_lower: float
-    ci_upper: float
 
 
 RatedOptions = dict[OptionById, ValueCI]
@@ -150,13 +148,6 @@ def resample_results(
         )
         raise RuntimeError("Resample scaling failed to converge")
     return ComparisonOutcomes(options=outcomes.options, counts=resample)
-
-
-def error_bars(values: Sequence[ValueCI]) -> tuple[list[float], list[float]]:
-    """Return error bars compatible with Matplotlib."""
-    diff_low = [vci.value - vci.ci_lower for vci in values]
-    diff_high = [vci.ci_upper - vci.value for vci in values]
-    return diff_low, diff_high
 
 
 def plot_ratings_stem(

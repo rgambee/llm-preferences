@@ -6,7 +6,15 @@ from matplotlib.axes import Axes
 from matplotlib.image import AxesImage
 from numpy.typing import NDArray
 
+from llmprefs.analysis.structs import ValueCI
 from llmprefs.task_structs import OptionById, TaskId, TaskRecord
+
+
+def error_bars(values: Sequence[ValueCI]) -> tuple[list[float], list[float]]:
+    """Return error bars compatible with Matplotlib."""
+    diff_low = [vci.value - vci.ci_lower for vci in values]
+    diff_high = [vci.ci_upper - vci.value for vci in values]
+    return diff_low, diff_high
 
 
 def get_tick_labels(
