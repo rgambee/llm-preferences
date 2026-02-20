@@ -28,7 +28,12 @@ def plot_comparison_outcomes_heatmap(
     )
     ax_main = fig.add_subplot(gridspec[0, 0])
     tick_labels = get_tick_labels(outcomes.options, tasks)
-    annotated_heatmap(ax_main, outcomes.counts, tick_labels, precision=0)
+    annotated_heatmap(
+        axes=ax_main,
+        matrix=outcomes.counts.astype(np.float64),
+        tick_labels=tick_labels,
+        precision=0,
+    )
     ax_main.set_title(  # pyright: ignore[reportUnknownMemberType]
         "Comparison Outcome Counts"
     )

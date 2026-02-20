@@ -30,7 +30,7 @@ class ComparisonOutcomes:
     # - 0: option i beat j
     # - 1: option j beat i
     # - 2: neither option was preferred
-    counts: NDArray[np.float64]
+    counts: NDArray[np.int64]
 
 
 RatedOptions = dict[OptionById, ValueCI]
@@ -54,7 +54,10 @@ def rate_options(
     resampled_ratings = np.full((num_resamples, len(outcomes.options)), np.nan)
     for i in range(num_resamples):
         resample = resample_results(outcomes=outcomes, generator=generator)
-        ratings = choix.ilsr_pairwise_dense(comp_mat=resample.counts, alpha=alpha)
+        ratings = choix.ilsr_pairwise_dense(
+            comp_mat=resample.counts.astype(np.float64),
+            alpha=alpha,
+        )
         resampled_ratings[i, :] = ratings
 
     medians = np.median(resampled_ratings, axis=0)  # mean?
@@ -114,7 +117,7 @@ def compile_matrix(results: Iterable[ResultRecord]) -> ComparisonOutcomes:
     }
 
     n_options = len(unique_options)
-    matrix: NDArray[np.float64] = np.zeros((n_options, n_options, 3), dtype=np.float64)
+    matrix: NDArray[np.int64] = np.zeros((n_options, n_options, 3), dtype=np.int64)
     for option_0, counts_for_opt_0 in counts.items():
         for option_1, counts_for_opts_01 in counts_for_opt_0.items():
             for outcome, count in counts_for_opts_01.items():
