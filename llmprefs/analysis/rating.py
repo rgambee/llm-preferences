@@ -17,12 +17,12 @@ from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
 
 @dataclass
-class OptionRatingMatrix:
+class ComparisonOutcomes:
     # A tuple of unique options. The order matches the indices of the matrix.
     options: tuple[OptionById, ...]
     # A matrix of size N_opts x N_opts. The entry at [i, j] is the number of times
     # option i was preferred over option j.
-    matrix: NDArray[np.float64]
+    counts: NDArray[np.float64]
 
 
 @dataclass
@@ -36,7 +36,7 @@ RatedOptions = dict[OptionById, ValueCI]
 
 
 def rate_options(
-    option_matrix: OptionRatingMatrix,
+    outcomes: ComparisonOutcomes,
     tasks: Mapping[TaskId, TaskRecord],
     num_resamples: int,
     confidence: float,
@@ -46,14 +46,14 @@ def rate_options(
 
     Also compute a bootstrapped confidence interval for each rating.
     """
-    if option_matrix.matrix.size == 0:
+    if outcomes.counts.size == 0:
         return {}
 
     generator = np.random.default_rng()
-    resampled_ratings = np.full((num_resamples, len(option_matrix.options)), np.nan)
+    resampled_ratings = np.full((num_resamples, len(outcomes.options)), np.nan)
     for i in range(num_resamples):
-        resample = resample_results(option_matrix=option_matrix, generator=generator)
-        ratings = choix.ilsr_pairwise_dense(comp_mat=resample.matrix, alpha=alpha)
+        resample = resample_results(outcomes=outcomes, generator=generator)
+        ratings = choix.ilsr_pairwise_dense(comp_mat=resample.counts, alpha=alpha)
         resampled_ratings[i, :] = ratings
 
     medians = np.median(resampled_ratings, axis=0)  # mean?
@@ -62,9 +62,9 @@ def rate_options(
     lower_bounds = np.quantile(resampled_ratings, q=lower_quant, axis=0)
     upper_bounds = np.quantile(resampled_ratings, q=upper_quant, axis=0)
     # Apply an offset such that the opt-out tasks have a rating of 0.
-    offset = median_opt_out_rating(resampled_ratings, option_matrix.options, tasks)
+    offset = median_opt_out_rating(resampled_ratings, outcomes.options, tasks)
     rated_options: RatedOptions = {}
-    for option_index, option_id in enumerate(option_matrix.options):
+    for option_index, option_id in enumerate(outcomes.options):
         rated_options[option_id] = ValueCI(
             value=medians[option_index] - offset,
             ci_lower=lower_bounds[option_index] - offset,
@@ -86,7 +86,7 @@ def median_opt_out_rating(
     return np.median(resampled_ratings[:, opt_outs])
 
 
-def compile_matrix(results: Iterable[ResultRecord]) -> OptionRatingMatrix:
+def compile_matrix(results: Iterable[ResultRecord]) -> ComparisonOutcomes:
     """Compile comparison results into a square matrix.
 
     The matrix has size N_options x N_options. The entry at [i, j] is the number of
@@ -106,7 +106,7 @@ def compile_matrix(results: Iterable[ResultRecord]) -> OptionRatingMatrix:
                 counts[preferred_option][option] += 1
 
     if len(unique_options) == 0:
-        return OptionRatingMatrix(options=(), matrix=np.array([]))
+        return ComparisonOutcomes(options=(), counts=np.array([]))
 
     sorted_options = tuple(sorted(unique_options))
     option_to_index: dict[OptionById, int] = {
@@ -120,16 +120,19 @@ def compile_matrix(results: Iterable[ResultRecord]) -> OptionRatingMatrix:
         for beaten_option, count in beaten_options.items():
             beaten_idx = option_to_index[beaten_option]
             matrix[preferred_idx, beaten_idx] = count
-    return OptionRatingMatrix(options=sorted_options, matrix=matrix)
+    return ComparisonOutcomes(options=sorted_options, counts=matrix)
 
 
 def resample_results(
-    option_matrix: OptionRatingMatrix,
+    outcomes: ComparisonOutcomes,
     generator: np.random.Generator,
-) -> OptionRatingMatrix:
-    num_comparisons = int(np.round(cast(float, option_matrix.matrix.sum())))
-    random_weights = generator.random(option_matrix.matrix.shape)
-    resample = option_matrix.matrix * random_weights
+) -> ComparisonOutcomes:
+    # TODO: check whether this respects the comparison constraints. Not all matrix
+    # elements are independent. We can't have A always beating B and B always beating A.
+    # TODO: move this elsewhere so other analyses can reuse it
+    num_comparisons = int(np.round(cast(float, outcomes.counts.sum())))
+    random_weights = generator.random(outcomes.counts.shape)
+    resample = outcomes.counts * random_weights
 
     # Scale resample such that after rounding, its sum equals num_comparisons.
     # To do this, we solve the following equation for the scalar variable x:
@@ -146,7 +149,7 @@ def resample_results(
             + f"{x=}, {resample_sum=}, {num_comparisons=}"
         )
         raise RuntimeError("Resample scaling failed to converge")
-    return OptionRatingMatrix(options=option_matrix.options, matrix=resample)
+    return ComparisonOutcomes(options=outcomes.options, counts=resample)
 
 
 def error_bars(values: Sequence[ValueCI]) -> tuple[list[float], list[float]]:

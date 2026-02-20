@@ -29,19 +29,19 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
     task_list = list(load_records(args.tasks_path, TaskRecord))
     tasks: dict[TaskId, TaskRecord] = {task.id: task for task in task_list}
     results = list(load_records(args.results_path, ResultRecord))
-    option_matrix = compile_matrix(results)
+    outcomes = compile_matrix(results)
     logger.info(
-        f"Analyzing {option_matrix.matrix.sum():.0f} preferences "
-        + f"across {len(option_matrix.options)} options"
+        f"Analyzing {outcomes.counts.sum():.0f} preferences "
+        + f"across {len(outcomes.options)} options"
     )
     rated_options = rate_options(
-        option_matrix,
+        outcomes,
         tasks,
         num_resamples=100,
         confidence=0.75,
     )
 
-    plot_comparison_outcomes_heatmap(option_matrix, tasks)
+    plot_comparison_outcomes_heatmap(outcomes, tasks)
 
     plot_ratings_stem(rated_options, tasks)
     desired_num_tasks = 2
@@ -70,7 +70,7 @@ def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
     results_2tpo = list(load_records(args.results_2tpo_path, ResultRecord))
     options_1tpo = compile_matrix(results_1tpo)
     logger.info(
-        f"Analyzing {options_1tpo.matrix.sum():.0f} preferences "
+        f"Analyzing {options_1tpo.counts.sum():.0f} preferences "
         + f"across {len(options_1tpo.options)} options"
     )
     rated_options_1tpo = rate_options(
@@ -81,7 +81,7 @@ def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
     )
     options_2tpo = compile_matrix(results_2tpo)
     logger.info(
-        f"Analyzing {options_2tpo.matrix.sum():.0f} preferences "
+        f"Analyzing {options_2tpo.counts.sum():.0f} preferences "
         + f"across {len(options_2tpo.options)} options"
     )
     rated_options_2tpo = rate_options(

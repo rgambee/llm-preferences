@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from llmprefs.analysis.rating import (
-    OptionRatingMatrix,
+    ComparisonOutcomes,
     RatedOptions,
     ValueCI,
     compile_matrix,
@@ -47,9 +47,9 @@ def highest_rating(ratings: RatedOptions) -> ValueCI:
 
 class TestRateOptions:
     def test_zero_results(self) -> None:
-        option_matrix = OptionRatingMatrix(options=(), matrix=np.array([]))
+        outcomes = ComparisonOutcomes(options=(), counts=np.array([]))
         ratings = rate_options(
-            option_matrix,
+            outcomes,
             tasks={},
             num_resamples=1,
             confidence=0.0,
@@ -61,9 +61,9 @@ class TestRateOptions:
         tasks = tasks_to_match_results([result])
         assert result.preferred_option_index is not None
         preferred_option = result.comparison[result.preferred_option_index]
-        option_matrix = compile_matrix([result])
+        outcomes = compile_matrix([result])
         ratings = rate_options(
-            option_matrix,
+            outcomes,
             tasks,
             num_resamples=1,
             confidence=0.0,
@@ -74,10 +74,10 @@ class TestRateOptions:
         assert highest_rating(ratings) == ratings[preferred_option]
 
     def test_multiple_results(self, mock_results: list[ResultRecord]) -> None:
-        option_matrix = compile_matrix(mock_results)
+        outcomes = compile_matrix(mock_results)
         tasks = tasks_to_match_results(mock_results)
         ratings = rate_options(
-            option_matrix,
+            outcomes,
             tasks,
             num_resamples=1,
             confidence=0.0,
@@ -143,31 +143,31 @@ class TestMedianOptOutRating:
 
 class TestCompileMatrix:
     def test_zero_results(self) -> None:
-        option_matrix = compile_matrix(())
-        assert len(option_matrix.options) == 0
-        assert option_matrix.matrix.size == 0
+        outcomes = compile_matrix(())
+        assert len(outcomes.options) == 0
+        assert outcomes.counts.size == 0
 
     def test_one_result(self) -> None:
         result = result_record_factory()
         assert result.preferred_option_index is not None
         preferred_option = result.comparison[result.preferred_option_index]
-        optmat = compile_matrix([result])
+        outcomes = compile_matrix([result])
 
-        assert len(optmat.options) == 2
-        assert optmat.matrix.shape == (2, 2)
-        assert optmat.matrix.sum() == 1
-        for i, option in enumerate(optmat.options):
-            assert optmat.matrix[i, i] == 0
+        assert len(outcomes.options) == 2
+        assert outcomes.counts.shape == (2, 2)
+        assert outcomes.counts.sum() == 1
+        for i, option in enumerate(outcomes.options):
+            assert outcomes.counts[i, i] == 0
             if option == preferred_option:
-                assert optmat.matrix[i, 1 - i] == 1
+                assert outcomes.counts[i, 1 - i] == 1
             else:
-                assert optmat.matrix[i, 1 - i] == 0
+                assert outcomes.counts[i, 1 - i] == 0
 
     def test_multiple_results(self, mock_results: list[ResultRecord]) -> None:
-        optmat = compile_matrix(mock_results)
+        outcomes = compile_matrix(mock_results)
 
-        assert optmat.options == ((0,), (1,), (2,))
-        assert optmat.matrix.shape == (3, 3)
+        assert outcomes.options == ((0,), (1,), (2,))
+        assert outcomes.counts.shape == (3, 3)
         expected_matrix = np.array(
             [
                 [0, 1, 1],
@@ -175,4 +175,4 @@ class TestCompileMatrix:
                 [0, 0, 0],
             ]
         )
-        assert (optmat.matrix == expected_matrix).all()
+        assert (outcomes.counts == expected_matrix).all()
