@@ -13,10 +13,11 @@ def plot_comparison_outcomes_heatmap(
     outcomes: ComparisonOutcomes,
     tasks: Mapping[TaskId, TaskRecord],
 ) -> Figure:
+    counts = outcomes.unfold()
     expected_dimensionality = 2
-    if outcomes.counts.ndim != expected_dimensionality:
+    if counts.ndim != expected_dimensionality:
         raise ValueError("Option has wrong number of dimensions")
-    if outcomes.counts.shape[0] != outcomes.counts.shape[1]:
+    if counts.shape[0] != counts.shape[1]:
         raise ValueError("Option matrix must be square")
 
     fig = plt.figure()  # pyright: ignore[reportUnknownMemberType]
@@ -30,7 +31,7 @@ def plot_comparison_outcomes_heatmap(
     tick_labels = get_tick_labels(outcomes.options, tasks)
     annotated_heatmap(
         axes=ax_main,
-        matrix=outcomes.counts.astype(np.float64),
+        matrix=counts.astype(np.float64),
         tick_labels=tick_labels,
         precision=0,
     )
@@ -48,14 +49,14 @@ def plot_comparison_outcomes_heatmap(
     bar_height = 0.8
     spacing = 1.0 - bar_height
     ax_right.barh(  # pyright: ignore[reportUnknownMemberType]
-        y=np.arange(len(outcomes.counts)),
-        width=np.sum(outcomes.counts, axis=1)[::-1],
+        y=np.arange(len(counts)),
+        width=np.sum(counts, axis=1)[::-1],
         height=bar_height,
     )
     ax_right.set_yticks([])  # pyright: ignore[reportUnknownMemberType]
     ax_right.set_ylim(
         -(bar_height + spacing) / 2.0,
-        len(outcomes.counts) - 1.0 + (bar_height + spacing) / 2.0,
+        len(counts) - 1.0 + (bar_height + spacing) / 2.0,
     )
     ax_right.set_xlabel(  # pyright: ignore[reportUnknownMemberType]
         "Sum of Wins"

@@ -47,6 +47,31 @@ def highest_rating(ratings: RatedOptions) -> ValueCI:
     return max(ratings.values(), key=lambda vci: vci.value)
 
 
+class TestComparisonOutcomes:
+    def test_unfold_empty(self) -> None:
+        outcomes = compile_matrix([])
+
+        assert outcomes.unfold().shape == (0, 0)
+
+    def test_unfold_one_result(self) -> None:
+        outcomes = compile_matrix([result_record_factory()])
+        unfolded = outcomes.unfold()
+
+        assert unfolded.shape == (2, 2)
+        assert unfolded.sum() == 1
+        assert unfolded[0, 1] == 1
+
+    def test_unfold_multiple_results(self, mock_results: list[ResultRecord]) -> None:
+        outcomes = compile_matrix(mock_results)
+        unfolded = outcomes.unfold()
+
+        assert unfolded.shape == (3, 3)
+        assert unfolded.sum() == len(mock_results)
+        assert unfolded[0, 1] == 1
+        assert unfolded[0, 2] == 1
+        assert unfolded[1, 2] == 1
+
+
 class TestRateOptions:
     def test_zero_results(self) -> None:
         outcomes = ComparisonOutcomes(options=(), counts=np.array([]))

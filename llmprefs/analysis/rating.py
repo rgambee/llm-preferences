@@ -31,6 +31,14 @@ class ComparisonOutcomes:
     # - 2: neither option was preferred
     counts: NDArray[np.int64]
 
+    def unfold(self) -> NDArray[np.int64]:
+        """Unfold the triangular 3D matrix and slice it into a 2D matrix.
+
+        In the output, the entry at [i, j] is the number of times that option i was
+        preferred over option j.
+        """
+        return self.counts[:, :, 0] + self.counts[:, :, 1].transpose()
+
 
 RatedOptions = dict[OptionById, ValueCI]
 
@@ -53,9 +61,8 @@ def rate_options(
     resampled_ratings = np.full((num_resamples, len(outcomes.options)), np.nan)
     for i in range(num_resamples):
         resample = resample_results(outcomes=outcomes, generator=generator)
-        # TODO: Unfold the triangular 3D matrix and slice it into a 2D matrix
         ratings = choix.ilsr_pairwise_dense(
-            comp_mat=resample.counts.astype(np.float64),
+            comp_mat=resample.unfold().astype(np.float64),
             alpha=alpha,
         )
         resampled_ratings[i, :] = ratings
