@@ -276,6 +276,9 @@ def plot_rating_additivity_scatter(
     tasks: Mapping[TaskId, TaskRecord],
     confidence: float,
 ) -> Figure:
+    if rated_options_1tpo.ratings.shape[1] != rated_options_2tpo.ratings.shape[1]:
+        raise ValueError("Number of resamples must be the same")
+
     fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
 
     # Every option in rated_options_2tpo is a sequence of multiple tasks.
