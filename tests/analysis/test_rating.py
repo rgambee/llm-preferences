@@ -21,11 +21,13 @@ RNG = np.random.default_rng(seed=123)
 
 @pytest.fixture
 def mock_results() -> list[ResultRecord]:
-    results = [result_record_factory() for _ in range(3)]
+    results = [result_record_factory() for _ in range(4)]
     results[0].comparison = ((0,), (1,))
     results[1].comparison = ((0,), (2,))
     results[2].comparison = ((2,), (1,))
     results[2].preferred_option_index = 1
+    results[3].comparison = ((1,), (0,))
+    results[3].preferred_option_index = None
     return results
 
 
@@ -63,10 +65,14 @@ class TestComparisonOutcomes:
 
     def test_unfold_multiple_results(self, mock_results: list[ResultRecord]) -> None:
         outcomes = compile_matrix(mock_results)
+        num_options = len(outcomes.options)
+        num_definite_outcomes = sum(
+            1 for result in mock_results if result.preferred_option_index is not None
+        )
         unfolded = outcomes.unfold()
 
-        assert unfolded.shape == (3, 3)
-        assert unfolded.sum() == len(mock_results)
+        assert unfolded.shape == (num_options, num_options)
+        assert unfolded.sum() == num_definite_outcomes
         assert unfolded[0, 1] == 1
         assert unfolded[0, 2] == 1
         assert unfolded[1, 2] == 1
@@ -110,8 +116,8 @@ class TestRateOptions:
             confidence=0.0,
         )
 
-        assert len(ratings) == len(mock_results)
-        for i in range(1, len(mock_results)):
+        assert len(ratings) == len(outcomes.options)
+        for i in range(1, len(outcomes.options)):
             assert ratings[(i - 1,)].value > ratings[(i,)].value
 
 
@@ -196,13 +202,15 @@ class TestCompileMatrix:
 
     def test_multiple_results(self, mock_results: list[ResultRecord]) -> None:
         outcomes = compile_matrix(mock_results)
+        num_options = len(outcomes.options)
 
         assert outcomes.options == ((0,), (1,), (2,))
-        assert outcomes.counts.shape == (3, 3, 3)
+        assert outcomes.counts.shape == (num_options, num_options, 3)
         assert outcomes.counts.sum() == len(mock_results)
         assert outcomes.counts[0, 1, 0] == 1
         assert outcomes.counts[0, 2, 0] == 1
         assert outcomes.counts[1, 2, 0] == 1
+        assert outcomes.counts[0, 1, 2] == 1
 
 
 class TestResampleResults:
