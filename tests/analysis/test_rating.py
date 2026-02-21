@@ -1,4 +1,4 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from itertools import chain
 
 import numpy as np
@@ -6,14 +6,13 @@ import pytest
 
 from llmprefs.analysis.rating import (
     ComparisonOutcomes,
-    RatedOptions,
     ValueCI,
     compile_matrix,
     median_opt_out_rating,
     rate_options,
     resample_results,
 )
-from llmprefs.task_structs import ResultRecord, TaskId, TaskRecord, TaskType
+from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord, TaskType
 from llmprefs.testing.factories import result_record_factory, task_record_factory
 
 RNG = np.random.default_rng(seed=123)
@@ -45,8 +44,8 @@ def tasks_to_match_results(results: Iterable[ResultRecord]) -> dict[TaskId, Task
     return tasks
 
 
-def highest_rating(ratings: RatedOptions) -> ValueCI:
-    return max(ratings.values(), key=lambda vci: vci.value)
+def highest_rating(rating_values: Mapping[OptionById, ValueCI]) -> ValueCI:
+    return max(rating_values.values(), key=lambda vci: vci.value)
 
 
 class TestComparisonOutcomes:
@@ -85,9 +84,9 @@ class TestRateOptions:
             outcomes,
             tasks={},
             num_resamples=0,
-            confidence=0.0,
         )
-        assert ratings == {}
+        assert ratings.options == ()
+        assert ratings.ratings.shape == (0, 0)
 
     def test_one_result(self) -> None:
         result = result_record_factory()
@@ -99,12 +98,13 @@ class TestRateOptions:
             outcomes,
             tasks,
             num_resamples=0,
-            confidence=0.0,
         )
 
-        assert len(ratings) == len(result.comparison)
-        assert preferred_option in ratings
-        assert highest_rating(ratings) == ratings[preferred_option]
+        assert len(ratings.options) == len(result.comparison)
+        assert ratings.ratings.shape == (len(result.comparison), 1)
+        assert preferred_option in ratings.options
+        rating_values = ratings.values(confidence=0.0)
+        assert highest_rating(rating_values) == rating_values[preferred_option]
 
     def test_multiple_results(self, mock_results: list[ResultRecord]) -> None:
         outcomes = compile_matrix(mock_results)
@@ -113,18 +113,21 @@ class TestRateOptions:
             outcomes,
             tasks,
             num_resamples=0,
-            confidence=0.0,
         )
 
-        assert len(ratings) == len(outcomes.options)
+        assert len(ratings.options) == len(outcomes.options)
+        assert ratings.ratings.shape == (len(outcomes.options), 1)
+        rating_values = ratings.values(confidence=0.0)
         for i in range(1, len(outcomes.options)):
-            assert ratings[(i - 1,)].value > ratings[(i,)].value
+            value_a = rating_values[outcomes.options[i - 1]].value
+            value_b = rating_values[outcomes.options[i]].value
+            assert value_a > value_b
 
 
 class TestMedianOptOutRating:
     def test_zero_results(self) -> None:
         median = median_opt_out_rating(
-            resampled_ratings=np.zeros((0, 0)),
+            ratings=np.zeros((0, 0)),
             options=(),
             tasks={},
         )

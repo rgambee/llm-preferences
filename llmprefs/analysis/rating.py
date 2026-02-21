@@ -40,14 +40,33 @@ class ComparisonOutcomes:
         return self.counts[:, :, 0] + self.counts[:, :, 1].transpose()
 
 
-RatedOptions = dict[OptionById, ValueCI]
+@dataclass
+class RatedOptions:
+    # A tuple of unique options. The order matches the indices of the matrix.
+    options: tuple[OptionById, ...]
+    # A 2D matrix of shape N_opts x N_resamples
+    ratings: NDArray[np.float64]
+
+    def values(self, confidence: float) -> dict[OptionById, ValueCI]:
+        medians = np.median(self.ratings, axis=1)
+        lower_quant = (1 - confidence) / 2
+        upper_quant = (1 + confidence) / 2
+        upper_bounds = np.quantile(self.ratings, q=upper_quant, axis=1)
+        lower_bounds = np.quantile(self.ratings, q=lower_quant, axis=1)
+        return {
+            option: ValueCI(
+                value=medians[i],
+                ci_lower=lower_bounds[i],
+                ci_upper=upper_bounds[i],
+            )
+            for i, option in enumerate(self.options)
+        }
 
 
 def rate_options(
     outcomes: ComparisonOutcomes,
     tasks: Mapping[TaskId, TaskRecord],
     num_resamples: int,
-    confidence: float,
     alpha: float = 1e-6,
 ) -> RatedOptions:
     """Return an estimate of each option's strength.
@@ -57,46 +76,38 @@ def rate_options(
     if num_resamples < 0:
         raise ValueError("Number of resamples must be non-negative")
     if outcomes.counts.size == 0:
-        return {}
+        return RatedOptions(
+            options=outcomes.options,
+            ratings=np.zeros((0, num_resamples), dtype=np.float64),
+        )
 
-    # 2D matrix of shape (max(num_resamples, 1), N_opts)
+    # 2D matrix of shape (N_opts, max(num_resamples, 1))
     ratings: NDArray[np.float64]
     if num_resamples == 0:
         ratings_1d = choix.ilsr_pairwise_dense(
             comp_mat=outcomes.unfold().astype(np.float64),
             alpha=alpha,
         )
-        ratings = np.expand_dims(ratings_1d, axis=0)
+        ratings = np.expand_dims(ratings_1d, axis=1)
     else:
         generator = np.random.default_rng()
-        ratings = np.full((num_resamples, len(outcomes.options)), np.nan)
+        ratings = np.full((len(outcomes.options), num_resamples), np.nan)
         for i in range(num_resamples):
             resample = resample_results(outcomes=outcomes, generator=generator)
             sample_ratings = choix.ilsr_pairwise_dense(
                 comp_mat=resample.unfold().astype(np.float64),
                 alpha=alpha,
             )
-            ratings[i, :] = sample_ratings
+            ratings[:, i] = sample_ratings
 
-    medians = np.median(ratings, axis=0)
-    lower_quant = (1 - confidence) / 2
-    upper_quant = (1 + confidence) / 2
-    lower_bounds = np.quantile(ratings, q=lower_quant, axis=0)
-    upper_bounds = np.quantile(ratings, q=upper_quant, axis=0)
     # Apply an offset such that the opt-out tasks have a rating of 0.
     offset = median_opt_out_rating(ratings, outcomes.options, tasks)
-    rated_options: RatedOptions = {}
-    for option_index, option_id in enumerate(outcomes.options):
-        rated_options[option_id] = ValueCI(
-            value=medians[option_index] - offset,
-            ci_lower=lower_bounds[option_index] - offset,
-            ci_upper=upper_bounds[option_index] - offset,
-        )
-    return rated_options
+    ratings -= offset
+    return RatedOptions(options=outcomes.options, ratings=ratings)
 
 
 def median_opt_out_rating(
-    resampled_ratings: NDArray[np.float64],
+    ratings: NDArray[np.float64],
     options: Sequence[OptionById],
     tasks: Mapping[TaskId, TaskRecord],
 ) -> float:
@@ -105,7 +116,7 @@ def median_opt_out_rating(
     ]
     if not any(opt_outs):
         return 0.0
-    return np.median(resampled_ratings[:, opt_outs])
+    return np.median(ratings[opt_outs, :])
 
 
 def compile_matrix(results: Iterable[ResultRecord]) -> ComparisonOutcomes:
@@ -173,19 +184,21 @@ def resample_results(
 def plot_ratings_stem(
     rated_options: RatedOptions,
     tasks: Mapping[TaskId, TaskRecord],
+    confidence: float,
 ) -> Figure:
-    xcoords = np.arange(len(rated_options))
-    rating_values = [vci.value for vci in rated_options.values()]
+    xcoords = np.arange(len(rated_options.options))
+    rating_values = rated_options.values(confidence)
+    medians = [vci.value for vci in rating_values.values()]
 
     fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
     ax.stem(
         xcoords,
-        rating_values,
+        medians,
     )
     ax.errorbar(  # pyright: ignore[reportUnknownMemberType]
         x=xcoords,
-        y=rating_values,
-        yerr=error_bars(list(rated_options.values())),
+        y=medians,
+        yerr=error_bars(list(rating_values.values())),
         marker="None",
         linestyle="None",
         ecolor="black",
@@ -196,7 +209,7 @@ def plot_ratings_stem(
     ax.set_xlabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
     ax.set_xticks(  # pyright: ignore[reportUnknownMemberType]
         ticks=xcoords,
-        labels=get_tick_labels(rated_options.keys(), tasks),
+        labels=get_tick_labels(rated_options.options, tasks),
         rotation="vertical",
         fontsize="x-small",
     )
@@ -210,13 +223,13 @@ def plot_ratings_heatmap(
     tasks: Mapping[TaskId, TaskRecord],
 ) -> Figure:
     expected_num_tasks = 2
-    if any(len(option) != expected_num_tasks for option in rated_options):
+    if any(len(option) != expected_num_tasks for option in rated_options.options):
         raise ValueError(
             f"Heatmap only accepts options containing {expected_num_tasks} tasks"
         )
 
     task_0_and_1_ids: zip[tuple[TaskId, TaskId]] = zip(
-        *rated_options.keys(),
+        *rated_options.options,
         strict=True,
     )
     task_0_ids, task_1_ids = task_0_and_1_ids
@@ -227,7 +240,7 @@ def plot_ratings_heatmap(
     del task_1_ids
     task_ids_to_index = {task_id: i for i, task_id in enumerate(task_0_ids)}
     ratings = np.full((len(task_0_ids), len(task_0_ids)), np.nan, dtype=float)
-    for (task0, task1), rating in rated_options.items():
+    for (task0, task1), rating in rated_options.values(confidence=0.0).items():
         ratings[task_ids_to_index[task0], task_ids_to_index[task1]] = rating.value
 
     fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
@@ -250,16 +263,25 @@ def plot_ratings_heatmap(
 def plot_rating_additivity_scatter(
     rated_options_1tpo: RatedOptions,
     rated_options_2tpo: RatedOptions,
+    confidence: float,
 ) -> Figure:
     fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
         subplot_kw={"aspect": "equal"}
     )
 
+    rating_values_1tpo = rated_options_1tpo.values(confidence)
+    rating_values_2tpo = rated_options_2tpo.values(confidence)
+    # Every option in rated_options_2tpo is a sequence of multiple tasks.
+    # Add the ratings of the individual tasks (from rated_options_1tpo) to get the
+    # x-coordinates.
     x_values = [
-        sum(rated_options_1tpo[(task_id,)].value for task_id in option)
-        for option in rated_options_2tpo
+        sum(rating_values_1tpo[(task_id,)].value for task_id in option)
+        for option in rated_options_2tpo.options
     ]
-    y_values = [rated_options_2tpo[option].value for option in rated_options_2tpo]
+    # The y-coordinates are the ratings of the task sequences (from rated_options_2tpo).
+    y_values = [
+        rating_values_2tpo[option].value for option in rated_options_2tpo.options
+    ]
 
     # Add error bars
     ax.plot(  # pyright: ignore[reportUnknownMemberType]

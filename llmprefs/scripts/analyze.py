@@ -38,21 +38,20 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
         outcomes,
         tasks,
         num_resamples=100,
-        confidence=0.75,
     )
 
     plot_comparison_outcomes_heatmap(outcomes, tasks)
 
-    plot_ratings_stem(rated_options, tasks)
-    desired_num_tasks = 2
-    two_tasks_per_option = {
-        key: value
-        for key, value in rated_options.items()
-        if len(key) == desired_num_tasks
-    }
-    if two_tasks_per_option:
-        fig = plot_ratings_heatmap(two_tasks_per_option, tasks)
+    plot_ratings_stem(rated_options, tasks, confidence=0.75)
+    two_tasks_per_option = True
+    try:
+        fig = plot_ratings_heatmap(rated_options, tasks)
         fig.tight_layout()
+    except ValueError as error:
+        if error.args[0] == "Heatmap only accepts options containing 2 tasks":
+            two_tasks_per_option = False
+        else:
+            raise
 
     option_order_analysis = analyze_option_order(results)
     plot_option_order_analysis(option_order_analysis, tasks)
@@ -77,7 +76,6 @@ def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
         options_1tpo,
         tasks,
         num_resamples=100,
-        confidence=0.75,
     )
     options_2tpo = compile_matrix(results_2tpo)
     logger.info(
@@ -88,9 +86,12 @@ def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
         options_2tpo,
         tasks,
         num_resamples=100,
+    )
+    plot_rating_additivity_scatter(
+        rated_options_1tpo,
+        rated_options_2tpo,
         confidence=0.75,
     )
-    plot_rating_additivity_scatter(rated_options_1tpo, rated_options_2tpo)
 
 
 def main() -> None:
