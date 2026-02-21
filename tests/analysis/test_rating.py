@@ -182,20 +182,26 @@ class TestCompileMatrix:
 
 class TestResampleResults:
     def test_zero_results(self) -> None:
-        counts = np.zeros((0, 0, 3), dtype=np.int64)
-        outcomes = ComparisonOutcomes(options=(), counts=counts)
+        outcomes = compile_matrix([])
         resample = resample_results(outcomes, RNG)
-        assert resample.counts.shape == counts.shape
+
+        assert resample.counts.shape == outcomes.counts.shape
         assert resample.counts.sum() == 0
 
     def test_one_result(self) -> None:
         outcomes = compile_matrix([result_record_factory()])
         resample = resample_results(outcomes, RNG)
+
         assert resample.counts.shape == outcomes.counts.shape
-        assert resample.counts.sum() == 1
+        assert np.all(resample.counts == outcomes.counts)
 
     def test_multiple_results(self, mock_results: list[ResultRecord]) -> None:
         outcomes = compile_matrix(mock_results)
+
         resample = resample_results(outcomes, RNG)
         assert resample.counts.shape == outcomes.counts.shape
         assert resample.counts.sum() == len(mock_results)
+        lower_triangle_indices = np.tril_indices(len(outcomes.options), k=0)
+        # Resampled matrix should still be triangular: if i >= j,
+        # then [i, j, :] should be zero.
+        assert np.all(resample.counts[lower_triangle_indices] == 0)

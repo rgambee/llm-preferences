@@ -135,7 +135,6 @@ def resample_results(
     outcomes: ComparisonOutcomes,
     generator: np.random.Generator,
 ) -> ComparisonOutcomes:
-    # FIXME: consider symmetry
     if outcomes.counts.size == 0:
         return outcomes
     sums = outcomes.counts.sum(axis=2, keepdims=True)
