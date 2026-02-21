@@ -1,12 +1,12 @@
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 import choix
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
+from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
 from odrpack import odr_fit
@@ -20,12 +20,6 @@ from llmprefs.analysis.visualization import (
 )
 from llmprefs.comparisons import is_opt_out_task
 from llmprefs.task_structs import OptionById, Outcome, ResultRecord, TaskId, TaskRecord
-
-if TYPE_CHECKING:
-    # LinregressResult is described in SciPy's documentation:
-    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html
-    # But for some reason it's not part of the public API.
-    from scipy.stats._stats_py import LinregressResult
 
 
 @dataclass
@@ -281,10 +275,68 @@ def plot_rating_additivity_scatter(
 
     fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
 
-    # Every option in rated_options_2tpo is a sequence of multiple tasks.
-    # Add the ratings of the individual tasks (from rated_options_1tpo) to get the
-    # x-coordinates. If option o consists of tasks (i, j),
-    # then sums[o, :] == ratings_1tpo[i, :] + ratings_1tpo[j, :]
+    # Every option in rated_options_2tpo is a sequence of multiple tasks. Add the
+    # ratings of the individual tasks from rated_options_1tpo to get the x coordinates.
+    summed_ratings = compute_summed_ratings(
+        rated_options_1tpo=rated_options_1tpo,
+        rated_options_2tpo=rated_options_2tpo,
+        tasks=tasks,
+    )
+    summed_values = summed_ratings.values(confidence)
+    x_medians = np.array(
+        [summed_values[option].value for option in summed_ratings.options]
+    )
+
+    # The y-coordinates are the ratings of the task sequences (from rated_options_2tpo).
+    rating_values_2tpo = rated_options_2tpo.values(confidence)
+    y_medians = np.array(
+        [rating_values_2tpo[option].value for option in rated_options_2tpo.options]
+    )
+
+    plot_medians_with_error_bars(
+        ax=ax,
+        x_values=[summed_values[opt] for opt in summed_ratings.options],
+        y_values=[rating_values_2tpo[opt] for opt in rated_options_2tpo.options],
+    )
+
+    # Linear fit of the median x and y values
+    fit_of_medians = odr_fit(
+        f=lambda x, beta: beta[0] + beta[1] * x,
+        xdata=x_medians,
+        ydata=y_medians,
+        beta0=(0.0, 1.0),
+        weight_x=weights_from_ci(summed_values.values()),
+        weight_y=weights_from_ci(rating_values_2tpo.values()),
+    )
+    ax.plot(  # pyright: ignore[reportUnknownMemberType]
+        x_medians,
+        fit_of_medians.beta[0] + fit_of_medians.beta[1] * x_medians,
+        marker="None",
+        color="C1",
+        label="Linear fit",
+    )
+
+    show_fit_confidence_band(
+        ax=ax,
+        x_resample_ratings=summed_ratings.ratings,
+        y_resample_ratings=rated_options_2tpo.ratings,
+        confidence=confidence,
+    )
+
+    ax.legend()  # pyright: ignore[reportUnknownMemberType]
+    ax.set_xlabel("Sum of Task Ratings")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_ylabel("Rating of Task Sequence")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_title("Task Rating Additivity")  # pyright: ignore[reportUnknownMemberType]
+    return fig
+
+
+def compute_summed_ratings(
+    rated_options_1tpo: RatedOptions,
+    rated_options_2tpo: RatedOptions,
+    tasks: Mapping[TaskId, TaskRecord],
+) -> RatedOptions:
+    # Say option o from rated_options_2tpo.options consists of tasks (i, j).
+    # Then sums[o, :] == ratings_1tpo[i, :] + ratings_1tpo[j, :]
     sums = np.zeros_like(rated_options_2tpo.ratings, dtype=np.float64)
     expected_num_tasks = 2
     for o, option in enumerate(rated_options_2tpo.options):
@@ -299,21 +351,19 @@ def plot_rating_additivity_scatter(
             rated_options_1tpo.ratings[index_i, :]
             + rated_options_1tpo.ratings[index_j, :]
         )
-    summed_ratings = RatedOptions(options=rated_options_2tpo.options, ratings=sums)
-    summed_values = summed_ratings.values(confidence)
-    x_values = np.array(
-        [summed_values[option].value for option in summed_ratings.options]
-    )
+    return RatedOptions(options=rated_options_2tpo.options, ratings=sums)
 
-    # The y-coordinates are the ratings of the task sequences (from rated_options_2tpo).
-    rating_values_2tpo = rated_options_2tpo.values(confidence)
-    y_values = np.array(
-        [rating_values_2tpo[option].value for option in rated_options_2tpo.options]
-    )
 
+def plot_medians_with_error_bars(
+    ax: Axes,
+    x_values: Sequence[ValueCI],
+    y_values: Sequence[ValueCI],
+) -> None:
+    x_medians = np.array([vci.value for vci in x_values])
+    y_medians = np.array([vci.value for vci in y_values])
     ax.plot(  # pyright: ignore[reportUnknownMemberType]
-        x_values,
-        y_values,
+        x_medians,
+        y_medians,
         marker="o",
         linestyle="None",
         alpha=0.5,
@@ -321,10 +371,10 @@ def plot_rating_additivity_scatter(
         label="Data points",
     )
     ax.errorbar(  # pyright: ignore[reportUnknownMemberType]
-        x=x_values,
-        y=y_values,
-        xerr=error_bars(list(summed_values.values())),
-        yerr=error_bars(list(rating_values_2tpo.values())),
+        x=x_medians,
+        y=y_medians,
+        xerr=error_bars(x_values),
+        yerr=error_bars(y_values),
         marker="None",
         linestyle="None",
         ecolor="black",
@@ -332,36 +382,26 @@ def plot_rating_additivity_scatter(
         label="Bootstrapped CI",
     )
 
-    # Linear fit of the median x and y values
-    fit_of_medians = odr_fit(
-        f=lambda x, beta: beta[0] + beta[1] * x,
-        xdata=x_values,
-        ydata=y_values,
-        beta0=(0.0, 1.0),
-        weight_x=weights_from_ci(summed_values.values()),
-        weight_y=weights_from_ci(rating_values_2tpo.values()),
-    )
-    ax.plot(  # pyright: ignore[reportUnknownMemberType]
-        x_values,
-        fit_of_medians.beta[0] + fit_of_medians.beta[1] * x_values,
-        marker="None",
-        color="C1",
-        label="Linear fit",
-    )
 
+def show_fit_confidence_band(
+    ax: Axes,
+    x_resample_ratings: NDArray[np.float64],
+    y_resample_ratings: NDArray[np.float64],
+    confidence: float,
+) -> None:
     # Compute a linear fit of each sample to construct a confidence band
-    resample_fits: list[LinregressResult] = []
-    num_resamples = rated_options_1tpo.ratings.shape[1]
-    for i in range(num_resamples):
-        fit = scipy.stats.linregress(
-            x=summed_ratings.ratings[:, i],
-            y=rated_options_2tpo.ratings[:, i],
-        )
-        resample_fits.append(fit)
-    x_grid = np.linspace(min(x_values), max(x_values), 100, dtype=np.float64)
-    y_estimates = np.zeros((len(x_grid), num_resamples), dtype=np.float64)
-    for i, fit in enumerate(resample_fits):
-        y_estimates[:, i] = fit.intercept + fit.slope * x_grid
+    x_medians = np.median(x_resample_ratings, axis=1)
+    x_grid = np.linspace(
+        start=x_medians.min(),
+        stop=x_medians.max(),
+        num=100,
+        dtype=np.float64,
+    )
+    y_estimates = calculate_y_estimates(
+        x_resample_ratings=x_resample_ratings,
+        y_resample_ratings=y_resample_ratings,
+        x_grid=x_grid,
+    )
     y_lower = np.quantile(y_estimates, q=(1 - confidence) / 2, axis=1)
     y_upper = np.quantile(y_estimates, q=(1 + confidence) / 2, axis=1)
     ax.fill_between(  # pyright: ignore[reportUnknownMemberType]
@@ -373,8 +413,23 @@ def plot_rating_additivity_scatter(
         label="Confidence band",
     )
 
-    ax.legend()  # pyright: ignore[reportUnknownMemberType]
-    ax.set_xlabel("Sum of Task Ratings")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_ylabel("Rating of Task Sequence")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_title("Task Rating Additivity")  # pyright: ignore[reportUnknownMemberType]
-    return fig
+
+def calculate_y_estimates(
+    x_resample_ratings: NDArray[np.float64],
+    y_resample_ratings: NDArray[np.float64],
+    x_grid: NDArray[np.float64],
+) -> NDArray[np.float64]:
+    """Calculate the y-estimates at x_grid for each resample using a linear fit.
+
+    x_resample_ratings and y_resample_ratings both have shape (N_options, N_resamples).
+    The output has shape (len(x_grid), N_resamples).
+    """
+    num_resamples = x_resample_ratings.shape[1]
+    y_estimates = np.zeros((len(x_grid), num_resamples), dtype=np.float64)
+    for i in range(num_resamples):
+        fit = scipy.stats.linregress(
+            x=x_resample_ratings[:, i],
+            y=y_resample_ratings[:, i],
+        )
+        y_estimates[:, i] = fit.intercept + fit.slope * x_grid
+    return y_estimates
