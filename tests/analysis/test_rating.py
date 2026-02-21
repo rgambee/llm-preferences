@@ -84,7 +84,7 @@ class TestRateOptions:
         ratings = rate_options(
             outcomes,
             tasks={},
-            num_resamples=1,
+            num_resamples=0,
             confidence=0.0,
         )
         assert ratings == {}
@@ -98,7 +98,7 @@ class TestRateOptions:
         ratings = rate_options(
             outcomes,
             tasks,
-            num_resamples=1,
+            num_resamples=0,
             confidence=0.0,
         )
 
@@ -112,7 +112,7 @@ class TestRateOptions:
         ratings = rate_options(
             outcomes,
             tasks,
-            num_resamples=1,
+            num_resamples=0,
             confidence=0.0,
         )
 

@@ -54,26 +54,37 @@ def rate_options(
 
     Also compute a bootstrapped confidence interval for each rating.
     """
+    if num_resamples < 0:
+        raise ValueError("Number of resamples must be non-negative")
     if outcomes.counts.size == 0:
         return {}
 
-    generator = np.random.default_rng()
-    resampled_ratings = np.full((num_resamples, len(outcomes.options)), np.nan)
-    for i in range(num_resamples):
-        resample = resample_results(outcomes=outcomes, generator=generator)
-        ratings = choix.ilsr_pairwise_dense(
-            comp_mat=resample.unfold().astype(np.float64),
+    # 2D matrix of shape (max(num_resamples, 1), N_opts)
+    ratings: NDArray[np.float64]
+    if num_resamples == 0:
+        ratings_1d = choix.ilsr_pairwise_dense(
+            comp_mat=outcomes.unfold().astype(np.float64),
             alpha=alpha,
         )
-        resampled_ratings[i, :] = ratings
+        ratings = np.expand_dims(ratings_1d, axis=0)
+    else:
+        generator = np.random.default_rng()
+        ratings = np.full((num_resamples, len(outcomes.options)), np.nan)
+        for i in range(num_resamples):
+            resample = resample_results(outcomes=outcomes, generator=generator)
+            sample_ratings = choix.ilsr_pairwise_dense(
+                comp_mat=resample.unfold().astype(np.float64),
+                alpha=alpha,
+            )
+            ratings[i, :] = sample_ratings
 
-    medians = np.median(resampled_ratings, axis=0)  # mean?
+    medians = np.median(ratings, axis=0)
     lower_quant = (1 - confidence) / 2
     upper_quant = (1 + confidence) / 2
-    lower_bounds = np.quantile(resampled_ratings, q=lower_quant, axis=0)
-    upper_bounds = np.quantile(resampled_ratings, q=upper_quant, axis=0)
+    lower_bounds = np.quantile(ratings, q=lower_quant, axis=0)
+    upper_bounds = np.quantile(ratings, q=upper_quant, axis=0)
     # Apply an offset such that the opt-out tasks have a rating of 0.
-    offset = median_opt_out_rating(resampled_ratings, outcomes.options, tasks)
+    offset = median_opt_out_rating(ratings, outcomes.options, tasks)
     rated_options: RatedOptions = {}
     for option_index, option_id in enumerate(outcomes.options):
         rated_options[option_id] = ValueCI(
