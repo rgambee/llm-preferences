@@ -7,12 +7,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
+from odrpack import odr_fit
 
 from llmprefs.analysis.structs import ValueCI
 from llmprefs.analysis.visualization import (
     annotated_heatmap,
     error_bars,
     get_tick_labels,
+    weights_from_ci,
 )
 from llmprefs.comparisons import is_opt_out_task
 from llmprefs.task_structs import OptionById, Outcome, ResultRecord, TaskId, TaskRecord
@@ -288,13 +290,15 @@ def plot_rating_additivity_scatter(
         )
     summed_ratings = RatedOptions(options=rated_options_2tpo.options, ratings=sums)
     summed_values = summed_ratings.values(confidence)
-    x_values = [summed_values[option].value for option in summed_ratings.options]
+    x_values = np.array(
+        [summed_values[option].value for option in summed_ratings.options]
+    )
 
     # The y-coordinates are the ratings of the task sequences (from rated_options_2tpo).
     rating_values_2tpo = rated_options_2tpo.values(confidence)
-    y_values = [
-        rating_values_2tpo[option].value for option in rated_options_2tpo.options
-    ]
+    y_values = np.array(
+        [rating_values_2tpo[option].value for option in rated_options_2tpo.options]
+    )
 
     ax.plot(  # pyright: ignore[reportUnknownMemberType]
         x_values,
@@ -315,6 +319,23 @@ def plot_rating_additivity_scatter(
         ecolor="black",
         capsize=5.0,
         label="Bootstrapped CI",
+    )
+
+    # Linear fit of the median x and y values
+    fit_of_medians = odr_fit(
+        f=lambda x, beta: beta[0] + beta[1] * x,
+        xdata=x_values,
+        ydata=y_values,
+        beta0=(0.0, 1.0),
+        weight_x=weights_from_ci(summed_values.values()),
+        weight_y=weights_from_ci(rating_values_2tpo.values()),
+    )
+    ax.plot(  # pyright: ignore[reportUnknownMemberType]
+        x_values,
+        fit_of_medians.beta[0] + fit_of_medians.beta[1] * x_values,
+        marker="None",
+        color="C1",
+        label="Linear fit",
     )
 
     ax.legend()  # pyright: ignore[reportUnknownMemberType]

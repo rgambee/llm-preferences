@@ -17,6 +17,17 @@ def error_bars(values: Sequence[ValueCI]) -> tuple[list[float], list[float]]:
     return diff_low, diff_high
 
 
+def weights_from_ci(values: Iterable[ValueCI]) -> NDArray[np.float64]:
+    """Compute weights inversely proportional to the confidence interval widths.
+
+    If the width is zero, use a weight of 1.0.
+    """
+    ci_widths = np.array([val.ci_upper - val.ci_lower for val in values])
+    weights = np.ones_like(ci_widths)
+    np.divide(1.0, ci_widths, out=weights, where=ci_widths > 0)
+    return weights
+
+
 def get_tick_labels(
     options: Iterable[OptionById],
     tasks: Mapping[TaskId, TaskRecord],
