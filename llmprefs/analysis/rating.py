@@ -263,27 +263,39 @@ def plot_ratings_heatmap(
 def plot_rating_additivity_scatter(
     rated_options_1tpo: RatedOptions,
     rated_options_2tpo: RatedOptions,
+    tasks: Mapping[TaskId, TaskRecord],
     confidence: float,
 ) -> Figure:
-    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
-        subplot_kw={"aspect": "equal"}
-    )
+    fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
 
-    rating_values_1tpo = rated_options_1tpo.values(confidence)
-    rating_values_2tpo = rated_options_2tpo.values(confidence)
     # Every option in rated_options_2tpo is a sequence of multiple tasks.
     # Add the ratings of the individual tasks (from rated_options_1tpo) to get the
-    # x-coordinates.
-    x_values = [
-        sum(rating_values_1tpo[(task_id,)].value for task_id in option)
-        for option in rated_options_2tpo.options
-    ]
+    # x-coordinates. If option o consists of tasks (i, j),
+    # then sums[o, :] == ratings_1tpo[i, :] + ratings_1tpo[j, :]
+    sums = np.zeros_like(rated_options_2tpo.ratings, dtype=np.float64)
+    expected_num_tasks = 2
+    for o, option in enumerate(rated_options_2tpo.options):
+        if len(option) != expected_num_tasks:
+            if is_opt_out_task(tasks[option[0]]):
+                continue
+            raise ValueError(f"Option {option} is not a valid 2-task option")
+        task_i, task_j = option
+        index_i = rated_options_1tpo.options.index((task_i,))
+        index_j = rated_options_1tpo.options.index((task_j,))
+        sums[o, :] = (
+            rated_options_1tpo.ratings[index_i, :]
+            + rated_options_1tpo.ratings[index_j, :]
+        )
+    summed_ratings = RatedOptions(options=rated_options_2tpo.options, ratings=sums)
+    summed_values = summed_ratings.values(confidence)
+    x_values = [summed_values[option].value for option in summed_ratings.options]
+
     # The y-coordinates are the ratings of the task sequences (from rated_options_2tpo).
+    rating_values_2tpo = rated_options_2tpo.values(confidence)
     y_values = [
         rating_values_2tpo[option].value for option in rated_options_2tpo.options
     ]
 
-    # Add error bars
     ax.plot(  # pyright: ignore[reportUnknownMemberType]
         x_values,
         y_values,
@@ -292,6 +304,17 @@ def plot_rating_additivity_scatter(
         alpha=0.5,
         markeredgewidth=0,
         label="Data points",
+    )
+    ax.errorbar(  # pyright: ignore[reportUnknownMemberType]
+        x=x_values,
+        y=y_values,
+        xerr=error_bars(list(summed_values.values())),
+        yerr=error_bars(list(rating_values_2tpo.values())),
+        marker="None",
+        linestyle="None",
+        ecolor="black",
+        capsize=5.0,
+        label="Bootstrapped CI",
     )
 
     ax.legend()  # pyright: ignore[reportUnknownMemberType]

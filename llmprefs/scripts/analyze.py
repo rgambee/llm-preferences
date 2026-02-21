@@ -90,6 +90,7 @@ def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
     plot_rating_additivity_scatter(
         rated_options_1tpo,
         rated_options_2tpo,
+        tasks,
         confidence=0.75,
     )
 
