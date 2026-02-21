@@ -147,7 +147,7 @@ class TestCompileMatrix:
     def test_zero_results(self) -> None:
         outcomes = compile_matrix(())
         assert len(outcomes.options) == 0
-        assert outcomes.counts.size == 0
+        assert outcomes.counts.shape == (0, 0, 3)
 
     def test_one_result(self) -> None:
         result = result_record_factory()

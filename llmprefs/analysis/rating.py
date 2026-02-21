@@ -107,7 +107,10 @@ def compile_matrix(results: Iterable[ResultRecord]) -> ComparisonOutcomes:
         unique_options.update(result.comparison)
 
     if len(unique_options) == 0:
-        return ComparisonOutcomes(options=(), counts=np.array([]))
+        return ComparisonOutcomes(
+            options=(),
+            counts=np.zeros((0, 0, 3), dtype=np.int64),
+        )
 
     sorted_options = tuple(sorted(unique_options))
     option_to_index: dict[OptionById, int] = {
