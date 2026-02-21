@@ -361,25 +361,17 @@ def plot_medians_with_error_bars(
 ) -> None:
     x_medians = np.array([vci.value for vci in x_values])
     y_medians = np.array([vci.value for vci in y_values])
-    ax.plot(  # pyright: ignore[reportUnknownMemberType]
-        x_medians,
-        y_medians,
-        marker="o",
-        linestyle="None",
-        alpha=0.5,
-        markeredgewidth=0,
-        label="Data points",
-    )
     ax.errorbar(  # pyright: ignore[reportUnknownMemberType]
         x=x_medians,
         y=y_medians,
         xerr=error_bars(x_values),
         yerr=error_bars(y_values),
-        marker="None",
+        marker="o",
+        markeredgewidth=0,
         linestyle="None",
         ecolor="black",
-        capsize=5.0,
-        label="Bootstrapped CI",
+        alpha=0.5,
+        label="Data points with bootstrapped CI",
     )
 
 
