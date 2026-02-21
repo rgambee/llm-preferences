@@ -1,10 +1,12 @@
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import choix
 import matplotlib.pyplot as plt
 import numpy as np
+import scipy.stats
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
 from odrpack import odr_fit
@@ -18,6 +20,12 @@ from llmprefs.analysis.visualization import (
 )
 from llmprefs.comparisons import is_opt_out_task
 from llmprefs.task_structs import OptionById, Outcome, ResultRecord, TaskId, TaskRecord
+
+if TYPE_CHECKING:
+    # LinregressResult is described in SciPy's documentation:
+    # https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html
+    # But for some reason it's not part of the public API.
+    from scipy.stats._stats_py import LinregressResult
 
 
 @dataclass
@@ -336,6 +344,30 @@ def plot_rating_additivity_scatter(
         marker="None",
         color="C1",
         label="Linear fit",
+    )
+
+    # Compute a linear fit of each sample to construct a confidence band
+    resample_fits: list[LinregressResult] = []
+    num_resamples = rated_options_1tpo.ratings.shape[1]
+    for i in range(num_resamples):
+        fit = scipy.stats.linregress(
+            x=summed_ratings.ratings[:, i],
+            y=rated_options_2tpo.ratings[:, i],
+        )
+        resample_fits.append(fit)
+    x_grid = np.linspace(min(x_values), max(x_values), 100, dtype=np.float64)
+    y_estimates = np.zeros((len(x_grid), num_resamples), dtype=np.float64)
+    for i, fit in enumerate(resample_fits):
+        y_estimates[:, i] = fit.intercept + fit.slope * x_grid
+    y_lower = np.quantile(y_estimates, q=(1 - confidence) / 2, axis=1)
+    y_upper = np.quantile(y_estimates, q=(1 + confidence) / 2, axis=1)
+    ax.fill_between(  # pyright: ignore[reportUnknownMemberType]
+        x=x_grid,
+        y1=y_lower,
+        y2=y_upper,
+        color="C1",
+        alpha=0.2,
+        label="Confidence band",
     )
 
     ax.legend()  # pyright: ignore[reportUnknownMemberType]
