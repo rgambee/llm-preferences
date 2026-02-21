@@ -24,7 +24,8 @@ def mock_results() -> list[ResultRecord]:
     results = [result_record_factory() for _ in range(3)]
     results[0].comparison = ((0,), (1,))
     results[1].comparison = ((0,), (2,))
-    results[2].comparison = ((1,), (2,))
+    results[2].comparison = ((2,), (1,))
+    results[2].preferred_option_index = 1
     return results
 
 

@@ -22,8 +22,10 @@ from llmprefs.task_structs import OptionById, Outcome, ResultRecord, TaskId, Tas
 class ComparisonOutcomes:
     # A tuple of unique options. The order matches the indices of the matrix.
     options: tuple[OptionById, ...]
-    # A matrix of shape N_opts x N_opts x 3. The entry at [i, j, o] is the count of
-    # comparisons between options i and j with outcome o. The three outcomes are:
+    # A 3D matrix of shape N_opts x N_opts x 3. It is triangular over the first two
+    # dimensions. If i >= j, then [i, j, :] is zero. If i < j, then the entry at
+    # [i, j, o] is the count of comparisons between options i and j with outcome o.
+    # The three outcomes are:
     # - 0: option i beat j
     # - 1: option j beat i
     # - 2: neither option was preferred
@@ -51,6 +53,7 @@ def rate_options(
     resampled_ratings = np.full((num_resamples, len(outcomes.options)), np.nan)
     for i in range(num_resamples):
         resample = resample_results(outcomes=outcomes, generator=generator)
+        # TODO: Unfold the triangular 3D matrix and slice it into a 2D matrix
         ratings = choix.ilsr_pairwise_dense(
             comp_mat=resample.counts.astype(np.float64),
             alpha=alpha,
@@ -88,21 +91,19 @@ def median_opt_out_rating(
 
 
 def compile_matrix(results: Iterable[ResultRecord]) -> ComparisonOutcomes:
-    """Compile comparison results into a square matrix.
-
-    The matrix has shape N_options x N_options x 3. The entry at [i, j, o] is the number
-    of comparisons between options i and j with outcome o. The three outcomes are:
-    - 0: option i beat j
-    - 1: option j beat i
-    - 2: neither option was preferred
-    """
+    """Compile comparison results into a triangular 3D matrix."""
     counts: dict[OptionById, dict[OptionById, dict[Outcome, int]]] = defaultdict(
         lambda: defaultdict(lambda: defaultdict(lambda: 0)),
     )
     unique_options: set[OptionById] = set()
     for result in results:
         option_0, option_1 = result.comparison
-        counts[option_0][option_1][result.preferred_option_index] += 1
+        smaller_option = min(option_0, option_1)
+        larger_option = max(option_0, option_1)
+        preferred_index = result.preferred_option_index
+        if preferred_index is not None and option_0 == larger_option:
+            preferred_index = 1 - preferred_index
+        counts[smaller_option][larger_option][preferred_index] += 1
         unique_options.update(result.comparison)
 
     if len(unique_options) == 0:
@@ -120,9 +121,9 @@ def compile_matrix(results: Iterable[ResultRecord]) -> ComparisonOutcomes:
             for outcome, count in counts_for_opts_01.items():
                 if outcome is None:
                     outcome = 2  # noqa: PLW2901
-                index_0 = option_to_index[option_0]
-                index_1 = option_to_index[option_1]
-                matrix[index_0, index_1, outcome] = count
+                i = option_to_index[option_0]
+                j = option_to_index[option_1]
+                matrix[i, j, outcome] = count
 
     return ComparisonOutcomes(options=sorted_options, counts=matrix)
 
