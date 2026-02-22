@@ -13,7 +13,7 @@ from llmprefs.analysis.rating import (
     compile_matrix,
     plot_rating_additivity_scatter,
     plot_ratings_heatmap,
-    plot_ratings_stem,
+    plot_ratings_scatter,
     rate_options,
 )
 from llmprefs.analysis.task_order import (
@@ -42,7 +42,7 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
 
     plot_comparison_outcomes_heatmap(outcomes, tasks)
 
-    plot_ratings_stem(rated_options, tasks, confidence=0.75)
+    plot_ratings_scatter(rated_options, tasks, confidence=0.75)
     two_tasks_per_option = True
     try:
         fig = plot_ratings_heatmap(rated_options, tasks)

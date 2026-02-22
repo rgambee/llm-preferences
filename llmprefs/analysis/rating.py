@@ -187,39 +187,41 @@ def resample_results(
     return ComparisonOutcomes(options=outcomes.options, counts=resample)
 
 
-def plot_ratings_stem(
+def plot_ratings_scatter(
     rated_options: RatedOptions,
     tasks: Mapping[TaskId, TaskRecord],
     confidence: float,
 ) -> Figure:
-    xcoords = np.arange(len(rated_options.options))
+    ycoords = np.arange(len(rated_options.options), 0, -1)
     rating_values = rated_options.values(confidence)
     medians = [vci.value for vci in rating_values.values()]
 
     fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
-    ax.stem(
-        xcoords,
-        medians,
-    )
     ax.errorbar(  # pyright: ignore[reportUnknownMemberType]
-        x=xcoords,
-        y=medians,
-        yerr=error_bars(list(rating_values.values())),
-        marker="None",
+        x=medians,
+        y=ycoords,
+        xerr=error_bars(list(rating_values.values())),
+        marker="o",
         linestyle="None",
         ecolor="black",
         capsize=5.0,
-        label=f"Bootstrapped {confidence:.0%} CI",
+        label=f"Data points with bootstrapped {confidence:.0%} CI",
+    )
+    ax.axvline(  # pyright: ignore[reportUnknownMemberType]
+        x=0,
+        linestyle="dashed",
+        color="gray",
+        zorder=0,
     )
     ax.set_title("Rated Options")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_xlabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_xticks(  # pyright: ignore[reportUnknownMemberType]
-        ticks=xcoords,
+    ax.set_xlabel("Rating")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_ylabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_yticks(  # pyright: ignore[reportUnknownMemberType]
+        ticks=ycoords,
         labels=get_tick_labels(rated_options.options, tasks),
-        rotation="vertical",
         fontsize="x-small",
     )
-    ax.set_ylabel("Rating")  # pyright: ignore[reportUnknownMemberType]
+    ax.legend()  # pyright: ignore[reportUnknownMemberType]
 
     return fig
 
