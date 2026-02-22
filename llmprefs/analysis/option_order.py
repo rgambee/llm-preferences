@@ -96,7 +96,9 @@ def plot_option_order_analysis(
     tasks: Mapping[TaskId, TaskRecord],
     title_suffix: str = "",
 ) -> Figure:
-    fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
+    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+        layout="constrained",
+    )
     tick_labels = get_tick_labels(analysis.options, tasks)
     image = annotated_heatmap(ax, analysis.deltas, tick_labels, vmin=-1.0, vmax=1.0)
     colorbar = fig.colorbar(image, ax=ax)  # pyright: ignore[reportUnknownMemberType]

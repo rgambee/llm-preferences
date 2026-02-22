@@ -275,7 +275,9 @@ def plot_task_order_analysis(
 
     figures: list[Figure] = []
     for direct in (True, False):
-        fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
+        fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+            layout="constrained",
+        )
         figures.append(fig)
 
         image = annotated_heatmap(

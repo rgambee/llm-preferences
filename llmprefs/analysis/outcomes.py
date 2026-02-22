@@ -25,7 +25,9 @@ def plot_comparison_outcomes_heatmap(
     if counts.shape[0] != counts.shape[1]:
         raise ValueError("Option matrix must be square")
 
-    fig = plt.figure()  # pyright: ignore[reportUnknownMemberType]
+    fig = plt.figure(  # pyright: ignore[reportUnknownMemberType]
+        layout="compressed",
+    )
     gridspec = fig.add_gridspec(  # pyright: ignore[reportUnknownMemberType]
         nrows=1,
         ncols=2,

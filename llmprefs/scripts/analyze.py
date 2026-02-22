@@ -70,7 +70,6 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
         else:
             raise
     else:
-        fig.tight_layout()
         save_figure(fig, args, "rated-options-heatmap")
 
     option_order_analysis = analyze_option_order(results)

@@ -198,7 +198,9 @@ def plot_ratings_scatter(
     rating_values = rated_options.values(confidence)
     medians = [vci.value for vci in rating_values.values()]
 
-    fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
+    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+        layout="constrained",
+    )
     ax.errorbar(  # pyright: ignore[reportUnknownMemberType]
         x=medians,
         y=ycoords,
@@ -261,7 +263,9 @@ def plot_ratings_heatmap(
         rating = rated_values[(task0, task1)]
         ratings[task_ids_to_index[task0], task_ids_to_index[task1]] = rating.value
 
-    fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
+    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+        layout="constrained",
+    )
     tick_labels = get_tick_labels(
         options=((task_id,) for task_id in task_0_ids),
         tasks=tasks,
@@ -290,7 +294,9 @@ def plot_rating_additivity_scatter(
     if rated_options_1tpo.ratings.shape[1] != rated_options_2tpo.ratings.shape[1]:
         raise ValueError("Number of resamples must be the same")
 
-    fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
+    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+        layout="constrained",
+    )
 
     # Every option in rated_options_2tpo is a sequence of multiple tasks. Add the
     # ratings of the individual tasks from rated_options_1tpo to get the x coordinates.
