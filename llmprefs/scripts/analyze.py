@@ -65,7 +65,7 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
             title_suffix=args.title_suffix,
         )
     except ValueError as error:
-        if error.args[0] == "Heatmap only accepts options containing 2 tasks":
+        if error.args[0] == "Heatmap requires options containing 2 tasks":
             two_tasks_per_option = False
         else:
             raise

@@ -236,13 +236,16 @@ def plot_ratings_heatmap(
     title_suffix: str = "",
 ) -> Figure:
     expected_num_tasks = 2
-    if any(len(option) != expected_num_tasks for option in rated_options.options):
+    options_to_plot = [
+        option for option in rated_options.options if len(option) == expected_num_tasks
+    ]
+    if len(options_to_plot) == 0:
         raise ValueError(
-            f"Heatmap only accepts options containing {expected_num_tasks} tasks"
+            f"Heatmap requires options containing {expected_num_tasks} tasks"
         )
 
     task_0_and_1_ids: zip[tuple[TaskId, TaskId]] = zip(
-        *rated_options.options,
+        *options_to_plot,
         strict=True,
     )
     task_0_ids, task_1_ids = task_0_and_1_ids
@@ -253,7 +256,9 @@ def plot_ratings_heatmap(
     del task_1_ids
     task_ids_to_index = {task_id: i for i, task_id in enumerate(task_0_ids)}
     ratings = np.full((len(task_0_ids), len(task_0_ids)), np.nan, dtype=float)
-    for (task0, task1), rating in rated_options.values(confidence=0.0).items():
+    rated_values = rated_options.values(confidence=0.0)
+    for task0, task1 in options_to_plot:
+        rating = rated_values[(task0, task1)]
         ratings[task_ids_to_index[task0], task_ids_to_index[task1]] = rating.value
 
     fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
