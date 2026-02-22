@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
 from matplotlib.axes import Axes
+from matplotlib.collections import FillBetweenPolyCollection
+from matplotlib.container import ErrorbarContainer
 from matplotlib.figure import Figure
 from numpy.typing import NDArray
 from odrpack import odr_fit
@@ -293,7 +295,7 @@ def plot_rating_additivity_scatter(
         [rating_values_2tpo[option].value for option in rated_options_2tpo.options]
     )
 
-    plot_medians_with_error_bars(
+    data_markers = plot_medians_with_error_bars(
         ax=ax,
         x_values=[summed_values[opt] for opt in summed_ratings.options],
         y_values=[rating_values_2tpo[opt] for opt in rated_options_2tpo.options],
@@ -309,7 +311,7 @@ def plot_rating_additivity_scatter(
         weight_x=weights_from_ci(summed_values.values()),
         weight_y=weights_from_ci(rating_values_2tpo.values()),
     )
-    ax.plot(  # pyright: ignore[reportUnknownMemberType]
+    linear_fit_line = ax.plot(  # pyright: ignore[reportUnknownMemberType]
         x_medians,
         fit_of_medians.beta[0] + fit_of_medians.beta[1] * x_medians,
         marker="None",
@@ -317,14 +319,20 @@ def plot_rating_additivity_scatter(
         label="Linear fit",
     )
 
-    show_fit_confidence_band(
+    confidence_band = show_fit_confidence_band(
         ax=ax,
         x_resample_ratings=summed_ratings.ratings,
         y_resample_ratings=rated_options_2tpo.ratings,
         confidence=confidence,
     )
 
-    ax.legend()  # pyright: ignore[reportUnknownMemberType]
+    ax.legend(  # pyright: ignore[reportUnknownMemberType]
+        handles=[
+            data_markers,
+            *linear_fit_line,
+            confidence_band,
+        ],
+    )
     ax.set_xlabel("Sum of Task Ratings")  # pyright: ignore[reportUnknownMemberType]
     ax.set_ylabel("Rating of Task Sequence")  # pyright: ignore[reportUnknownMemberType]
     ax.set_title("Task Rating Additivity")  # pyright: ignore[reportUnknownMemberType]
@@ -359,10 +367,11 @@ def plot_medians_with_error_bars(
     ax: Axes,
     x_values: Sequence[ValueCI],
     y_values: Sequence[ValueCI],
-) -> None:
+    confidence: float,
+) -> ErrorbarContainer:
     x_medians = np.array([vci.value for vci in x_values])
     y_medians = np.array([vci.value for vci in y_values])
-    ax.errorbar(  # pyright: ignore[reportUnknownMemberType]
+    return ax.errorbar(  # pyright: ignore[reportUnknownMemberType]
         x=x_medians,
         y=y_medians,
         xerr=error_bars(x_values),
@@ -381,7 +390,7 @@ def show_fit_confidence_band(
     x_resample_ratings: NDArray[np.float64],
     y_resample_ratings: NDArray[np.float64],
     confidence: float,
-) -> None:
+) -> FillBetweenPolyCollection:
     # Compute a linear fit of each sample to construct a confidence band
     x_medians = np.median(x_resample_ratings, axis=1)
     x_grid = np.linspace(
@@ -397,7 +406,7 @@ def show_fit_confidence_band(
     )
     y_lower = np.quantile(y_estimates, q=(1 - confidence) / 2, axis=1)
     y_upper = np.quantile(y_estimates, q=(1 + confidence) / 2, axis=1)
-    ax.fill_between(  # pyright: ignore[reportUnknownMemberType]
+    return ax.fill_between(  # pyright: ignore[reportUnknownMemberType]
         x=x_grid,
         y1=y_lower,
         y2=y_upper,
