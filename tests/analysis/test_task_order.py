@@ -33,6 +33,16 @@ def mock_results() -> list[ResultRecord]:
     results[6].comparison = ((3, 4), (4, 3))
     results[7].comparison = ((1, 3), (3, 1))
     results[8].comparison = ((4, 2), (2, 4))
+    # Indirect comparisons:
+    # - (1, 2) won 1, lost 1 | (2, 1) won 0, lost 1 => partial preference for ASC
+    # - (1, 3) won 1, lost 0 | (3, 1) won 0, lost 1 => perfect preference for ASC
+    # - (2, 4) won 0, lost 1 | (4, 2) won 1, lost 0 => perfect preference for DESC
+    # - (3, 4) won 1, lost 1 | (4, 3) won 1, lost 0 => partial preference for DESC
+    # Direct comparisons:
+    # - (1, 2) vs (2, 1): 1-0 => perfect preference for ASC
+    # - (1, 3) vs (3, 1): 1-0 => perfect preference for ASC
+    # - (2, 4) vs (4, 2): 0-1 => perfect preference for DESC
+    # - (3, 4) vs (4, 3): 1-0 => perfect preference for ASC
     return results
 
 
@@ -153,6 +163,15 @@ class TestIndirectComparison:
         )
         assert result.signed_outcome(UnorderedTaskPair((1, 2))) == 1
         assert result.signed_outcome(UnorderedTaskPair((3, 4))) == -1
+
+        result = IndirectComparison(
+            first_option=(2, 1),
+            second_option=(4, 3),
+            preferred_option_index=0,
+        )
+        assert result.signed_outcome(UnorderedTaskPair((1, 2))) == -1
+        assert result.signed_outcome(UnorderedTaskPair((3, 4))) == 1
+
         with pytest.raises(
             ValueError,
             match="Result does not contain the desired option",
@@ -167,25 +186,45 @@ class TestAnalyzeTaskOrder:
         assert len(analysis.tasks) == 0
         assert analysis.deltas_indirect.size == 0
 
-    def test_multiple_results(self, mock_results: list[ResultRecord]) -> None:
+    def test_multiple_results_direct(self, mock_results: list[ResultRecord]) -> None:
         analysis = analyze_task_order(mock_results)
 
         assert analysis.tasks == (1, 2, 3, 4)
-        assert analysis.deltas_indirect.shape == (4, 4)
-        expected_indirect = np.array(
+        assert analysis.deltas_direct.shape == (4, 4)
+        expected = np.array(
             [
-                [np.nan, 0.5, 1.0, np.nan],
+                [np.nan, 1.0, 1.0, np.nan],
                 [np.nan, np.nan, np.nan, -1.0],
-                [np.nan, np.nan, np.nan, -0.5],
+                [np.nan, np.nan, np.nan, 1.0],
                 [np.nan, np.nan, np.nan, np.nan],
             ],
         )
         for i in range(len(analysis.tasks)):
             for j in range(len(analysis.tasks)):
-                if np.isnan(expected_indirect[i, j]):
+                if np.isnan(expected[i, j]):
+                    assert np.isnan(analysis.deltas_direct[i, j])
+                else:
+                    assert expected[i, j] == analysis.deltas_direct[i, j]
+
+    def test_multiple_results_indirect(self, mock_results: list[ResultRecord]) -> None:
+        analysis = analyze_task_order(mock_results)
+
+        assert analysis.tasks == (1, 2, 3, 4)
+        assert analysis.deltas_indirect.shape == (4, 4)
+        expected = np.array(
+            [
+                [np.nan, 1 / 3, 1.0, np.nan],
+                [np.nan, np.nan, np.nan, -1.0],
+                [np.nan, np.nan, np.nan, -1 / 3],
+                [np.nan, np.nan, np.nan, np.nan],
+            ],
+        )
+        for i in range(len(analysis.tasks)):
+            for j in range(len(analysis.tasks)):
+                if np.isnan(expected[i, j]):
                     assert np.isnan(analysis.deltas_indirect[i, j])
                 else:
-                    assert expected_indirect[i, j] == analysis.deltas_indirect[i, j]
+                    assert expected[i, j] == analysis.deltas_indirect[i, j]
 
 
 class TestComputeDeltaDirect:
@@ -260,11 +299,11 @@ class TestComputeDeltaIndirect:
         assert np.isnan(delta)
 
     def test_one_result(self, mock_results: list[ResultRecord]) -> None:
-        with pytest.raises(ValueError, match="Missing outcomes for one or more orders"):
-            compute_delta_indirect(
-                results=mock_results[:1],
-                desired_option=UnorderedTaskPair((1, 2)),
-            )
+        delta = compute_delta_indirect(
+            results=mock_results[:1],
+            desired_option=UnorderedTaskPair((1, 2)),
+        )
+        assert delta == 1.0
 
     def test_no_order_effect(self) -> None:
         result0 = result_record_factory()
@@ -308,7 +347,7 @@ class TestComputeDeltaIndirect:
         # The ascending task order (1, 2) both won and lost. The descending order (2, 1)
         # lost. Therefore, the delta should be positive, indicating a slight preference
         # for ascending order.
-        assert delta == 0.5
+        assert delta == 1 / 3
 
 
 class TestFindRelevantComparisons:

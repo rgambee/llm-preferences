@@ -1,3 +1,4 @@
+import itertools
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
@@ -116,10 +117,25 @@ class IndirectComparison(ReducedResult):
         if self.preferred_option_index is None:
             return 0
         if self.first_pair_unordered == desired_option:
-            return 1 if self.preferred_option_index == 0 else -1
-        if self.second_pair_unordered == desired_option:
-            return -1 if self.preferred_option_index == 0 else 1
-        raise ValueError("Result does not contain the desired option")
+            desired_option_selected = self.preferred_option_index == 0
+            desired_option_order = task_order(self.first_pair_ordered)
+        elif self.second_pair_unordered == desired_option:
+            desired_option_selected = self.preferred_option_index == 1
+            desired_option_order = task_order(self.second_pair_ordered)
+        else:
+            raise ValueError("Result does not contain the desired option")
+
+        if desired_option_selected:
+            if desired_option_order is TaskOrder.ASCENDING:
+                # Preferred the desired option in ascending order
+                return 1
+            # Preferred the desired option in descending order
+            return -1
+        if desired_option_order is TaskOrder.ASCENDING:
+            # Dispreferred the desired option in ascending order
+            return -1
+        # Dispreferred the desired option in descending order
+        return 1
 
 
 def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
@@ -172,10 +188,10 @@ def compute_delta_direct(
         desired_option,
         direct=True,
     )
-    outcomes = [result.signed_outcome() for result in relevant_results]
-    if not outcomes:
+    signs = [result.signed_outcome() for result in relevant_results]
+    if not signs:
         return np.nan
-    return float(np.mean(outcomes))
+    return float(np.mean(signs))
 
 
 def compute_delta_indirect(
@@ -187,31 +203,21 @@ def compute_delta_indirect(
         desired_option,
         direct=False,
     )
-    outcomes: dict[UnorderedTaskPair, dict[TaskOrder, list[int]]] = defaultdict(
-        lambda: {TaskOrder.ASCENDING: [], TaskOrder.DESCENDING: []}
+    outcomes: dict[UnorderedTaskPair, list[int]] = defaultdict(
+        list,
     )
     for result in relevant_results:
         outcome = result.signed_outcome(desired_option)
         if result.first_pair_unordered == desired_option:
-            order = task_order(result.first_pair_ordered)
-            outcomes[result.second_pair_unordered][order].append(outcome)
+            outcomes[result.second_pair_unordered].append(outcome)
         elif result.second_pair_unordered == desired_option:
-            order = task_order(result.second_pair_ordered)
-            outcomes[result.first_pair_unordered][order].append(outcome)
+            outcomes[result.first_pair_unordered].append(outcome)
         else:
             raise ValueError("Result does not contain the desired option")
-
-    deltas: list[np.floating] = []
-    for outcomes_by_order in outcomes.values():
-        asc_outcomes = outcomes_by_order[TaskOrder.ASCENDING]
-        desc_outcomes = outcomes_by_order[TaskOrder.DESCENDING]
-        if not asc_outcomes or not desc_outcomes:
-            raise ValueError("Missing outcomes for one or more orders")
-        delta = (np.mean(asc_outcomes) - np.mean(desc_outcomes)) / 2.0
-        deltas.append(delta)
-    if not deltas:
+    signs = list(itertools.chain.from_iterable(outcomes.values()))
+    if not signs:
         return np.nan
-    return float(np.mean(deltas))
+    return float(np.mean(signs))
 
 
 @overload
