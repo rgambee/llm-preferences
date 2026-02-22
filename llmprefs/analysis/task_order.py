@@ -16,14 +16,25 @@ from llmprefs.analysis.visualization import (
     construct_title,
     get_tick_labels,
 )
-from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
-
-OrderedOption = OptionById
-UnorderedOption = frozenset[TaskId]
+from llmprefs.task_structs import ResultRecord, TaskId, TaskRecord
 
 
 class OptionSizeError(Exception):
     pass
+
+
+class OrderedTaskPair(tuple[TaskId, TaskId]):
+    EXPECTED_SIZE = 2
+
+    __slots__ = ()
+
+    def __new__(cls, tasks: Iterable[TaskId]) -> Self:
+        instance = super().__new__(cls, tasks)
+        if len(instance) != cls.EXPECTED_SIZE:
+            raise OptionSizeError(
+                f"Size of {instance.__class__.__name__} must be {cls.EXPECTED_SIZE}",
+            )
+        return instance
 
 
 class UnorderedTaskPair(frozenset[TaskId]):
@@ -61,48 +72,52 @@ class TaskOrder(Enum):
 @dataclass
 class ReducedResult(ReducedResultBase):
     @property
-    def unordered_first_option(self) -> UnorderedOption:
-        return UnorderedOption(self.first_option)
+    def first_pair_ordered(self) -> OrderedTaskPair:
+        return OrderedTaskPair(self.first_option)
 
     @property
-    def unordered_first_pair(self) -> UnorderedTaskPair:
+    def first_pair_unordered(self) -> UnorderedTaskPair:
         return UnorderedTaskPair(self.first_option)
 
     @property
-    def unordered_second_option(self) -> UnorderedOption:
-        return UnorderedOption(self.second_option)
+    def second_pair_ordered(self) -> OrderedTaskPair:
+        return OrderedTaskPair(self.second_option)
 
     @property
-    def unordered_second_pair(self) -> UnorderedTaskPair:
+    def second_pair_unordered(self) -> UnorderedTaskPair:
         return UnorderedTaskPair(self.second_option)
 
 
 class DirectComparison(ReducedResult):
     def __post_init__(self) -> None:
-        if self.unordered_first_option != self.unordered_second_option:
+        if self.first_pair_unordered != self.second_pair_unordered:
             raise ValueError("Comparison is not direct")
 
     def signed_outcome(self) -> int:
         if self.preferred_option_index is None:
             return 0
         if self.preferred_option_index == 0:
-            return 1 if task_order(self.first_option) is TaskOrder.ASCENDING else -1
+            if task_order(self.first_pair_ordered) is TaskOrder.ASCENDING:
+                return 1
+            return -1
         if self.preferred_option_index == 1:
-            return 1 if task_order(self.second_option) is TaskOrder.ASCENDING else -1
+            if task_order(self.second_pair_ordered) is TaskOrder.ASCENDING:
+                return 1
+            return -1
         raise ValueError("Invalid preferred_option_index")
 
 
 class IndirectComparison(ReducedResult):
     def __post_init__(self) -> None:
-        if self.unordered_first_option == self.unordered_second_option:
+        if self.first_pair_unordered == self.second_pair_unordered:
             raise ValueError("Comparison is not indirect")
 
-    def signed_outcome(self, desired_option: UnorderedOption) -> int:
+    def signed_outcome(self, desired_option: UnorderedTaskPair) -> int:
         if self.preferred_option_index is None:
             return 0
-        if self.unordered_first_option == desired_option:
+        if self.first_pair_unordered == desired_option:
             return 1 if self.preferred_option_index == 0 else -1
-        if self.unordered_second_option == desired_option:
+        if self.second_pair_unordered == desired_option:
             return -1 if self.preferred_option_index == 0 else 1
         raise ValueError("Result does not contain the desired option")
 
@@ -150,7 +165,7 @@ def analyze_task_order(results: Sequence[ResultRecord]) -> TaskOrderAnalysis:
 
 def compute_delta_direct(
     results: Sequence[ResultRecord],
-    desired_option: UnorderedOption,
+    desired_option: UnorderedTaskPair,
 ) -> float:
     relevant_results = find_relevant_comparisons(
         results,
@@ -165,24 +180,24 @@ def compute_delta_direct(
 
 def compute_delta_indirect(
     results: Sequence[ResultRecord],
-    desired_option: UnorderedOption,
+    desired_option: UnorderedTaskPair,
 ) -> float:
     relevant_results = find_relevant_comparisons(
         results,
         desired_option,
         direct=False,
     )
-    outcomes: dict[UnorderedOption, dict[TaskOrder, list[int]]] = defaultdict(
+    outcomes: dict[UnorderedTaskPair, dict[TaskOrder, list[int]]] = defaultdict(
         lambda: {TaskOrder.ASCENDING: [], TaskOrder.DESCENDING: []}
     )
     for result in relevant_results:
         outcome = result.signed_outcome(desired_option)
-        if result.unordered_first_option == desired_option:
-            order = task_order(result.first_option)
-            outcomes[result.unordered_second_option][order].append(outcome)
-        elif result.unordered_second_option == desired_option:
-            order = task_order(result.second_option)
-            outcomes[result.unordered_first_option][order].append(outcome)
+        if result.first_pair_unordered == desired_option:
+            order = task_order(result.first_pair_ordered)
+            outcomes[result.second_pair_unordered][order].append(outcome)
+        elif result.second_pair_unordered == desired_option:
+            order = task_order(result.second_pair_ordered)
+            outcomes[result.first_pair_unordered][order].append(outcome)
         else:
             raise ValueError("Result does not contain the desired option")
 
@@ -202,7 +217,7 @@ def compute_delta_indirect(
 @overload
 def find_relevant_comparisons(
     results: Iterable[ResultRecord],
-    desired_option: UnorderedOption,
+    desired_option: UnorderedTaskPair,
     *,
     direct: Literal[True],
 ) -> Iterable[DirectComparison]: ...
@@ -211,7 +226,7 @@ def find_relevant_comparisons(
 @overload
 def find_relevant_comparisons(
     results: Iterable[ResultRecord],
-    desired_option: UnorderedOption,
+    desired_option: UnorderedTaskPair,
     *,
     direct: Literal[False],
 ) -> Iterable[IndirectComparison]: ...
@@ -219,7 +234,7 @@ def find_relevant_comparisons(
 
 def find_relevant_comparisons(
     results: Iterable[ResultRecord],
-    desired_option: UnorderedOption,
+    desired_option: UnorderedTaskPair,
     *,
     direct: bool,
 ) -> Iterable[ReducedResult]:
@@ -238,8 +253,11 @@ def find_relevant_comparisons(
             second_option=ordered_option_b,
             preferred_option_index=full_result.preferred_option_index,
         )
-        unordered_option_a = reduced_result.unordered_first_option
-        unordered_option_b = reduced_result.unordered_second_option
+        try:
+            unordered_option_a = reduced_result.first_pair_unordered
+            unordered_option_b = reduced_result.second_pair_unordered
+        except OptionSizeError:
+            continue
         if desired_option not in {unordered_option_a, unordered_option_b}:
             continue
         if unordered_option_a == unordered_option_b and direct:
@@ -256,8 +274,8 @@ def find_relevant_comparisons(
             )
 
 
-def task_order(option: OrderedOption) -> TaskOrder:
-    first_task, second_task = option
+def task_order(task_pair: OrderedTaskPair) -> TaskOrder:
+    first_task, second_task = task_pair
     if first_task < second_task:
         return TaskOrder.ASCENDING
     return TaskOrder.DESCENDING

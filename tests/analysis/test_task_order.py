@@ -7,7 +7,7 @@ from llmprefs.analysis.task_order import (
     DirectComparison,
     IndirectComparison,
     OptionSizeError,
-    OrderedOption,
+    OrderedTaskPair,
     ReducedResult,
     TaskOrder,
     UnorderedTaskPair,
@@ -68,27 +68,31 @@ class TestUnorderedTaskPair:
 
 
 class TestReducedResult:
+    def test_ordered_pairs(self) -> None:
+        result = ReducedResult(
+            first_option=(1, 2),
+            second_option=(3, 4),
+            preferred_option_index=0,
+        )
+        assert result.first_pair_ordered == (1, 2)
+        assert result.second_pair_ordered == (3, 4)
+
+        result.second_option = (3,)
+        with pytest.raises(OptionSizeError):
+            _ = result.second_pair_ordered
+
     def test_unordered_pairs(self) -> None:
         result = ReducedResult(
             first_option=(1, 2),
             second_option=(3, 4),
             preferred_option_index=0,
         )
-        assert result.unordered_first_pair == {1, 2}
-        assert result.unordered_second_pair == {3, 4}
+        assert result.first_pair_unordered == {1, 2}
+        assert result.second_pair_unordered == {3, 4}
 
         result.second_option = (3,)
         with pytest.raises(OptionSizeError):
-            _ = result.unordered_second_pair
-
-    def test_unordered_options(self) -> None:
-        result = ReducedResult(
-            first_option=(1, 2),
-            second_option=(3,),
-            preferred_option_index=0,
-        )
-        assert result.unordered_first_option == {1, 2}
-        assert result.unordered_second_option == {3}
+            _ = result.second_pair_unordered
 
 
 class TestDirectComparison:
@@ -334,12 +338,12 @@ class TestFindRelevantComparisons:
         assert len(relevant_results) == 3
         for res in relevant_results:
             assert desired_pair in {
-                res.unordered_first_pair,
-                res.unordered_second_pair,
+                res.first_pair_unordered,
+                res.second_pair_unordered,
             }
             assert not (
-                res.unordered_first_pair == desired_pair
-                and res.unordered_second_pair == desired_pair
+                res.first_pair_unordered == desired_pair
+                and res.second_pair_unordered == desired_pair
             )
 
     def test_indirect_comparisons(self, mock_results: list[ResultRecord]) -> None:
@@ -353,8 +357,8 @@ class TestFindRelevantComparisons:
         )
         assert len(relevant_results) == 1
         for res in relevant_results:
-            assert res.unordered_first_pair == desired_pair
-            assert res.unordered_second_pair == desired_pair
+            assert res.first_pair_unordered == desired_pair
+            assert res.second_pair_unordered == desired_pair
 
 
 class TestTaskOrder:
@@ -366,7 +370,7 @@ class TestTaskOrder:
             (0, 99),
         ],
     )
-    def test_ascending(self, option: OrderedOption) -> None:
+    def test_ascending(self, option: OrderedTaskPair) -> None:
         assert task_order(option) == TaskOrder.ASCENDING
 
     @pytest.mark.parametrize(
@@ -377,5 +381,5 @@ class TestTaskOrder:
             (123, 42),
         ],
     )
-    def test_descending(self, option: OrderedOption) -> None:
+    def test_descending(self, option: OrderedTaskPair) -> None:
         assert task_order(option) == TaskOrder.DESCENDING
