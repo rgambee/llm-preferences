@@ -46,6 +46,10 @@ class Settings(
     )
 
     # API settings
+    timeout: float = Field(
+        default=10.0,
+        description="Timeout for individual API requests",
+    )
     concurrent_requests: int = Field(
         default=10,
         description="Maximum number of concurrent API requests",
@@ -117,4 +121,10 @@ class Settings(
             Reasoning effort to use when parsing free-form responses. Only applies when
             structured_output is False and parsing_model is an OpenAI model.
         """,
+    )
+
+    # Analysis settings
+    analysis_confidence: float = Field(
+        default=0.75,
+        description="Confidence level for analysis",
     )

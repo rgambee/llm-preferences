@@ -27,6 +27,7 @@ def plot_comparison_outcomes_heatmap(
 
     fig = plt.figure(  # pyright: ignore[reportUnknownMemberType]
         layout="compressed",
+        figsize=(5.2, 4.8),
     )
     gridspec = fig.add_gridspec(  # pyright: ignore[reportUnknownMemberType]
         nrows=1,

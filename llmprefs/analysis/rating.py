@@ -265,6 +265,7 @@ def plot_ratings_heatmap(
 
     fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
         layout="constrained",
+        figsize=(5.2, 4.8),
     )
     tick_labels = get_tick_labels(
         options=((task_id,) for task_id in task_0_ids),

@@ -277,6 +277,7 @@ def plot_task_order_analysis(
     for direct in (True, False):
         fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
             layout="constrained",
+            figsize=(5.4, 4.8),
         )
         figures.append(fig)
 
