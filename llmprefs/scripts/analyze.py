@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from llmprefs.analysis.option_order import (
     analyze_option_order,
@@ -20,6 +21,7 @@ from llmprefs.analysis.task_order import (
     analyze_task_order,
     plot_task_order_analysis,
 )
+from llmprefs.analysis.visualization import construct_figure_filename
 from llmprefs.file_io.load_records import load_records
 from llmprefs.task_structs import ResultRecord, TaskId, TaskRecord
 
@@ -40,14 +42,21 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
         num_resamples=100,
     )
 
-    plot_comparison_outcomes_heatmap(outcomes, tasks, title_suffix=args.title_suffix)
+    fig = plot_comparison_outcomes_heatmap(
+        outcomes,
+        tasks,
+        title_suffix=args.title_suffix,
+    )
+    save_figure(fig, args, "outcome-counts")
 
-    plot_ratings_scatter(
+    fig = plot_ratings_scatter(
         rated_options,
         tasks,
         confidence=0.75,
         title_suffix=args.title_suffix,
     )
+    save_figure(fig, args, "rated-options")
+
     two_tasks_per_option = True
     try:
         fig = plot_ratings_heatmap(
@@ -55,27 +64,32 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
             tasks,
             title_suffix=args.title_suffix,
         )
-        fig.tight_layout()
     except ValueError as error:
         if error.args[0] == "Heatmap only accepts options containing 2 tasks":
             two_tasks_per_option = False
         else:
             raise
+    else:
+        fig.tight_layout()
+        save_figure(fig, args, "rated-options-heatmap")
 
     option_order_analysis = analyze_option_order(results)
-    plot_option_order_analysis(
+    fig = plot_option_order_analysis(
         option_order_analysis,
         tasks,
         title_suffix=args.title_suffix,
     )
+    save_figure(fig, args, "option-order-analysis")
 
     if two_tasks_per_option:
         task_order_analysis = analyze_task_order(results)
-        plot_task_order_analysis(
+        figs = plot_task_order_analysis(
             task_order_analysis,
             tasks,
             title_suffix=args.title_suffix,
         )
+        for i, fig in enumerate(figs):
+            save_figure(fig, args, f"task-order-analysis-{i}")
 
 
 def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
@@ -104,13 +118,38 @@ def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
         tasks,
         num_resamples=100,
     )
-    plot_rating_additivity_scatter(
+    fig = plot_rating_additivity_scatter(
         rated_options_1tpo,
         rated_options_2tpo,
         tasks,
         confidence=0.75,
         title_suffix=args.title_suffix,
     )
+    save_figure(
+        fig,
+        argparse.Namespace(
+            output_dir=args.output_dir,
+            results_path=args.results_1tpo_path,
+        ),
+        "rating-additivity",
+    )
+
+
+def save_figure(
+    figure: Figure,
+    args: argparse.Namespace,
+    figure_name: str,
+) -> Path | None:
+    if args.output_dir is None:
+        return None
+    figure_filename = construct_figure_filename(
+        output_dir=args.output_dir,
+        results_path=args.results_path,
+        figure_name=figure_name,
+    )
+    figure.savefig(figure_filename)  # pyright: ignore[reportUnknownMemberType]
+    logging.getLogger(__name__).info(f"Saved figure to {figure_filename}")
+    return figure_filename
 
 
 def main() -> None:
@@ -139,6 +178,11 @@ def main() -> None:
         "--title-suffix",
         type=str,
         help="Suffix to add to all figure titles",
+    )
+    analyze_one_parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Directory to save figures as SVGs",
     )
     analyze_one_parser.set_defaults(func=analyze_one_set_of_results)
 
@@ -170,6 +214,11 @@ def main() -> None:
         "--title-suffix",
         type=str,
         help="Suffix to add to all figure titles",
+    )
+    analyze_two_parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Directory to save figures as SVGs",
     )
     analyze_two_parser.set_defaults(func=analyze_two_sets_of_results)
 

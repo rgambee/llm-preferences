@@ -1,4 +1,5 @@
 from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -99,3 +100,13 @@ def construct_title(title: str, title_suffix: str) -> str:
     if title_suffix:
         title = f"{title}\n{title_suffix}"
     return title
+
+
+def construct_figure_filename(
+    output_dir: Path,
+    results_path: Path,
+    figure_name: str,
+    extension: str = "svg",
+) -> Path:
+    results_stem = results_path.stem
+    return output_dir / f"{results_stem}_{figure_name}.{extension}"
