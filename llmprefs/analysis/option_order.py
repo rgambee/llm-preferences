@@ -101,7 +101,14 @@ def plot_option_order_analysis(
         figsize=(5.4, 4.8),
     )
     tick_labels = get_tick_labels(analysis.options, tasks)
-    image = annotated_heatmap(ax, analysis.deltas, tick_labels, vmin=-1.0, vmax=1.0)
+    image = annotated_heatmap(
+        ax,
+        analysis.deltas,
+        tick_labels,
+        precision=1,
+        vmin=-1.0,
+        vmax=1.0,
+    )
     colorbar = fig.colorbar(image, ax=ax)  # pyright: ignore[reportUnknownMemberType]
     colorbar.ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
         "Option Ordering Effect Strength",
