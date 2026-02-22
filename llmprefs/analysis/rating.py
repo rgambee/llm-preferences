@@ -207,7 +207,7 @@ def plot_ratings_stem(
         linestyle="None",
         ecolor="black",
         capsize=5.0,
-        label="Bootstrapped CI",
+        label=f"Bootstrapped {confidence:.0%} CI",
     )
     ax.set_title("Rated Options")  # pyright: ignore[reportUnknownMemberType]
     ax.set_xlabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
@@ -297,6 +297,7 @@ def plot_rating_additivity_scatter(
         ax=ax,
         x_values=[summed_values[opt] for opt in summed_ratings.options],
         y_values=[rating_values_2tpo[opt] for opt in rated_options_2tpo.options],
+        confidence=confidence,
     )
 
     # Linear fit of the median x and y values
@@ -371,7 +372,7 @@ def plot_medians_with_error_bars(
         linestyle="None",
         ecolor="black",
         alpha=0.5,
-        label="Data points with bootstrapped CI",
+        label=f"Data points with bootstrapped {confidence:.0%} CI",
     )
 
 
@@ -402,7 +403,7 @@ def show_fit_confidence_band(
         y2=y_upper,
         color="C1",
         alpha=0.2,
-        label="Confidence band",
+        label=f"{confidence:.0%} confidence band",
     )
 
 
