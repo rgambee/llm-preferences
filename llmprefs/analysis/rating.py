@@ -16,6 +16,7 @@ from odrpack import odr_fit
 from llmprefs.analysis.structs import ValueCI
 from llmprefs.analysis.visualization import (
     annotated_heatmap,
+    construct_title,
     error_bars,
     get_tick_labels,
     weights_from_ci,
@@ -191,6 +192,7 @@ def plot_ratings_scatter(
     rated_options: RatedOptions,
     tasks: Mapping[TaskId, TaskRecord],
     confidence: float,
+    title_suffix: str = "",
 ) -> Figure:
     ycoords = np.arange(len(rated_options.options), 0, -1)
     rating_values = rated_options.values(confidence)
@@ -213,7 +215,9 @@ def plot_ratings_scatter(
         color="gray",
         zorder=0,
     )
-    ax.set_title("Rated Options")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_title(  # pyright: ignore[reportUnknownMemberType]
+        construct_title("Rated Options", title_suffix)
+    )
     ax.set_xlabel("Rating")  # pyright: ignore[reportUnknownMemberType]
     ax.set_ylabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
     ax.set_yticks(  # pyright: ignore[reportUnknownMemberType]
@@ -229,6 +233,7 @@ def plot_ratings_scatter(
 def plot_ratings_heatmap(
     rated_options: RatedOptions,
     tasks: Mapping[TaskId, TaskRecord],
+    title_suffix: str = "",
 ) -> Figure:
     expected_num_tasks = 2
     if any(len(option) != expected_num_tasks for option in rated_options.options):
@@ -258,7 +263,9 @@ def plot_ratings_heatmap(
     )
     im = annotated_heatmap(ax, ratings, tick_labels)
 
-    ax.set_title("Rated Options")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_title(  # pyright: ignore[reportUnknownMemberType]
+        construct_title("Rated Options", title_suffix)
+    )
     ax.set_ylabel("First Task ID")  # pyright: ignore[reportUnknownMemberType]
     ax.set_xlabel("Second Task ID")  # pyright: ignore[reportUnknownMemberType]
 
@@ -273,6 +280,7 @@ def plot_rating_additivity_scatter(
     rated_options_2tpo: RatedOptions,
     tasks: Mapping[TaskId, TaskRecord],
     confidence: float,
+    title_suffix: str = "",
 ) -> Figure:
     if rated_options_1tpo.ratings.shape[1] != rated_options_2tpo.ratings.shape[1]:
         raise ValueError("Number of resamples must be the same")
@@ -337,7 +345,9 @@ def plot_rating_additivity_scatter(
     )
     ax.set_xlabel("Sum of Task Ratings")  # pyright: ignore[reportUnknownMemberType]
     ax.set_ylabel("Rating of Task Sequence")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_title("Task Rating Additivity")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_title(  # pyright: ignore[reportUnknownMemberType]
+        construct_title("Task Rating Additivity", title_suffix)
+    )
     return fig
 
 

@@ -8,7 +8,11 @@ from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
 from llmprefs.analysis.structs import ReducedResultBase
-from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
+from llmprefs.analysis.visualization import (
+    annotated_heatmap,
+    construct_title,
+    get_tick_labels,
+)
 from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
 
@@ -90,6 +94,7 @@ def analyze_option_order(results: Sequence[ResultRecord]) -> OptionOrderAnalysis
 def plot_option_order_analysis(
     analysis: OptionOrderAnalysis,
     tasks: Mapping[TaskId, TaskRecord],
+    title_suffix: str = "",
 ) -> Figure:
     fig, ax = plt.subplots()  # pyright: ignore[reportUnknownMemberType]
     tick_labels = get_tick_labels(analysis.options, tasks)
@@ -98,7 +103,9 @@ def plot_option_order_analysis(
     colorbar.ax.set_ylabel(  # pyright: ignore[reportUnknownMemberType]
         "Option Ordering Effect Strength",
     )
-    ax.set_title("Option Order Analysis")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_title(  # pyright: ignore[reportUnknownMemberType]
+        construct_title("Option Order Analysis", title_suffix)
+    )
     ax.set_xlabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
     ax.set_ylabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
     return fig

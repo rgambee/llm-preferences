@@ -40,12 +40,21 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
         num_resamples=100,
     )
 
-    plot_comparison_outcomes_heatmap(outcomes, tasks)
+    plot_comparison_outcomes_heatmap(outcomes, tasks, title_suffix=args.title_suffix)
 
-    plot_ratings_scatter(rated_options, tasks, confidence=0.75)
+    plot_ratings_scatter(
+        rated_options,
+        tasks,
+        confidence=0.75,
+        title_suffix=args.title_suffix,
+    )
     two_tasks_per_option = True
     try:
-        fig = plot_ratings_heatmap(rated_options, tasks)
+        fig = plot_ratings_heatmap(
+            rated_options,
+            tasks,
+            title_suffix=args.title_suffix,
+        )
         fig.tight_layout()
     except ValueError as error:
         if error.args[0] == "Heatmap only accepts options containing 2 tasks":
@@ -54,11 +63,19 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
             raise
 
     option_order_analysis = analyze_option_order(results)
-    plot_option_order_analysis(option_order_analysis, tasks)
+    plot_option_order_analysis(
+        option_order_analysis,
+        tasks,
+        title_suffix=args.title_suffix,
+    )
 
     if two_tasks_per_option:
         task_order_analysis = analyze_task_order(results)
-        plot_task_order_analysis(task_order_analysis, tasks)
+        plot_task_order_analysis(
+            task_order_analysis,
+            tasks,
+            title_suffix=args.title_suffix,
+        )
 
 
 def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
@@ -92,6 +109,7 @@ def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
         rated_options_2tpo,
         tasks,
         confidence=0.75,
+        title_suffix=args.title_suffix,
     )
 
 
@@ -116,6 +134,11 @@ def main() -> None:
         type=Path,
         required=True,
         help="Path to the results file",
+    )
+    analyze_one_parser.add_argument(
+        "--title-suffix",
+        type=str,
+        help="Suffix to add to all figure titles",
     )
     analyze_one_parser.set_defaults(func=analyze_one_set_of_results)
 
@@ -142,6 +165,11 @@ def main() -> None:
         required=True,
         dest="results_2tpo_path",
         help="Path to the results file for two tasks per option",
+    )
+    analyze_two_parser.add_argument(
+        "--title-suffix",
+        type=str,
+        help="Suffix to add to all figure titles",
     )
     analyze_two_parser.set_defaults(func=analyze_two_sets_of_results)
 

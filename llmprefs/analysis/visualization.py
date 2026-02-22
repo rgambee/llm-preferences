@@ -93,3 +93,9 @@ def annotated_heatmap(
         fontsize="xx-small",
     )
     return image
+
+
+def construct_title(title: str, title_suffix: str) -> str:
+    if title_suffix:
+        title = f"{title}\n{title_suffix}"
+    return title

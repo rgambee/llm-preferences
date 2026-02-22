@@ -5,13 +5,18 @@ import numpy as np
 from matplotlib.figure import Figure
 
 from llmprefs.analysis.rating import ComparisonOutcomes
-from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
+from llmprefs.analysis.visualization import (
+    annotated_heatmap,
+    construct_title,
+    get_tick_labels,
+)
 from llmprefs.task_structs import TaskId, TaskRecord
 
 
 def plot_comparison_outcomes_heatmap(
     outcomes: ComparisonOutcomes,
     tasks: Mapping[TaskId, TaskRecord],
+    title_suffix: str = "",
 ) -> Figure:
     counts = outcomes.unfold()
     expected_dimensionality = 2
@@ -36,7 +41,7 @@ def plot_comparison_outcomes_heatmap(
         precision=0,
     )
     ax_main.set_title(  # pyright: ignore[reportUnknownMemberType]
-        "Comparison Outcome Counts"
+        construct_title("Comparison Outcome Counts", title_suffix)
     )
     ax_main.set_xlabel(  # pyright: ignore[reportUnknownMemberType]
         "Index of Disfavored Option"

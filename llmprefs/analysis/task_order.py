@@ -11,7 +11,11 @@ from matplotlib.figure import Figure
 from numpy.typing import NDArray
 
 from llmprefs.analysis.structs import ReducedResultBase
-from llmprefs.analysis.visualization import annotated_heatmap, get_tick_labels
+from llmprefs.analysis.visualization import (
+    annotated_heatmap,
+    construct_title,
+    get_tick_labels,
+)
 from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord
 
 OrderedOption = OptionById
@@ -262,6 +266,7 @@ def task_order(option: OrderedOption) -> TaskOrder:
 def plot_task_order_analysis(
     analysis: TaskOrderAnalysis,
     tasks: Mapping[TaskId, TaskRecord],
+    title_suffix: str = "",
 ) -> list[Figure]:
     tick_labels = get_tick_labels(
         options=((task_id,) for task_id in analysis.tasks),
@@ -287,7 +292,10 @@ def plot_task_order_analysis(
 
         comparison_type = "Direct" if direct else "Indirect"
         ax.set_title(  # pyright: ignore[reportUnknownMemberType]
-            f"Task Order Analysis: {comparison_type} Comparisons",
+            construct_title(
+                f"Task Order Analysis: {comparison_type} Comparisons",
+                title_suffix,
+            ),
         )
         ax.set_xlabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
         ax.set_ylabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
