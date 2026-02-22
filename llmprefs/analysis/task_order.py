@@ -303,7 +303,7 @@ def plot_task_order_analysis(
             axes=ax,
             matrix=analysis.deltas_direct if direct else analysis.deltas_indirect,
             tick_labels=tick_labels,
-            precision=1,
+            precision=2,
             vmin=-1.0,
             vmax=1.0,
         )
