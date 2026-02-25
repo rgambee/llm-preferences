@@ -1,5 +1,3 @@
-import itertools
-from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import Enum, auto
@@ -203,21 +201,10 @@ def compute_delta_indirect(
         desired_option,
         direct=False,
     )
-    outcomes: dict[UnorderedTaskPair, list[int]] = defaultdict(
-        list,
-    )
-    for result in relevant_results:
-        outcome = result.signed_outcome(desired_option)
-        if result.first_pair_unordered == desired_option:
-            outcomes[result.second_pair_unordered].append(outcome)
-        elif result.second_pair_unordered == desired_option:
-            outcomes[result.first_pair_unordered].append(outcome)
-        else:
-            raise ValueError("Result does not contain the desired option")
-    signs = list(itertools.chain.from_iterable(outcomes.values()))
-    if not signs:
+    outcomes = [res.signed_outcome(desired_option) for res in relevant_results]
+    if not outcomes:
         return np.nan
-    return float(np.mean(signs))
+    return float(np.mean(outcomes))
 
 
 @overload
