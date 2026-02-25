@@ -25,6 +25,8 @@ from llmprefs.analysis.visualization import construct_figure_filename
 from llmprefs.file_io.load_records import load_records
 from llmprefs.task_structs import ResultRecord, TaskId, TaskRecord
 
+CONFIDENCE = 0.95
+
 
 def analyze_one_set_of_results(args: argparse.Namespace) -> None:
     logger = logging.getLogger(__name__)
@@ -52,7 +54,7 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
     fig = plot_ratings_scatter(
         rated_options,
         tasks,
-        confidence=0.75,
+        confidence=CONFIDENCE,
         title_suffix=args.title_suffix,
     )
     save_figure(fig, args, "rated-options")
@@ -121,7 +123,7 @@ def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
         rated_options_1tpo,
         rated_options_2tpo,
         tasks,
-        confidence=0.75,
+        confidence=CONFIDENCE,
         title_suffix=args.title_suffix,
     )
     save_figure(
