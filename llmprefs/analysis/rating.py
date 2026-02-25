@@ -24,6 +24,8 @@ from llmprefs.analysis.visualization import (
 from llmprefs.comparisons import is_opt_out_task
 from llmprefs.task_structs import OptionById, Outcome, ResultRecord, TaskId, TaskRecord
 
+RANDOM_SEED = 123
+
 
 @dataclass
 class ComparisonOutcomes:
@@ -97,7 +99,7 @@ def rate_options(
         )
         ratings = np.expand_dims(ratings_1d, axis=1)
     else:
-        generator = np.random.default_rng()
+        generator = np.random.default_rng(seed=RANDOM_SEED)
         ratings = np.full((len(outcomes.options), num_resamples), np.nan)
         for i in range(num_resamples):
             resample = resample_results(outcomes=outcomes, generator=generator)

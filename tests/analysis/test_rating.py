@@ -5,6 +5,7 @@ import numpy as np
 import pytest
 
 from llmprefs.analysis.rating import (
+    RANDOM_SEED,
     ComparisonOutcomes,
     ValueCI,
     compile_matrix,
@@ -15,7 +16,7 @@ from llmprefs.analysis.rating import (
 from llmprefs.task_structs import OptionById, ResultRecord, TaskId, TaskRecord, TaskType
 from llmprefs.testing.factories import result_record_factory, task_record_factory
 
-RNG = np.random.default_rng(seed=123)
+RNG = np.random.default_rng(seed=RANDOM_SEED)
 
 
 @pytest.fixture
