@@ -10,7 +10,7 @@ from matplotlib.axes import Axes
 from matplotlib.collections import FillBetweenPolyCollection
 from matplotlib.container import ErrorbarContainer
 from matplotlib.figure import Figure
-from numpy.typing import NDArray
+from numpy.typing import ArrayLike, NDArray
 from odrpack import odr_fit
 
 from llmprefs.analysis.structs import ValueCI
@@ -213,24 +213,13 @@ def plot_ratings_scatter(
         capsize=5.0,
         label=f"Data points with bootstrapped {confidence:.0%} CI",
     )
-    ax.axvline(  # pyright: ignore[reportUnknownMemberType]
-        x=0,
-        linestyle="dashed",
-        color="gray",
-        zorder=0,
+    add_axis_decorations(
+        ax=ax,
+        ycoords=ycoords,
+        options=rated_options.options,
+        tasks=tasks,
+        title_suffix=title_suffix,
     )
-    ax.set_title(  # pyright: ignore[reportUnknownMemberType]
-        construct_title("Rated Options", title_suffix)
-    )
-    ax.set_xlabel("Rating")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_ylabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_yticks(  # pyright: ignore[reportUnknownMemberType]
-        ticks=ycoords,
-        labels=get_tick_labels(rated_options.options, tasks),
-        fontsize="x-small",
-    )
-    ax.legend()  # pyright: ignore[reportUnknownMemberType]
-
     return fig
 
 
@@ -251,6 +240,23 @@ def plot_ratings_violin(
         showmedians=True,
         showextrema=True,
     )
+    add_axis_decorations(
+        ax=ax,
+        ycoords=ycoords,
+        options=rated_options.options,
+        tasks=tasks,
+        title_suffix=title_suffix,
+    )
+    return fig
+
+
+def add_axis_decorations(
+    ax: Axes,
+    ycoords: ArrayLike,
+    options: Sequence[OptionById],
+    tasks: Mapping[TaskId, TaskRecord],
+    title_suffix: str = "",
+) -> None:
     ax.axvline(  # pyright: ignore[reportUnknownMemberType]
         x=0,
         linestyle="dashed",
@@ -264,10 +270,9 @@ def plot_ratings_violin(
     ax.set_ylabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
     ax.set_yticks(  # pyright: ignore[reportUnknownMemberType]
         ticks=ycoords,
-        labels=get_tick_labels(rated_options.options, tasks),
+        labels=get_tick_labels(options, tasks),
         fontsize="x-small",
     )
-    return fig
 
 
 def plot_ratings_heatmap(
