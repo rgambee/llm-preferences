@@ -220,7 +220,9 @@ def main() -> None:
 
     analyze_two_parser = subparsers.add_parser(
         "analyze-two",
-        help="Analyze two sets of results",
+        help="""
+            Analyze corresponding one-task-per-option and two-tasks-per-option results
+        """,
     )
     analyze_two_parser.add_argument(
         "--tasks-path",
