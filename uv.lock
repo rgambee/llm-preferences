@@ -632,7 +632,7 @@ visualization = [
 requires-dist = [
     { name = "anthropic", specifier = ">=0.60.0" },
     { name = "choix", specifier = ">=0.3.6" },
-    { name = "matplotlib", specifier = ">=3.7.5" },
+    { name = "matplotlib", specifier = ">=3.10.0" },
     { name = "numpy", specifier = ">=1.24.4" },
     { name = "odrpack", specifier = ">=0.5.0" },
     { name = "openai", specifier = ">=1.99.8" },

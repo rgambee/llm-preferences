@@ -7,7 +7,7 @@ requires-python = ">=3.10"
 dependencies = [
     "anthropic>=0.60.0",
     "choix>=0.3.6",
-    "matplotlib>=3.7.5",
+    "matplotlib>=3.10.0",
     "numpy>=1.24.4",
     "odrpack>=0.5.0",
     "openai>=1.99.8",
