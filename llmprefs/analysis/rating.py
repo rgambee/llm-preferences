@@ -1,13 +1,15 @@
 from collections import defaultdict
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from typing import cast
 
 import choix
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats
+from matplotlib.artist import Artist
 from matplotlib.axes import Axes
-from matplotlib.collections import FillBetweenPolyCollection
+from matplotlib.collections import Collection, FillBetweenPolyCollection
 from matplotlib.container import ErrorbarContainer
 from matplotlib.figure import Figure
 from numpy.typing import ArrayLike, NDArray
@@ -246,6 +248,62 @@ def plot_ratings_violin(
         options=rated_options.options,
         tasks=tasks,
         title_suffix=title_suffix,
+    )
+    return fig
+
+
+def plot_multi_ratings_violin(
+    rated_options: Sequence[RatedOptions],
+    tasks: Mapping[TaskId, TaskRecord],
+    title_suffix: str = "",
+    legend_labels: Sequence[str] = (),
+) -> Figure:
+    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+        figsize=(6.4, 4.8 + 1.0 * len(rated_options)),
+        layout="constrained",
+    )
+    if len(rated_options) == 0:
+        return fig
+    if not all(ro.options == rated_options[0].options for ro in rated_options):
+        raise ValueError("All options must be the same")
+    ycoords = np.arange(len(rated_options[0].options), 0, -1)
+    width = 1 / (len(rated_options) + 1)
+    legend_handles: list[Artist] = []
+    for i, ro in enumerate(rated_options):
+        offset = width * ((len(rated_options) - 1) / 2 - i)
+        violin = ax.violinplot(
+            ro.ratings.T,
+            positions=ycoords + offset,
+            orientation="horizontal",
+            widths=width,
+            showmeans=False,
+            showmedians=True,
+            showextrema=True,
+        )
+        # The return type annotation for violinplot() appears to be incorrect. The
+        # documentation says it returns dict[str, list[Collection]], but the return
+        # type annotation is dict[str, Collection].
+        legend_handles.append(cast(list[Collection], violin["bodies"])[0])
+    add_axis_decorations(
+        ax=ax,
+        ycoords=ycoords,
+        options=rated_options[0].options,
+        tasks=tasks,
+        title_suffix=title_suffix,
+    )
+    ax.set_yticks(  # pyright: ignore[reportUnknownMemberType]
+        ycoords[1:] + 0.5,
+        minor=True,
+    )
+    ax.grid(which="minor", visible=True)  # pyright: ignore[reportUnknownMemberType]
+    ax.tick_params(  # pyright: ignore[reportUnknownMemberType]
+        axis="y",
+        which="minor",
+        left=False,
+    )
+    ax.legend(  # pyright: ignore[reportUnknownMemberType]
+        handles=legend_handles,
+        labels=legend_labels,
     )
     return fig
 
