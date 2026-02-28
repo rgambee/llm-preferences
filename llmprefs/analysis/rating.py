@@ -9,9 +9,15 @@ import numpy as np
 import scipy.stats
 from matplotlib.artist import Artist
 from matplotlib.axes import Axes
-from matplotlib.collections import Collection, FillBetweenPolyCollection
+from matplotlib.collections import (
+    FillBetweenPolyCollection,
+    LineCollection,
+    PolyCollection,
+)
 from matplotlib.container import ErrorbarContainer
 from matplotlib.figure import Figure
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from numpy.typing import ArrayLike, NDArray
 from odrpack import odr_fit
 
@@ -268,10 +274,11 @@ def plot_multi_ratings_violin(
         raise ValueError("All options must be the same")
     ycoords = np.arange(len(rated_options[0].options), 0, -1)
     width = 1 / (len(rated_options) + 1)
-    legend_handles: list[Artist] = []
+    body_colors: list[str] = []
+    line_colors: list[str] = []
     for i, ro in enumerate(rated_options):
         offset = width * ((len(rated_options) - 1) / 2 - i)
-        violin = ax.violinplot(
+        _parts = ax.violinplot(
             ro.ratings.T,
             positions=ycoords + offset,
             orientation="horizontal",
@@ -281,9 +288,20 @@ def plot_multi_ratings_violin(
             showextrema=True,
         )
         # The return type annotation for violinplot() appears to be incorrect. The
-        # documentation says it returns dict[str, list[Collection]], but the return
-        # type annotation is dict[str, Collection].
-        legend_handles.append(cast(list[Collection], violin["bodies"])[0])
+        # documentation says it returns dict[str, LineCollection | list[PolyCollection],
+        # but the return type annotation is dict[str, Collection].
+        parts = cast(dict[str, LineCollection | list[PolyCollection]], _parts)
+        for value in parts.values():
+            if isinstance(value, LineCollection):
+                color = ["C1", "C3"][i % 2]
+                value.set_color(color)
+                line_colors.append(color)
+            else:
+                color = f"C{i // 2 * 2}"
+                for pc in value:
+                    pc.set_color(color)
+                    pc.set_alpha(1.0)
+                    body_colors.append(color)
     add_axis_decorations(
         ax=ax,
         ycoords=ycoords,
@@ -301,9 +319,17 @@ def plot_multi_ratings_violin(
         which="minor",
         left=False,
     )
+
+    legend_handles: list[Artist] = []
+    legend_handles.extend(Patch(color=color) for color in dict.fromkeys(body_colors))
+    legend_handles.extend(
+        Line2D(xdata=[], ydata=[], color=color) for color in dict.fromkeys(line_colors)
+    )
     ax.legend(  # pyright: ignore[reportUnknownMemberType]
         handles=legend_handles,
         labels=legend_labels,
+        ncols=2,
+        fontsize="x-small",
     )
     return fig
 
