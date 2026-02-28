@@ -234,6 +234,42 @@ def plot_ratings_scatter(
     return fig
 
 
+def plot_ratings_violin(
+    rated_options: RatedOptions,
+    tasks: Mapping[TaskId, TaskRecord],
+    title_suffix: str = "",
+) -> Figure:
+    fig, ax = plt.subplots(  # pyright: ignore[reportUnknownMemberType]
+        layout="constrained",
+    )
+    ycoords = np.arange(len(rated_options.options), 0, -1)
+    ax.violinplot(
+        rated_options.ratings.T,
+        positions=ycoords,
+        orientation="horizontal",
+        showmeans=False,
+        showmedians=True,
+        showextrema=True,
+    )
+    ax.axvline(  # pyright: ignore[reportUnknownMemberType]
+        x=0,
+        linestyle="dashed",
+        color="gray",
+        zorder=0,
+    )
+    ax.set_title(  # pyright: ignore[reportUnknownMemberType]
+        construct_title("Rated Options", title_suffix)
+    )
+    ax.set_xlabel("Rating")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_ylabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_yticks(  # pyright: ignore[reportUnknownMemberType]
+        ticks=ycoords,
+        labels=get_tick_labels(rated_options.options, tasks),
+        fontsize="x-small",
+    )
+    return fig
+
+
 def plot_ratings_heatmap(
     rated_options: RatedOptions,
     tasks: Mapping[TaskId, TaskRecord],

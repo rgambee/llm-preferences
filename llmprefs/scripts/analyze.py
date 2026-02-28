@@ -14,7 +14,7 @@ from llmprefs.analysis.rating import (
     compile_matrix,
     plot_rating_additivity_scatter,
     plot_ratings_heatmap,
-    plot_ratings_scatter,
+    plot_ratings_violin,
     rate_options,
 )
 from llmprefs.analysis.task_order import (
@@ -51,10 +51,9 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
     )
     save_figure(fig, args, "outcome-counts")
 
-    fig = plot_ratings_scatter(
+    fig = plot_ratings_violin(
         rated_options,
         tasks,
-        confidence=CONFIDENCE,
         title_suffix=args.title_suffix,
     )
     save_figure(fig, args, "rated-options")
