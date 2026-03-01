@@ -343,8 +343,10 @@ def add_axis_decorations(
 ) -> None:
     ax.axvline(  # pyright: ignore[reportUnknownMemberType]
         x=0,
-        linestyle="dashed",
-        color="gray",
+        # Mimic default style of grid lines
+        linestyle="solid",
+        color="#b0b0b0",
+        linewidth=0.8,
         zorder=0,
     )
     ax.set_title(  # pyright: ignore[reportUnknownMemberType]
