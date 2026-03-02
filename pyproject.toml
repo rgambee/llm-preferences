@@ -37,6 +37,9 @@ visualization = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[project.scripts]
+analyze = "llmprefs.scripts.analyze:main"
+
 [tool.setuptools.packages.find]
 # The data/ directory only contains datasets, no code
 exclude = ["data"]
