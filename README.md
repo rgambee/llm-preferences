@@ -427,7 +427,6 @@ To install the required dependencies, run
 
 ```bash
 uv sync
-uv pip install -e .
 ```
 
 Make a copy of `.env.example` and enter your API keys.
