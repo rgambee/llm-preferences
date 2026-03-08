@@ -198,6 +198,79 @@ Like Anthropic did [[6]](#references), the rating of the opt-out option is defin
   <p style="width: 100%; margin-top: 10px;"><strong>Figure 2:</strong> <em>Task ratings as estimated by a Bradley–Terry model. Ratings are shifted such that the opt-out task has a rating of 0. The distribution for each task was bootstrapped by resampling the LLM's responses.</em></p>
 </div>
 
+<details>
+<summary><strong>Results in tabular form</strong></summary>
+
+#### Results Table for GPT-5 mini, 1 task per option, free-form output
+
+|   Option ID |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
+|------------:|-------:|---------:|--------:|------------------:|----------------:|------------------:|
+|           0 |     99 |       11 |       0 |             2.148 |           4.654 |             8.558 |
+|           1 |     81 |       29 |       0 |             0.343 |           2.521 |             6.268 |
+|           2 |    104 |        6 |       0 |             3.095 |           5.612 |             9.484 |
+|           3 |      1 |       70 |      39 |           -16.382 |         -13.793 |            -9.133 |
+|           4 |      1 |       71 |      38 |           -35.279 |         -16.414 |           -10.862 |
+|           5 |      2 |       72 |      36 |           -27.548 |         -20.912 |           -12.756 |
+|           6 |     88 |       22 |       0 |             0.781 |           3.403 |             6.945 |
+|           7 |      0 |       67 |      43 |           -45.170 |         -34.973 |           -13.646 |
+|           8 |      1 |       71 |      38 |           -36.536 |         -28.888 |           -13.931 |
+|           9 |     63 |       47 |       0 |            -1.654 |           0.518 |             4.545 |
+|          10 |     54 |       53 |       3 |            -2.131 |           0.000 |             3.472 |
+|          11 |     67 |       42 |       1 |            -0.868 |           1.164 |             5.036 |
+
+#### Results Table for GPT-5 mini, 1 task per option, structured output
+
+|   Option ID |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
+|------------:|-------:|---------:|--------:|------------------:|----------------:|------------------:|
+|           0 |    100 |       10 |       0 |             5.652 |           7.497 |            15.951 |
+|           1 |     78 |       32 |       0 |             1.245 |           3.211 |             4.153 |
+|           2 |    109 |        1 |       0 |             8.477 |          16.313 |            25.993 |
+|           3 |     27 |       83 |       0 |           -15.726 |         -13.532 |           -12.455 |
+|           4 |     22 |       88 |       0 |           -16.391 |         -14.018 |           -12.931 |
+|           5 |     18 |       92 |       0 |           -16.789 |         -14.317 |           -13.192 |
+|           6 |     87 |       23 |       0 |             2.379 |           4.434 |             6.163 |
+|           7 |     18 |       92 |       0 |           -16.900 |         -14.455 |           -13.321 |
+|           8 |     15 |       95 |       0 |           -17.254 |         -14.673 |           -13.724 |
+|           9 |     67 |       43 |       0 |            -0.628 |           1.623 |             3.017 |
+|          10 |     54 |       56 |       0 |            -2.435 |           0.000 |             0.961 |
+|          11 |     65 |       45 |       0 |            -0.508 |           1.618 |             2.619 |
+
+#### Results Table for Haiku 4.5, 1 task per option, free-form output
+
+|   Option ID |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
+|------------:|-------:|---------:|--------:|------------------:|----------------:|------------------:|
+|           0 |     88 |       22 |       0 |             3.233 |           5.820 |            12.205 |
+|           1 |     83 |       27 |       0 |             2.628 |           5.285 |            11.784 |
+|           2 |     97 |       13 |       0 |             4.175 |           6.732 |            13.039 |
+|           3 |      0 |       71 |      39 |           -40.745 |         -35.071 |           -15.002 |
+|           4 |      1 |       70 |      39 |           -38.177 |         -22.895 |           -12.599 |
+|           5 |      1 |       68 |      41 |           -18.754 |          -2.987 |            -0.254 |
+|           6 |     74 |       36 |       0 |             1.690 |           4.191 |            10.697 |
+|           7 |      3 |       72 |      35 |           -29.125 |         -23.413 |           -15.483 |
+|           8 |      2 |       68 |      40 |           -18.174 |         -12.545 |           -10.609 |
+|           9 |    105 |        5 |       0 |             5.371 |           7.841 |            14.040 |
+|          10 |     46 |       59 |       5 |            -5.225 |          -0.000 |             1.764 |
+|          11 |     60 |       49 |       1 |            -1.494 |           2.373 |             9.184 |
+
+#### Results Table for Haiku 4.5, 1 task per option, structured output
+
+|   Option ID |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
+|------------:|-------:|---------:|--------:|------------------:|----------------:|------------------:|
+|           0 |     92 |       18 |       0 |            25.467 |          27.585 |            34.808 |
+|           1 |     75 |       35 |       0 |            21.269 |          24.040 |            25.015 |
+|           2 |    100 |       10 |       0 |            28.037 |          29.257 |            37.377 |
+|           3 |     20 |       88 |       2 |           -16.401 |         -13.696 |           -12.998 |
+|           4 |     17 |       92 |       1 |           -16.472 |         -14.117 |           -13.306 |
+|           5 |     22 |       87 |       1 |           -16.444 |         -13.514 |           -12.925 |
+|           6 |     76 |       34 |       0 |            21.572 |          24.334 |            25.155 |
+|           7 |     22 |       87 |       1 |           -16.178 |         -13.534 |           -13.014 |
+|           8 |     16 |       93 |       1 |           -16.777 |         -14.157 |           -13.494 |
+|           9 |    107 |        3 |       0 |            29.029 |          30.806 |            41.455 |
+|          10 |     50 |       60 |       0 |            -2.483 |           0.000 |             0.330 |
+|          11 |     60 |       50 |       0 |             9.359 |          11.841 |            12.171 |
+
+</details>
+
 The comparison results were resampled with replacement in order to bootstrap confidence intervals. Figure 1 illustrates that the bootstrapped distributions for each option are clearly not Gaussian.
 
 The signs of each task's rating are consistent across both models and both response formats. However, the magnitudes differ substantially across both dimensions. The similarities and differences across models are not too surprising: the post-training regimens (curricula) for GPT-5 mini and Haiku 4.5 were likely similar enough such that they tend to prefer similar types of tasks. Yet their regimens (curricula) were different enough that they prefer tasks to different degrees.
