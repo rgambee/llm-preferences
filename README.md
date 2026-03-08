@@ -181,19 +181,19 @@ We can interpret $\beta_i$ as the model's revealed rating of option $i$, at leas
 
 Like Anthropic did [[6]](#references), the rating of the opt-out option is defined to be 0. This facilitates comparison across different models and response formats.
 
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; text-align: center;">
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; align: center; text-align: center;">
 
-  <img src="data/analysis/tasks-012_gpt-5-mini_1-task-per-option_free-form_2025-12-28T15-26-29+0000_outcome-counts.svg" alt="Heatmap showing the comparison outcome counts for GPT-5 mini, 1 task per option, free-form output" style="width: 45%; max-width: 200px;"/>
-  <img src="data/analysis/tasks-012_haiku-4-5_1-task-per-option_free-form_2026-01-01T19-19-37+0000_outcome-counts.svg" alt="Heatmap showing the comparison outcome counts for Haiku 4.5, 1 task per option, free-form output" style="width: 45%; max-width: 200px;"/>
-  <img src="data/analysis/tasks-012_gpt-5-mini_1-task-per-option_structured-output_2025-12-28T15-01-12+0000_outcome-counts.svg" alt="Heatmap showing the comparison outcome counts for GPT-5 mini, 1 task per option, structured output" style="width: 45%; max-width: 200px;"/>
-  <img src="data/analysis/tasks-012_haiku-4-5_1-task-per-option_structured-output_2026-01-01T19-04-28+0000_outcome-counts.svg" alt="Heatmap showing the comparison outcome counts for Haiku 4.5, 1 task per option, structured output" style="width: 45%; max-width: 200px;"/>
+  <img src="data/analysis/tasks-012_gpt-5-mini_1-task-per-option_free-form_2025-12-28T15-26-29+0000_outcome-counts.svg" alt="Heatmap showing the comparison outcome counts for GPT-5 mini, 1 task per option, free-form output" width="45%"/>
+  <img src="data/analysis/tasks-012_haiku-4-5_1-task-per-option_free-form_2026-01-01T19-19-37+0000_outcome-counts.svg" alt="Heatmap showing the comparison outcome counts for Haiku 4.5, 1 task per option, free-form output" width="45%"/>
+  <img src="data/analysis/tasks-012_gpt-5-mini_1-task-per-option_structured-output_2025-12-28T15-01-12+0000_outcome-counts.svg" alt="Heatmap showing the comparison outcome counts for GPT-5 mini, 1 task per option, structured output" width="45%"/>
+  <img src="data/analysis/tasks-012_haiku-4-5_1-task-per-option_structured-output_2026-01-01T19-04-28+0000_outcome-counts.svg" alt="Heatmap showing the comparison outcome counts for Haiku 4.5, 1 task per option, structured output" width="45%"/>
 
   <p style="width: 100%; margin-top: 10px;"><strong>Figure 1:</strong> <em>Pairwise comparison results with one task per option. The number in each cell is the number of times the task in that row was chosen over the task in the column. See <a href="#tasks">the list above</a> for full task contents. Transposed cells do not all add to the same total because the LLM sometimes refused to pick either option.</em></p>
 
 </div>
 
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; text-align: center;">
-  <img src="data/analysis/tasks-012_1-task-per-option_rated-options.svg" alt="Violin plot showing the bootstrapped distributions of task ratings for 1 task per option, both models and both response formats" style="width: 90%; max-width: 400px;"/>
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; align: center; text-align: center;">
+  <img src="data/analysis/tasks-012_1-task-per-option_rated-options.svg" alt="Violin plot showing the bootstrapped distributions of task ratings for 1 task per option, both models and both response formats" width="90%"/>
 
   <p style="width: 100%; margin-top: 10px;"><strong>Figure 2:</strong> <em>Task ratings as estimated by a Bradley–Terry model. Ratings are shifted such that the opt-out task has a rating of 0. The distribution for each task was bootstrapped by resampling the LLM's responses.</em></p>
 </div>
@@ -283,10 +283,10 @@ The differences between response formats are more surprising. Some of the differ
 
 To answer this, the task ratings from the one-task-per-option experiment were added together and plotted against the ratings from the two-task-per-option experiment. The results are shown in figure 3. There is clearly a correlation, which indicates that task ratings do add to an extent. However, the correlation is far from perfect. For GPT-5 mini, a linear correlation tends to underestimate the rating for sequences of the most disliked tasks, while it overestimates the rating for sequences of tasks that the model is more neutral towards. For Haiku, the opt-out task is an outlier: it is rated below many individual tasks but above sequences of those same tasks.
 
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; text-align: center;">
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; align: center; text-align: center;">
 
-  <img src="data/analysis/tasks-012_gpt-5-mini_1-task-per-option_structured-output_2025-12-28T15-01-12+0000_rating-additivity.svg" alt="Scatter plot of task rating additivity for GPT-5 mini, structured output" style="width: 45%; max-width: 200px;"/>
-  <img src="data/analysis/tasks-012_haiku-4-5_1-task-per-option_structured-output_2026-01-01T19-04-28+0000_rating-additivity.svg" alt="Scatter plot of task rating additivity for Haiku 4.5, structured output" style="width: 45%; max-width: 200px;"/>
+  <img src="data/analysis/tasks-012_gpt-5-mini_1-task-per-option_structured-output_2025-12-28T15-01-12+0000_rating-additivity.svg" alt="Scatter plot of task rating additivity for GPT-5 mini, structured output" width="45%"/>
+  <img src="data/analysis/tasks-012_haiku-4-5_1-task-per-option_structured-output_2026-01-01T19-04-28+0000_rating-additivity.svg" alt="Scatter plot of task rating additivity for Haiku 4.5, structured output" width="45%"/>
 
   <p style="width: 100%; margin-top: 10px;"><strong>Figure 3:</strong> <em>Scatter plot showing the degree to which individual task ratings add together to when considering sequences of tasks. The horizontal axis shows the sums of individual task ratings from the one-task-per option experiment. The vertical axis shows the ratings of task sequences from the two-tasks-per-option experiment.</em></p>
 
@@ -302,12 +302,12 @@ To answer this, the model was asked to pick between two single tasks. The outcom
 
 In many cases, the order in which the options were presented had no effect on which one the LLM selected. But for some combinations of options, there was a strong ordering effect. This is especially true for disfavored tasks when using structured output. In these cases, the LLM must pick between two tasks it does not want to work on. It often selects the first one (in the case of Haiku 4.5) or the second one (in the case of GPT-5 mini).
 
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; text-align: center;">
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; align: center; text-align: center;">
 
-  <img src="data/analysis/tasks-012_gpt-5-mini_1-task-per-option_free-form_2025-12-28T15-26-29+0000_option-order-analysis.svg" alt="Heat map showing option order sensitivity for GPT-5 mini, 1 task per option, free-form output" style="width: 45%; max-width: 200px;"/>
-  <img src="data/analysis/tasks-012_haiku-4-5_1-task-per-option_free-form_2026-01-01T19-19-37+0000_option-order-analysis.svg" alt="Hea tmap showing option order sensitivity for Haiku 4.5, 1 task per option, free-form output" style="width: 45%; max-width: 200px;"/>
-  <img src="data/analysis/tasks-012_gpt-5-mini_1-task-per-option_structured-output_2025-12-28T15-01-12+0000_option-order-analysis.svg" alt="Heat map showing option order sensitivity for GPT-5 mini, 1 task per option, structured output" style="width: 45%; max-width: 200px;"/>
-  <img src="data/analysis/tasks-012_haiku-4-5_1-task-per-option_structured-output_2026-01-01T19-04-28+0000_option-order-analysis.svg" alt="Heat map showing option order sensitivity for Haiku 4.5, 1 task per option, structured output" style="width: 45%; max-width: 200px;"/>
+  <img src="data/analysis/tasks-012_gpt-5-mini_1-task-per-option_free-form_2025-12-28T15-26-29+0000_option-order-analysis.svg" alt="Heat map showing option order sensitivity for GPT-5 mini, 1 task per option, free-form output" width="45%"/>
+  <img src="data/analysis/tasks-012_haiku-4-5_1-task-per-option_free-form_2026-01-01T19-19-37+0000_option-order-analysis.svg" alt="Hea tmap showing option order sensitivity for Haiku 4.5, 1 task per option, free-form output" width="45%"/>
+  <img src="data/analysis/tasks-012_gpt-5-mini_1-task-per-option_structured-output_2025-12-28T15-01-12+0000_option-order-analysis.svg" alt="Heat map showing option order sensitivity for GPT-5 mini, 1 task per option, structured output" width="45%"/>
+  <img src="data/analysis/tasks-012_haiku-4-5_1-task-per-option_structured-output_2026-01-01T19-04-28+0000_option-order-analysis.svg" alt="Heat map showing option order sensitivity for Haiku 4.5, 1 task per option, structured output" width="45%"/>
 
   <p style="width: 100%; margin-top: 10px;"><strong>Figure 4:</strong> <em>Option order effects with one task per option. A positive value at (<strong>i</strong>, <strong>j</strong>) means the LLM tends to prefer the first option when choosing between both (task <strong>i</strong> vs. task <strong>j</strong>) and (task <strong>j</strong> vs. task <strong>i</strong>). A negative value means the LLM tends to prefer the second option, and zero means the order has no effect on the selected task.</em></p>
 
@@ -321,10 +321,10 @@ To answer this, the model was asked to pick between two sequences of tasks, each
 
 The results are shown in figure 5. They indicate negligible task ordering effects. The model's inclination for (task $i$ then task $j$) was roughly the same as is inclination for (task $j$ then task $i$).
 
-<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; text-align: center;">
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; align: center; text-align: center;">
 
-  <img src="data/analysis/tasks-012_gpt-5-mini_2-tasks-per-option_structured-output_2026-01-10T12-52-06+0000_task-order-analysis-1.svg" alt="Heat map showing the task order sensitivity for GPT-5 mini, 2 tasks per option, structured output" style="width: 45%; max-width: 200px;"/>
-  <img src="data/analysis/tasks-012_haiku-4-5_2-tasks-per-option_structured-output_2026-01-10T17-36-03+0000_task-order-analysis-1.svg" alt="Heat map showing the task order sensitivity for Haiku 4.5, 2 tasks per option, structured output" style="width: 45%; max-width: 200px;"/>
+  <img src="data/analysis/tasks-012_gpt-5-mini_2-tasks-per-option_structured-output_2026-01-10T12-52-06+0000_task-order-analysis-1.svg" alt="Heat map showing the task order sensitivity for GPT-5 mini, 2 tasks per option, structured output" width="45%"/>
+  <img src="data/analysis/tasks-012_haiku-4-5_2-tasks-per-option_structured-output_2026-01-10T17-36-03+0000_task-order-analysis-1.svg" alt="Heat map showing the task order sensitivity for Haiku 4.5, 2 tasks per option, structured output" width="45%"/>
 
   <p style="width: 100%; margin-top: 10px;"><strong>Figure 5:</strong> <em>Task order effects with two tasks per option. A positive value at (<strong>i</strong>, <strong>j</strong>) means the LLM tends to prefer completing task $i$ before task <strong>j</strong>. A negative value means the LLM tends to prefer completing task <strong>j</strong> before task $i$, and zero means the order has no effect on the selected option.</em></p>
 
@@ -372,9 +372,7 @@ Preference utilitarians value actions that satisfy a moral patient's desires [[1
 
 Why is the dependence on option order so much stronger than the dependence on task order? One possible explanation is that option order is more simply salient: the order of the two options in the comparison is more noticeable than the order of the tasks within each option.
 
-Another factor may be the difference in sample sizes. The option order analysis used one task per option: "task $i$ or task $j$?" The number of comparisons equals the number of permutations of length 2. Since there are 12 tasks in this dataset, there are $12 \times 11 = 132$ comparisons with one task per option. In contrast, the task order analysis used two tasks per option: "(task $i$ then task $j$) or (task $k$ then task $l$)?" Here the number of comparisons is $12,210$ [^1] which greatly reduces the impact of random noise.
-
-[^1]: Naively, for two tasks per option, the number of comparisons is $132 \times 131 = 17,292$. However, the opt-out task requires special treatment, as explained [above](#options-and-comparisons).
+Another factor may be the difference in sample sizes. The option order analysis used one task per option: "task $i$ or task $j$?" The number of comparisons equals the number of permutations of length 2. Since there are 12 tasks in this dataset, there are $12 \times 11 = 132$ comparisons with one task per option. In contrast, the task order analysis used two tasks per option: "(task $i$ then task $j$) or (task $k$ then task $l$)?" Here the number of comparisons is $12,210$ <sup>[[a]](#footnote-2tpo-comparisons)</sup> which greatly reduces the impact of random noise.
 
 ## Future Work
 
@@ -418,6 +416,10 @@ I would like to thank
 17. Bradley, R.A. & Terry, M.E. (1952). [_Rank Analysis of Incomplete Block Designs: I. The Method of Paired Comparisons_](https://doi.org/10.2307/2334029).
 18. [_Bradley–Terry model_](https://en.wikipedia.org/wiki/Bradley%E2%80%93Terry_model).
 19. Tomasik, B. (2016). [_Hedonistic vs. Preference Utilitarianism_](https://longtermrisk.org/hedonistic-vs-preference-utilitarianism/).
+
+## Footnotes
+
+<a name="footnote-2tpo-comparisons"></a>[a]: Naively, for two tasks per option, the number of comparisons is $132 \times 131 = 17,292$. However, the opt-out task requires special treatment, as explained [above](#options-and-comparisons).
 
 ## Code
 
