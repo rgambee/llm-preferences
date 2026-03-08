@@ -425,6 +425,13 @@ I would like to thank
 
 ### Setup
 
+This repo uses LFS for storing results files. In order to view them, first make sure you have [LFS installed](https://github.com/git-lfs/git-lfs#installing). Then
+
+```bash
+git lfs install
+git clone https://github.com/rgambee/llm-preferences.git
+```
+
 To install the required dependencies, run
 
 ```bash
