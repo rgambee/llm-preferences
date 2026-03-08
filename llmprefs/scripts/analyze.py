@@ -4,6 +4,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from tabulate import tabulate_formats
 
 from llmprefs.analysis.option_order import (
     analyze_option_order,
@@ -19,6 +20,7 @@ from llmprefs.analysis.rating import (
     plot_ratings_violin,
     rate_options,
 )
+from llmprefs.analysis.table import print_table
 from llmprefs.analysis.task_order import (
     analyze_task_order,
     plot_task_order_analysis,
@@ -93,6 +95,14 @@ def analyze_one_set_of_results(args: argparse.Namespace) -> None:
         for i, fig in enumerate(figs):
             save_figure(fig, args, f"task-order-analysis-{i}")
 
+    if args.print_table:
+        print_table(
+            outcomes,
+            rated_options,
+            table_format=args.print_table,
+            confidence=CONFIDENCE,
+        )
+
 
 def analyze_two_sets_of_results(args: argparse.Namespace) -> None:
     logger = logging.getLogger(__name__)
@@ -151,6 +161,14 @@ def analyze_multiple_sets_of_results(args: argparse.Namespace) -> None:
         )
         rated_options = rate_options(outcomes, tasks, num_resamples=100)
         all_ratings.append(rated_options)
+        if args.print_table:
+            logger.info(f"Table for {results_path}")
+            print_table(
+                outcomes,
+                rated_options,
+                table_format=args.print_table,
+                confidence=CONFIDENCE,
+            )
     fig = plot_multi_ratings_violin(
         all_ratings,
         tasks,
@@ -215,6 +233,19 @@ def main() -> None:
         "--output-dir",
         type=Path,
         help="Directory to save figures as SVGs",
+    )
+    analyze_one_parser.add_argument(
+        "--print-table",
+        const="simple",
+        default=None,
+        metavar="TABLE_FMT",
+        nargs="?",
+        choices=tabulate_formats,
+        help="""
+            Print outcome totals and option ratings as a table. Optionally specify the
+            table format. Default is "simple". For a list of formats, see
+            https://github.com/astanin/python-tabulate/tree/master?tab=readme-ov-file#table-format
+        """,
     )
     analyze_one_parser.set_defaults(func=analyze_one_set_of_results)
 
@@ -287,6 +318,19 @@ def main() -> None:
         "--output-dir",
         type=Path,
         help="Directory to save figures as SVGs",
+    )
+    analyze_multi_parser.add_argument(
+        "--print-table",
+        const="simple",
+        default=None,
+        metavar="TABLE_FMT",
+        nargs="?",
+        choices=tabulate_formats,
+        help="""
+            Print outcome totals and option ratings as a table. Optionally specify the
+            table format. Default is "simple". For a list of formats, see
+            https://github.com/astanin/python-tabulate/tree/master?tab=readme-ov-file#table-format
+        """,
     )
     analyze_multi_parser.set_defaults(func=analyze_multiple_sets_of_results)
 
