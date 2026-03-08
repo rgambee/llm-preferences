@@ -609,13 +609,9 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "scipy", version = "1.15.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "scipy", version = "1.16.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "scipy-stubs", version = "1.15.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "scipy-stubs", version = "1.16.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "tabulate" },
     { name = "tenacity" },
     { name = "tqdm" },
-    { name = "types-tabulate" },
-    { name = "types-tqdm" },
 ]
 
 [package.dev-dependencies]
@@ -625,6 +621,10 @@ dev = [
     { name = "pytest" },
     { name = "pytest-dotenv" },
     { name = "ruff" },
+    { name = "scipy-stubs", version = "1.15.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
+    { name = "scipy-stubs", version = "1.16.3.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "types-tabulate" },
+    { name = "types-tqdm" },
 ]
 visualization = [
     { name = "pyside6" },
@@ -642,12 +642,9 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.8.1" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "scipy", specifier = ">=1.15.3" },
-    { name = "scipy-stubs", specifier = ">=1.15.3.0" },
     { name = "tabulate", specifier = ">=0.10.0" },
     { name = "tenacity", specifier = ">=9.0.0" },
     { name = "tqdm", specifier = ">=4.67.1" },
-    { name = "types-tabulate", specifier = ">=0.10.0.20260308" },
-    { name = "types-tqdm", specifier = ">=4.67.0.20250809" },
 ]
 
 [package.metadata.requires-dev]
@@ -657,6 +654,9 @@ dev = [
     { name = "pytest", specifier = ">=9.0.0" },
     { name = "pytest-dotenv", specifier = ">=0.5.2" },
     { name = "ruff", specifier = ">=0.12.2" },
+    { name = "scipy-stubs", specifier = ">=1.15.3.0" },
+    { name = "types-tabulate", specifier = ">=0.10.0.20260308" },
+    { name = "types-tqdm", specifier = ">=4.67.0.20250809" },
 ]
 visualization = [{ name = "pyside6", specifier = ">=6.6.3.1" }]
 
