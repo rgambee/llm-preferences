@@ -203,7 +203,7 @@ Like Anthropic did [[6]](#references), the rating of the opt-out option is defin
 
 #### Results Table for GPT-5 mini, 1 task per option, free-form output
 
-|   Option ID |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
+|   Task ID   |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
 |------------:|-------:|---------:|--------:|------------------:|----------------:|------------------:|
 |           0 |     99 |       11 |       0 |             2.148 |           4.654 |             8.558 |
 |           1 |     81 |       29 |       0 |             0.343 |           2.521 |             6.268 |
@@ -220,7 +220,7 @@ Like Anthropic did [[6]](#references), the rating of the opt-out option is defin
 
 #### Results Table for GPT-5 mini, 1 task per option, structured output
 
-|   Option ID |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
+|   Task ID   |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
 |------------:|-------:|---------:|--------:|------------------:|----------------:|------------------:|
 |           0 |    100 |       10 |       0 |             5.652 |           7.497 |            15.951 |
 |           1 |     78 |       32 |       0 |             1.245 |           3.211 |             4.153 |
@@ -237,7 +237,7 @@ Like Anthropic did [[6]](#references), the rating of the opt-out option is defin
 
 #### Results Table for Haiku 4.5, 1 task per option, free-form output
 
-|   Option ID |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
+|   Task ID   |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
 |------------:|-------:|---------:|--------:|------------------:|----------------:|------------------:|
 |           0 |     88 |       22 |       0 |             3.233 |           5.820 |            12.205 |
 |           1 |     83 |       27 |       0 |             2.628 |           5.285 |            11.784 |
@@ -254,7 +254,7 @@ Like Anthropic did [[6]](#references), the rating of the opt-out option is defin
 
 #### Results Table for Haiku 4.5, 1 task per option, structured output
 
-|   Option ID |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
+|   Task ID   |   Wins |   Losses |   Draws |   Rating CI Lower |   Rating CI Mid |   Rating CI Upper |
 |------------:|-------:|---------:|--------:|------------------:|----------------:|------------------:|
 |           0 |     92 |       18 |       0 |            25.467 |          27.585 |            34.808 |
 |           1 |     75 |       35 |       0 |            21.269 |          24.040 |            25.015 |
