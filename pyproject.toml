@@ -16,8 +16,10 @@ dependencies = [
     "python-dotenv>=1.0.1",
     "scipy>=1.15.3",
     "scipy-stubs>=1.15.3.0",
+    "tabulate>=0.10.0",
     "tenacity>=9.0.0",
     "tqdm>=4.67.1",
+    "types-tabulate>=0.10.0.20260308",
     "types-tqdm>=4.67.0.20250809",
 ]
 
