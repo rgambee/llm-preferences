@@ -116,6 +116,6 @@ def plot_option_order_analysis(
     ax.set_title(  # pyright: ignore[reportUnknownMemberType]
         construct_title("Option Order Analysis", title_suffix)
     )
-    ax.set_xlabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_ylabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_xlabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_ylabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
     return fig

@@ -353,7 +353,7 @@ def add_axis_decorations(
         construct_title("Rated Options", title_suffix)
     )
     ax.set_xlabel("Rating")  # pyright: ignore[reportUnknownMemberType]
-    ax.set_ylabel("Index of Option")  # pyright: ignore[reportUnknownMemberType]
+    ax.set_ylabel("Index of Task")  # pyright: ignore[reportUnknownMemberType]
     ax.set_yticks(  # pyright: ignore[reportUnknownMemberType]
         ticks=ycoords,
         labels=get_tick_labels(options, tasks),
