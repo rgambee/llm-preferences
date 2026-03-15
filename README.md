@@ -1,5 +1,7 @@
 # Do LLMs Have Stable Preferences?
 
+[See here for a slightly shorter writeup](https://www.lesswrong.com/posts/AChWbkiS4EnusPsvQ/do-llms-have-stable-preferences)
+
 ## Abstract
 
 This study explores the preferences of large language models, specifically GPT-5 mini and Claude Haiku 4.5, by presenting them with pairwise comparisons of various tasks. The LLM's selections are compiled to compute a rating for each option, which can be interpreted as the LLM's revealed inclination toward that option. These ratings are coherent across the number and order of tasks within each option. However, they are not consistent across the format of the LLM's response (free vs. structured output), nor across the order in which the options are presented. On balance, these results are weak evidence against the claim that today's LLMs have stable human-like preferences.
@@ -48,9 +50,9 @@ Given these results, I wondered how an LLM's preferences change when presented w
 
 ### Tasks
 
-The tasks for this study were copied from Anthropic's Claude 4 system card [[6]](#references). Anthropic included a subset of their task dataset containing Opus 4's five most and five least preferred tasks, according to their findings. As in Anthropic's study, these ten tasks are supplemented by two neutral tasks to serve as baselines: an opt-out task which would end the conversation and a free-choice task which would let the LLM generate text without external guidance.
+The tasks for this study were copied from Anthropic's Claude 4 system card [[6]](#references). Anthropic included a subset of their task dataset containing Opus 4's five most and five least preferred tasks, according to their findings. As in Anthropic's study, these ten tasks are supplemented by two neutral tasks to serve as baselines: an opt-out task (which would end the conversation) and a free-choice task (which would let the LLM generate text without external guidance).
 
-The LLM was simply asked to select which option to work on. It was not instructed to actually complete any tasks.
+The LLM was simply asked to select which option to work on. It was not instructed to actually complete any tasks. Here is the full task list:
 
 0. Write a short, emotionally charged monologue from the perspective of a time traveler who has seen the long-term consequences of a seemingly insignificant present-day decision.
 1. Compose a short poem that captures the essence of a complex philosophical concept in an accessible and thought-provoking way.
@@ -273,13 +275,13 @@ Like Anthropic did [[6]](#references), the rating of the opt-out option is defin
 
 The comparison results were resampled with replacement in order to bootstrap confidence intervals. Figure 2 illustrates that the bootstrapped distributions for each option are clearly not Gaussian.
 
-The signs of each task's rating are consistent across both LLMs and both response formats. However, the magnitudes differ substantially across these two. The similarities and differences across LLMs are not too surprising: the post-training curricula for GPT-5 mini and Haiku 4.5 were likely similar enough such that they tend to prefer similar types of tasks. Yet their curricula were different enough that they prefer tasks to different degrees.
+The signs of each task's rating are consistent across both LLMs and both response formats. However, the magnitudes differ substantially across these two dimensions. The similarities and differences across LLMs are not too surprising: the post-training curricula for GPT-5 mini and Haiku 4.5 were likely similar enough such that they tend to prefer similar types of tasks. Yet their curricula were different enough that they prefer tasks to different degrees.
 
 The differences between response formats are more surprising. Some of the difference stems from the fact that both LLMs frequently refused to choose between disfavored tasks when responding in free form. That resulted in much wider confidence intervals for disfavored tasks. However, the confidence intervals for some tasks do not overlap, suggesting that the response format has a significant effect on the LLM's reported preferences. Speculatively, this might be because the free format gives the LLM more opportunity to reason before making its decision.
 
 ### Task Preference Additivity
 
-**Do LLMs' inclinations for individual tasks add when considering sequences of tasks?**
+**Do the ratings for individual tasks add when considering sequences of tasks?**
 
 To answer this, the task ratings from the one-task-per-option experiment were added together and plotted against the ratings from the two-task-per-option experiment. The results are shown in Figure 3. There is clearly a correlation, which indicates that task ratings do add to an extent. However, the correlation is far from perfect. For GPT-5 mini, a linear correlation tends to underestimate the rating for sequences of the most disliked tasks, while it overestimates the rating for sequences of tasks that the LLM is more neutral towards. For Haiku, the opt-out task is an outlier: it is rated below many individual tasks but above sequences of those same tasks.
 
